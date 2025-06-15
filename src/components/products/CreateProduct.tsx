@@ -2,8 +2,13 @@
  * Компонент создания нового товара
  */
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import ProductForm from './ProductForm';
+import { 
+  InformationCircleIcon, 
+  ArrowLeftIcon, 
+  CheckCircleIcon 
+} from '@heroicons/react/24/outline';
 
 // Заглушки для API, в реальном приложении заменить на реальные вызовы API
 const mockBrands = [
@@ -50,6 +55,7 @@ const CreateProduct: React.FC = () => {
   const [units, setUnits] = useState(mockUnits);
   const [categories, setCategories] = useState(mockCategories);
   const [error, setError] = useState<string | null>(null);
+  const [showTips, setShowTips] = useState(true);
 
   // В реальном приложении здесь будет загрузка данных с сервера
   useEffect(() => {
@@ -75,16 +81,62 @@ const CreateProduct: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6 pb-16 lg:pb-0">
+      {/* Навигационная цепочка */}
+      <div className="flex items-center text-sm text-gray-500 mb-2">
+        <Link to="/dashboard" className="hover:text-orange-600">Главная</Link>
+        <span className="mx-2">›</span>
+        <Link to="/dashboard/products" className="hover:text-orange-600">Товары</Link>
+        <span className="mx-2">›</span>
+        <span className="text-gray-800">Создание товара</span>
+      </div>
+
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Создание нового товара</h1>
-          <p className="mt-1 text-sm text-gray-500">Заполните информацию о товаре</p>
+          <p className="mt-1 text-sm text-gray-500">Заполните информацию о товаре для добавления в каталог</p>
         </div>
+        <Link 
+          to="/dashboard/products" 
+          className="inline-flex items-center text-sm text-orange-600 hover:text-orange-700"
+        >
+          <ArrowLeftIcon className="h-4 w-4 mr-1" />
+          Вернуться к списку
+        </Link>
       </div>
       
+      {/* Подсказки для заполнения формы */}
+      {showTips && (
+        <div className="bg-orange-50 border-l-4 border-orange-500 p-4 rounded-md">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <InformationCircleIcon className="h-5 w-5 text-orange-500" />
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-orange-800">Советы по заполнению формы</h3>
+              <div className="mt-2 text-sm text-orange-700">
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Поля, отмеченные звездочкой (*), обязательны для заполнения</li>
+                  <li>Добавьте точное описание товара для улучшения его видимости в поиске</li>
+                  <li>Указывайте точные размеры и вес для правильного расчета доставки</li>
+                </ul>
+              </div>
+              <div className="mt-3">
+                <button 
+                  type="button"
+                  onClick={() => setShowTips(false)}
+                  className="text-sm font-medium text-orange-800 hover:text-orange-600"
+                >
+                  Скрыть подсказки
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {error && (
-        <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
           <div className="flex">
             <div className="flex-shrink-0">
               <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">

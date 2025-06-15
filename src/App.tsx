@@ -7,8 +7,18 @@ import DashboardPage from './pages/dashboard/DashboardPage';
 import ProductsPage from './pages/products/ProductsPage';
 import CreateProductPage from './pages/products/CreateProductPage';
 import OrdersPage from './pages/orders/OrdersPage';
+import ProfilePage from './pages/profile/ProfilePage';
 import { useEffect, useState } from 'react';
 import authService from './services/authService';
+
+// Компонент для установки заголовка страницы
+const PageTitle = ({ title }: { title: string }) => {
+  useEffect(() => {
+    document.title = title + " | Valik.kz";
+  }, [title]);
+  
+  return null;
+};
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -41,12 +51,13 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" /> : <LoginPage />} />
-        <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" /> : <LoginPage />} />
-        <Route path="/dashboard" element={isAuthenticated ? <DashboardPage /> : <Navigate to="/login" />} />
-        <Route path="/dashboard/products" element={isAuthenticated ? <ProductsPage /> : <Navigate to="/login" />} />
-        <Route path="/dashboard/products/create" element={isAuthenticated ? <CreateProductPage /> : <Navigate to="/login" />} />
-        <Route path="/dashboard/orders" element={isAuthenticated ? <OrdersPage /> : <Navigate to="/login" />} />
+        <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" /> : <><PageTitle title="Вход" /><LoginPage /></>} />
+        <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" /> : <><PageTitle title="Вход" /><LoginPage /></>} />
+        <Route path="/dashboard" element={isAuthenticated ? <><PageTitle title="Панель управления" /><DashboardPage /></> : <Navigate to="/login" />} />
+        <Route path="/dashboard/products" element={isAuthenticated ? <><PageTitle title="Товары" /><ProductsPage /></> : <Navigate to="/login" />} />
+        <Route path="/dashboard/products/create" element={isAuthenticated ? <><PageTitle title="Создание товара" /><CreateProductPage /></> : <Navigate to="/login" />} />
+        <Route path="/dashboard/orders" element={isAuthenticated ? <><PageTitle title="Заказы" /><OrdersPage /></> : <Navigate to="/login" />} />
+        <Route path="/dashboard/profile" element={isAuthenticated ? <><PageTitle title="Профиль" /><ProfilePage /></> : <Navigate to="/login" />} />
       </Routes>
     </Router>
   );
