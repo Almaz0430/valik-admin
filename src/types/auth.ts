@@ -10,7 +10,7 @@ export interface User {
   email: string;
   name: string;
   avatar?: string;
-  role: UserRole;
+  role: string;
 }
 
 /**
@@ -26,16 +26,24 @@ export enum UserRole {
  * Данные для входа
  */
 export interface LoginCredentials {
-  email: string;
+  login: string;
   password: string;
-  rememberMe?: boolean;
+}
+
+/**
+ * Данные поставщика
+ */
+export interface Supplier {
+  id: number;
+  login: string;
+  [key: string]: any; // для других полей поставщика
 }
 
 /**
  * Ответ при успешной аутентификации
  */
 export interface AuthResponse {
-  user: User;
-  token: string;
-  refreshToken: string;
+  message: string;
+  supplier: Supplier;
+  accessToken: string;
 } 

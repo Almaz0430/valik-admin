@@ -1,109 +1,133 @@
 /**
- * Сервис для работы с API аутентификации
+ * Сервис для работы с API аутентификации поставщиков
  */
-import type { AuthResponse, LoginCredentials, User } from '../types/auth';
+import type { AuthResponse, LoginCredentials, Supplier } from '../types/auth';
 
 /**
  * Базовый URL API
  */
-const API_URL = '/api';
+const API_URL = 'http://localhost:8080';
+
+/**
+ * Интерфейс для структуры ошибок API
+ */
+interface ApiError {
+  errors?: Array<{
+    type: string;
+    value: string;
+    msg: string;
+    path: string;
+    location: string;
+  }>;
+  message?: string;
+}
 
 /**
  * Класс для работы с API аутентификации
  */
 class AuthService {
   /**
-   * Вход пользователя
+   * Вход поставщика
    */
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    // В реальном приложении здесь будет запрос к API
-    // const response = await fetch(`${API_URL}/auth/login`, {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-    //   body: JSON.stringify(credentials),
-    // });
+    this.validateCredentials(credentials);
     
-    // if (!response.ok) {
-    //   const error = await response.json();
-    //   throw new Error(error.message || 'Ошибка при входе');
-    // }
-    
-    // const data = await response.json();
-    // return data;
-    
-    // Имитация ответа от API
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // Проверка учетных данных (в реальном приложении это делается на сервере)
-    if (credentials.email !== 'test@test.com' || credentials.password !== 'test') {
-      throw new Error('Неверный email или пароль');
+    try {
+      const response = await fetch(`${API_URL}/suppliers/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(credentials),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        // Обработка ошибок API
+        const apiError = data as ApiError;
+        
+        // Если API вернул структуру с массивом errors
+        if (apiError.errors && apiError.errors.length > 0) {
+          // Проверяем, есть ли ошибка о ненайденном пользователе
+          const loginError = apiError.errors.find(err => 
+            err.path === 'login' && err.msg.includes('Пользователь не найден')
+          );
+          
+          if (loginError) {
+            throw new Error('Неверный логин или пароль');
+          }
+          
+          // Если есть другие ошибки, берем первую
+          throw new Error(apiError.errors[0].msg || 'Произошла ошибка при входе');
+        }
+        
+        // Если структура ошибки другая
+        throw new Error(apiError.message || 'Произошла ошибка при входе');
+      }
+      
+      const authResponse = data as AuthResponse;
+      
+      // Сохранение токена в localStorage
+      localStorage.setItem('accessToken', authResponse.accessToken);
+      
+      return authResponse;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Произошла ошибка при подключении к серверу');
     }
-    
-    const authResponse: AuthResponse = {
-      user: {
-        id: '1',
-        email: credentials.email,
-        name: 'Администратор',
-        role: 'admin' as any,
-        avatar: 'https://i.pravatar.cc/150?img=1'
-      },
-      token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwibmFtZSI6ItCQ0LTQvNC40L3QuNGB0YLRgNCw0YLQvtGAIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c',
-      refreshToken: 'refresh-token-example'
-    };
-    
-    // Сохранение токена в localStorage
-    if (credentials.rememberMe) {
-      localStorage.setItem('token', authResponse.token);
-    } else {
-      sessionStorage.setItem('token', authResponse.token);
-    }
-    
-    return authResponse;
   }
   
   /**
-   * Выход пользователя
+   * Валидация учетных данных
+   */
+  private validateCredentials(credentials: LoginCredentials): void {
+    if (!credentials.login || credentials.login.length < 4) {
+      throw new Error('Логин должен содержать минимум 4 символа');
+    }
+    
+    if (!credentials.password || credentials.password.length < 8) {
+      throw new Error('Пароль должен содержать минимум 8 символов');
+    }
+  }
+  
+  /**
+   * Выход поставщика
    */
   logout(): void {
-    localStorage.removeItem('token');
-    sessionStorage.removeItem('token');
+    localStorage.removeItem('accessToken');
   }
   
   /**
-   * Получение текущего пользователя
+   * Получение текущего поставщика
    */
-  async getCurrentUser(): Promise<User | null> {
+  async getCurrentUser(): Promise<Supplier | null> {
     const token = this.getToken();
     
     if (!token) {
       return null;
     }
     
-    // В реальном приложении здесь будет запрос к API
-    // const response = await fetch(`${API_URL}/auth/me`, {
-    //   headers: {
-    //     'Authorization': `Bearer ${token}`,
-    //   },
-    // });
-    
-    // if (!response.ok) {
-    //   this.logout();
-    //   return null;
-    // }
-    
-    // const data = await response.json();
-    // return data.user;
-    
-    // Имитация ответа от API
-    return {
-      id: '1',
-      email: 'admin@example.com',
-      name: 'Администратор',
-      role: 'admin' as any,
-      avatar: 'https://i.pravatar.cc/150?img=1'
-    };
+    try {
+      const response = await fetch(`${API_URL}/suppliers/me`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      
+      if (!response.ok) {
+        this.logout();
+        return null;
+      }
+      
+      const data = await response.json();
+      return data.supplier;
+    } catch (error) {
+      this.logout();
+      return null;
+    }
   }
   
   /**
@@ -114,10 +138,10 @@ class AuthService {
   }
   
   /**
-   * Получение токена из localStorage или sessionStorage
+   * Получение токена из localStorage
    */
-  private getToken(): string | null {
-    return localStorage.getItem('token') || sessionStorage.getItem('token');
+  getToken(): string | null {
+    return localStorage.getItem('accessToken');
   }
 }
 
