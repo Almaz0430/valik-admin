@@ -9,6 +9,24 @@ import {
   ArrowLeftIcon, 
   CheckCircleIcon 
 } from '@heroicons/react/24/outline';
+import productService from '../../services/productService';
+import type { CreateProductDTO } from '../../types/product';
+
+// Импортируем интерфейс ProductFormData из файла формы
+interface ProductFormData {
+  title: string;
+  description: string;
+  brand_id: number | null;
+  unit_id: number | null;
+  category_id: number | null;
+  article?: number;
+  length?: number;
+  width?: number;
+  height?: number;
+  weight?: number;
+  depth?: number;
+  price: number;
+}
 
 // Заглушки для API, в реальном приложении заменить на реальные вызовы API
 const mockBrands = [
@@ -33,27 +51,8 @@ const mockCategories = [
   { id: 4, name: 'Крепежные изделия' }
 ];
 
-// Имитация API запроса для создания товара
-const createProductAPI = async (productData: any): Promise<any> => {
-  // Имитация задержки сети
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  console.log('Создание товара:', productData);
-  
-  // Имитация успешного ответа
-  return {
-    id: Math.floor(Math.random() * 1000),
-    ...productData,
-    created_at: new Date().toISOString()
-  };
-};
-
 interface CreateProductProps {
-  defaultValues?: {
-    brand_id?: number;
-    unit_id?: number;
-    category_id?: number;
-  };
+  defaultValues?: Partial<ProductFormData>;
 }
 
 const CreateProduct: React.FC<CreateProductProps> = ({ defaultValues }) => {
@@ -73,12 +72,31 @@ const CreateProduct: React.FC<CreateProductProps> = ({ defaultValues }) => {
     // setCategories(await fetchCategories());
   }, []);
 
-  const handleSubmit = async (formData: any) => {
+  const handleSubmit = async (formData: ProductFormData) => {
     setIsLoading(true);
     setError(null);
     
     try {
-      const createdProduct = await createProductAPI(formData);
+      // Создаем объект CreateProductDTO на основе данных формы
+      const productData: CreateProductDTO = {
+        title: formData.title,
+        description: formData.description,
+        price: formData.price,
+        brand_id: formData.brand_id || undefined,
+        unit_id: formData.unit_id || undefined,
+        category_id: formData.category_id || undefined,
+        article: formData.article,
+        length: formData.length,
+        width: formData.width,
+        height: formData.height,
+        weight: formData.weight,
+        depth: formData.depth
+      };
+      
+      // Вызываем реальный метод API для создания товара
+      const createdProduct = await productService.createProduct(productData);
+      
+      console.log('Товар успешно создан:', createdProduct);
       navigate('/dashboard/products');
     } catch (err) {
       console.error('Ошибка при создании товара:', err);
@@ -164,7 +182,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ defaultValues }) => {
         brands={brands}
         units={units}
         categories={categories}
-        initialData={defaultValues}
+        initialData={defaultValues as ProductFormData}
       />
     </div>
   );
