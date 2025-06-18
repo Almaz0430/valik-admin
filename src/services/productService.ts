@@ -17,6 +17,24 @@ import type {
 const API_URL = 'http://localhost:8080';
 
 /**
+ * Интерфейсы для категорий, брендов и единиц измерения
+ */
+export interface Category {
+  id: number;
+  name: string;
+}
+
+export interface Brand {
+  id: number;
+  name: string;
+}
+
+export interface Unit {
+  id: number;
+  name: string;
+}
+
+/**
  * Класс для работы с API товаров поставщика
  */
 class ProductService {
@@ -152,6 +170,81 @@ class ProductService {
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.message || `Ошибка при удалении товара с ID ${id}`);
+    }
+  }
+
+  /**
+   * Получение списка категорий
+   */
+  async getCategories(): Promise<Category[]> {
+    console.log('Запрос списка категорий');
+    
+    try {
+      const response = await authService.fetchWithAuth(`${API_URL}/categories`);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Ошибка при получении списка категорий:', response.status, errorText);
+        throw new Error(`Ошибка при получении списка категорий: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('Получены данные о категориях:', data);
+      
+      return data.categories || data;
+    } catch (error) {
+      console.error('Ошибка при запросе списка категорий:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Получение списка брендов
+   */
+  async getBrands(): Promise<Brand[]> {
+    console.log('Запрос списка брендов');
+    
+    try {
+      const response = await authService.fetchWithAuth(`${API_URL}/brands`);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Ошибка при получении списка брендов:', response.status, errorText);
+        throw new Error(`Ошибка при получении списка брендов: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('Получены данные о брендах:', data);
+      
+      return data.brands || data;
+    } catch (error) {
+      console.error('Ошибка при запросе списка брендов:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Получение списка единиц измерения
+   */
+  async getUnits(): Promise<Unit[]> {
+    console.log('Запрос списка единиц измерения');
+    
+    try {
+      const response = await authService.fetchWithAuth(`${API_URL}/units`);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Ошибка при получении списка единиц измерения:', response.status, errorText);
+        throw new Error(`Ошибка при получении списка единиц измерения: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('Получены данные о единицах измерения:', data);
+      
+      return data.units || data;
+    } catch (error) {
+      console.error('Ошибка при запросе списка единиц измерения:', error);
+      throw error;
     }
   }
 }

@@ -11,6 +11,7 @@ import {
 } from '@heroicons/react/24/outline';
 import productService from '../../services/productService';
 import type { CreateProductDTO } from '../../types/product';
+import type { Brand, Category, Unit } from '../../services/productService';
 
 // Импортируем интерфейс ProductFormData из файла формы
 interface ProductFormData {
@@ -28,29 +29,6 @@ interface ProductFormData {
   price: number;
 }
 
-// Заглушки для API, в реальном приложении заменить на реальные вызовы API
-const mockBrands = [
-  { id: 1, name: 'Knauf' },
-  { id: 2, name: 'Ceresit' },
-  { id: 3, name: 'Технониколь' },
-  { id: 4, name: 'Волма' }
-];
-
-const mockUnits = [
-  { id: 1, name: 'шт' },
-  { id: 2, name: 'кг' },
-  { id: 3, name: 'м²' },
-  { id: 4, name: 'м³' },
-  { id: 5, name: 'упак' }
-];
-
-const mockCategories = [
-  { id: 1, name: 'Строительные смеси' },
-  { id: 2, name: 'Отделочные материалы' },
-  { id: 3, name: 'Инструменты' },
-  { id: 4, name: 'Крепежные изделия' }
-];
-
 interface CreateProductProps {
   defaultValues?: Partial<ProductFormData>;
 }
@@ -58,18 +36,37 @@ interface CreateProductProps {
 const CreateProduct: React.FC<CreateProductProps> = ({ defaultValues }) => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-  const [brands, setBrands] = useState(mockBrands);
-  const [units, setUnits] = useState(mockUnits);
-  const [categories, setCategories] = useState(mockCategories);
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [units, setUnits] = useState<Unit[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [showTips, setShowTips] = useState(true);
+  const [isDataLoading, setIsDataLoading] = useState(true);
 
-  // В реальном приложении здесь будет загрузка данных с сервера
+  // Загрузка данных с сервера
   useEffect(() => {
-    // Загрузка брендов, единиц измерения и категорий с сервера
-    // setBrands(await fetchBrands());
-    // setUnits(await fetchUnits());
-    // setCategories(await fetchCategories());
+    const fetchData = async () => {
+      setIsDataLoading(true);
+      try {
+        // Параллельная загрузка всех справочников
+        const [categoriesData, brandsData, unitsData] = await Promise.all([
+          productService.getCategories(),
+          productService.getBrands(),
+          productService.getUnits()
+        ]);
+        
+        setCategories(categoriesData);
+        setBrands(brandsData);
+        setUnits(unitsData);
+      } catch (err) {
+        console.error('Ошибка при загрузке справочных данных:', err);
+        setError('Не удалось загрузить справочные данные. Пожалуйста, обновите страницу.');
+      } finally {
+        setIsDataLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
   const handleSubmit = async (formData: ProductFormData) => {
@@ -176,14 +173,21 @@ const CreateProduct: React.FC<CreateProductProps> = ({ defaultValues }) => {
         </div>
       )}
       
-      <ProductForm
-        onSubmit={handleSubmit}
-        isLoading={isLoading}
-        brands={brands}
-        units={units}
-        categories={categories}
-        initialData={defaultValues as ProductFormData}
-      />
+      {isDataLoading ? (
+        <div className="flex justify-center items-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+          <span className="ml-3 text-gray-600">Загрузка данных...</span>
+        </div>
+      ) : (
+        <ProductForm
+          onSubmit={handleSubmit}
+          isLoading={isLoading}
+          brands={brands}
+          units={units}
+          categories={categories}
+          initialData={defaultValues as ProductFormData}
+        />
+      )}
     </div>
   );
 };
