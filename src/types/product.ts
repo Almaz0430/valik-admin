@@ -44,33 +44,103 @@ export enum ProductStatus {
 }
 
 /**
- * Интерфейс товара
+ * Типы для работы с товарами
+ */
+
+/**
+ * Тип данных товара
  */
 export interface Product {
-  id: string;
-  name: string;
-  description: string;
-  sku: string;
+  id: number;
+  title: string;
+  description?: string;
   price: number;
-  discountPrice?: number;
-  category: ProductCategory;
-  subcategory?: string;
-  brand: string;
-  unit: ProductUnit;
-  quantity: number;
-  minOrderQuantity?: number;
-  images: string[];
-  status: ProductStatus;
-  specifications?: Record<string, string>;
+  brand_id?: number;
+  brand_name?: string;
+  unit_id?: number;
+  unit_name?: string;
+  category_id?: number;
+  category_name?: string;
+  article?: number;
+  length?: number;
+  width?: number;
+  height?: number;
   weight?: number;
-  dimensions?: {
-    length: number;
-    width: number;
-    height: number;
-  };
-  createdAt: string;
-  updatedAt: string;
-  supplierId: string;
+  depth?: number;
+  status?: string;
+  stock?: number;
+  created_at?: string;
+  updated_at?: string;
+  supplier_id?: number;
+}
+
+/**
+ * Интерфейс для создания нового товара
+ */
+export interface CreateProductDTO {
+  title: string;
+  description?: string;
+  brand_id?: number;
+  unit_id?: number;
+  category_id?: number;
+  article?: number;
+  price: number;
+  length?: number;
+  width?: number;
+  height?: number;
+  weight?: number;
+  depth?: number;
+}
+
+/**
+ * Интерфейс для обновления товара
+ */
+export interface UpdateProductDTO {
+  title?: string;
+  description?: string;
+  brand_id?: number;
+  unit_id?: number;
+  category_id?: number;
+  article?: number;
+  price?: number;
+  length?: number;
+  width?: number;
+  height?: number;
+  weight?: number;
+  depth?: number;
+  status?: string;
+}
+
+/**
+ * Интерфейс для запроса списка товаров
+ */
+export interface ProductQueryParams {
+  page?: number;
+  limit?: number;
+  sort?: string;
+  order?: 'asc' | 'desc';
+  search?: string;
+  category_id?: number;
+  min_price?: number;
+  max_price?: number;
+  status?: string;
+}
+
+/**
+ * Интерфейс для ответа со списком товаров
+ */
+export interface ProductListResponse {
+  total: number;
+  page: number;
+  limit: number;
+  products: Product[];
+}
+
+/**
+ * Интерфейс для ответа с конкретным товаром
+ */
+export interface ProductResponse {
+  product: Product;
 }
 
 /**

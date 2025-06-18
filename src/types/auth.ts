@@ -46,4 +46,12 @@ export interface AuthResponse {
   message: string;
   supplier: Supplier;
   accessToken: string;
+}
+
+/**
+ * Ответ при обновлении токена
+ */
+export interface TokenRefreshResponse {
+  message: string;
+  accessToken: string;
 } 

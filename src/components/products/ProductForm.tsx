@@ -100,6 +100,21 @@ const ProductForm: React.FC<ProductFormProps> = ({
     }
   };
 
+  // Специальный обработчик для цены, который не принимает отрицательные значения
+  const handlePriceChange = (value: string) => {
+    // Удаляем все символы, кроме цифр и точек
+    const sanitized = value.replace(/[^\d.]/g, '');
+    
+    if (sanitized === '') {
+      handleChange('price', 0);
+    } else {
+      const numValue = parseFloat(sanitized);
+      if (!isNaN(numValue) && numValue >= 0) {
+        handleChange('price', numValue);
+      }
+    }
+  };
+
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
@@ -371,10 +386,11 @@ const ProductForm: React.FC<ProductFormProps> = ({
             <Input
               id="price"
               value={formData.price.toString()}
-              onChange={(e) => handleNumberChange('price', e.target.value)}
+              onChange={(e) => handlePriceChange(e.target.value)}
               placeholder="0"
-              type="number"
-              step="1"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
               fullWidth
               error={errors.price}
               required

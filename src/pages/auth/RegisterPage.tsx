@@ -1,13 +1,12 @@
 /**
- * Страница входа поставщика
- * Современный минималистичный дизайн с использованием Tailwind CSS
+ * Страница регистрации поставщика
  */
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import authService from '../../services/authService';
 import { useAuth } from '../../contexts/AuthContext';
 
-const LoginPage = () => {
+const RegisterPage = () => {
   const navigate = useNavigate();
   const { setAuthData } = useAuth();
   
@@ -16,6 +15,7 @@ const LoginPage = () => {
    */
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   
@@ -25,11 +25,16 @@ const LoginPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (password !== confirmPassword) {
+      setError('Пароли не совпадают');
+      return;
+    }
+    
     try {
       setIsLoading(true);
       setError('');
       
-      const response = await authService.login({
+      const response = await authService.register({
         login,
         password
       });
@@ -41,16 +46,11 @@ const LoginPage = () => {
       navigate('/dashboard');
       
     } catch (err) {
-      // Обработка ошибок авторизации
-      let errorMessage = 'Произошла ошибка при входе. Пожалуйста, попробуйте еще раз.';
+      // Обработка ошибок регистрации
+      let errorMessage = 'Произошла ошибка при регистрации. Пожалуйста, попробуйте еще раз.';
       
       if (err instanceof Error) {
-        if (err.message.includes('Неверный логин или пароль') || 
-            err.message.includes('Пользователь не найден')) {
-          errorMessage = 'Неверный логин или пароль';
-        } else {
-          errorMessage = err.message;
-        }
+        errorMessage = err.message;
       }
       
       setError(errorMessage);
@@ -67,18 +67,18 @@ const LoginPage = () => {
         <div className="fixed top-0 right-0 w-40 h-40 bg-orange-200 rounded-full opacity-20 blur-2xl"></div>
         <div className="fixed bottom-0 left-0 w-60 h-60 bg-amber-300 rounded-full opacity-20 blur-3xl"></div>
         
-        {/* Карточка формы входа */}
+        {/* Карточка формы регистрации */}
         <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl overflow-hidden border border-gray-100 relative z-10">
           {/* Верхняя часть с логотипом */}
           <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white text-center pt-10 pb-12 px-8 rounded-b-[40px]">
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white p-2 mb-4 shadow-lg">
               <img src="/logo.svg" alt="Логотип Valik.kz" className="w-14 h-14 object-contain" />
             </div>
-            <h1 className="text-2xl font-bold text-white mt-4">Личный кабинет</h1>
-            <p className="mt-1 text-orange-100 text-sm">Войдите в систему для доступа к панели управления</p>
+            <h1 className="text-2xl font-bold text-white mt-4">Регистрация поставщика</h1>
+            <p className="mt-1 text-orange-100 text-sm">Создайте аккаунт для доступа к панели управления</p>
           </div>
           
-          {/* Форма входа */}
+          {/* Форма регистрации */}
           <div className="p-8 pt-2">
             {error && (
               <div className="mb-6 bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-lg text-sm">
@@ -109,7 +109,7 @@ const LoginPage = () => {
                     value={login}
                     onChange={(e) => setLogin(e.target.value)}
                     className="pl-10 block w-full border-0 rounded-lg focus:ring-orange-500 focus:outline-none shadow-sm py-3 bg-gray-50"
-                    placeholder="Введите логин"
+                    placeholder="Придумайте логин"
                     required
                     minLength={4}
                     style={{ border: 'none' }}
@@ -134,7 +134,7 @@ const LoginPage = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-10 block w-full border-0 rounded-lg focus:ring-orange-500 focus:outline-none shadow-sm py-3 bg-gray-50"
-                    placeholder="Введите пароль"
+                    placeholder="Придумайте пароль"
                     required
                     minLength={8}
                     style={{ border: 'none' }}
@@ -142,7 +142,32 @@ const LoginPage = () => {
                 </div>
               </div>
               
-              {/* Кнопка входа */}
+              {/* Поле подтверждения пароля */}
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Подтверждение пароля
+                </label>
+                <div className="mt-1 relative rounded-lg shadow-sm">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </div>
+                  <input
+                    id="confirmPassword"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="pl-10 block w-full border-0 rounded-lg focus:ring-orange-500 focus:outline-none shadow-sm py-3 bg-gray-50"
+                    placeholder="Повторите пароль"
+                    required
+                    minLength={8}
+                    style={{ border: 'none' }}
+                  />
+                </div>
+              </div>
+              
+              {/* Кнопка регистрации */}
               <button
                 type="submit"
                 disabled={isLoading}
@@ -156,17 +181,17 @@ const LoginPage = () => {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Вход...
+                    Регистрация...
                   </>
                 ) : (
-                  'Войти в систему'
+                  'Создать аккаунт'
                 )}
               </button>
             </form>
             
-            {/* Футер с ссылкой на регистрацию */}
+            {/* Футер с ссылкой на вход */}
             <div className="mt-8 text-center text-sm text-gray-500">
-              <p>Нет аккаунта? <Link to="/register" className="font-medium text-orange-600 hover:text-orange-500 transition-all">Зарегистрироваться</Link></p>
+              <p>Уже есть аккаунт? <Link to="/login" className="font-medium text-orange-600 hover:text-orange-500 transition-all">Войти</Link></p>
             </div>
           </div>
         </div>
@@ -180,4 +205,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage; 
+export default RegisterPage; 

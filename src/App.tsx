@@ -4,7 +4,16 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import LoginPage from './pages/auth/LoginPage';
+import RegisterPage from './pages/auth/RegisterPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
+import ProductsPage from './pages/products/ProductsPage';
+import ProductsPageMobile from './pages/products/ProductsPageMobile';
+import ProductsPageWrapper from './pages/products/ProductsPageWrapper';
+import CreateProductPage from './pages/products/CreateProductPage';
+import CreateProductPageMobile from './pages/products/CreateProductPageMobile';
+import CreateProductPageWrapper from './pages/products/CreateProductPageWrapper';
+import OrdersPage from './pages/orders/OrdersPage';
+import ProfilePage from './pages/profile/ProfilePage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
 function App() {
@@ -13,14 +22,61 @@ function App() {
       <Router>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
-          <Route 
-            path="/dashboard/*" 
-            element={
-              <ProtectedRoute>
-                <DashboardPage />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <DashboardPage />
+            </ProtectedRoute>
+          } />
+          
+          {/* Основной маршрут для товаров с автоопределением устройства */}
+          <Route path="/dashboard/products" element={
+            <ProtectedRoute>
+              <ProductsPageWrapper />
+            </ProtectedRoute>
+          } />
+          
+          {/* Прямые маршруты для десктопной и мобильной версий */}
+          <Route path="/dashboard/products/desktop" element={
+            <ProtectedRoute>
+              <ProductsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard/products/mobile" element={
+            <ProtectedRoute>
+              <ProductsPageMobile />
+            </ProtectedRoute>
+          } />
+          
+          {/* Основной маршрут для создания товара с автоопределением устройства */}
+          <Route path="/dashboard/products/create" element={
+            <ProtectedRoute>
+              <CreateProductPageWrapper />
+            </ProtectedRoute>
+          } />
+          
+          {/* Прямые маршруты для десктопной и мобильной версий создания товара */}
+          <Route path="/dashboard/products/create/desktop" element={
+            <ProtectedRoute>
+              <CreateProductPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard/products/create/mobile" element={
+            <ProtectedRoute>
+              <CreateProductPageMobile />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/dashboard/orders" element={
+            <ProtectedRoute>
+              <OrdersPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard/profile" element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          } />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </Router>

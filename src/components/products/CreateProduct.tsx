@@ -48,7 +48,15 @@ const createProductAPI = async (productData: any): Promise<any> => {
   };
 };
 
-const CreateProduct: React.FC = () => {
+interface CreateProductProps {
+  defaultValues?: {
+    brand_id?: number;
+    unit_id?: number;
+    category_id?: number;
+  };
+}
+
+const CreateProduct: React.FC<CreateProductProps> = ({ defaultValues }) => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [brands, setBrands] = useState(mockBrands);
@@ -156,6 +164,7 @@ const CreateProduct: React.FC = () => {
         brands={brands}
         units={units}
         categories={categories}
+        initialData={defaultValues}
       />
     </div>
   );

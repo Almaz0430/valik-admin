@@ -57,46 +57,7 @@ const DashboardPage = () => {
     <Layout>
       {/* Заголовок страницы */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Добро пожаловать, {supplier?.login || 'поставщик'}</h1>
-        <p className="mt-1 text-sm text-gray-500">Панель управления товарами</p>
       </div>
-      
-      {/* Информация о пользователе */}
-      {supplier && (
-        <section className="mb-10">
-          <div className="bg-white shadow rounded-lg overflow-hidden">
-            <div className="px-4 py-5 sm:px-6 bg-orange-50">
-              <h2 className="text-lg font-medium text-gray-900">Информация о поставщике</h2>
-              <p className="mt-1 text-sm text-gray-500">Основные данные вашего аккаунта</p>
-            </div>
-            <div className="border-t border-gray-200">
-              <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-8 p-6">
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">ID</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{supplier.id}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Логин</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{supplier.login}</dd>
-                </div>
-                
-                {Object.entries(supplier)
-                  .filter(([key]) => !['id', 'login'].includes(key))
-                  .map(([key, value]) => (
-                    <div key={key}>
-                      <dt className="text-sm font-medium text-gray-500">
-                        {key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}
-                      </dt>
-                      <dd className="mt-1 text-sm text-gray-900">
-                        {typeof value === 'object' ? JSON.stringify(value) : String(value)}
-                      </dd>
-                    </div>
-                  ))}
-              </dl>
-            </div>
-          </div>
-        </section>
-      )}
       
       {/* Основной блок с карточками */}
       <div className="space-y-10">

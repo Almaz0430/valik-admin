@@ -2,14 +2,14 @@
  * Боковая панель навигации
  */
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   HomeIcon, 
   CubeIcon, 
   ShoppingCartIcon,
-  ArrowRightOnRectangleIcon,
-  UserCircleIcon
+  ArrowRightOnRectangleIcon
 } from '@heroicons/react/24/outline';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -18,6 +18,8 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { supplier, logout } = useAuth();
   
   const navItems = [
     { name: 'Главная', path: '/dashboard', icon: HomeIcon },
@@ -30,6 +32,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       return true;
     }
     return location.pathname.startsWith(path) && path !== '/dashboard';
+  };
+  
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Ошибка при выходе:', error);
+    }
   };
   
   return (
@@ -86,18 +97,18 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         <div className="flex-1"></div>
         
         {/* Профиль пользователя */}
-        <div className="p-4 mx-3 mb-4 bg-gray-50 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex items-center space-x-3 mb-3">
-            <UserCircleIcon className="h-10 w-10 text-orange-500" />
-            <div>
-              <p className="text-sm font-medium text-gray-800">user@valik.kz</p>
+        <div className="px-4 py-4 border-t border-gray-100">
+          <div className="mb-3">
+            <div className="flex items-center">
+              <span className="text-xs font-medium text-gray-500 mr-1">Логин:</span>
+              <span className="text-sm font-medium text-gray-800">{supplier ? supplier.login : ''}</span>
             </div>
           </div>
           <button 
-            className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-orange-500 to-amber-500 rounded-lg hover:from-orange-600 hover:to-amber-600 transition-colors duration-300"
-            onClick={() => console.log('Выход из системы')}
+            className="w-full flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors"
+            onClick={handleLogout}
           >
-            <ArrowRightOnRectangleIcon className="h-4 w-4 mr-2" />
+            <ArrowRightOnRectangleIcon className="h-4 w-4 mr-1.5" />
             <span>Выйти</span>
           </button>
         </div>
