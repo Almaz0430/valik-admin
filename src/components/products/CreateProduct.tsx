@@ -27,6 +27,7 @@ interface ProductFormData {
   weight?: number;
   depth?: number;
   price: number;
+  images?: File[];
 }
 
 interface CreateProductProps {
@@ -74,24 +75,60 @@ const CreateProduct: React.FC<CreateProductProps> = ({ defaultValues }) => {
     setError(null);
     
     try {
-      // Создаем объект CreateProductDTO на основе данных формы
-      const productData: CreateProductDTO = {
-        title: formData.title,
-        description: formData.description,
-        price: formData.price,
-        brand_id: formData.brand_id || undefined,
-        unit_id: formData.unit_id || undefined,
-        category_id: formData.category_id || undefined,
-        article: formData.article,
-        length: formData.length,
-        width: formData.width,
-        height: formData.height,
-        weight: formData.weight,
-        depth: formData.depth
-      };
+      // Создаем объект FormData для отправки multipart/form-data
+      const formDataToSend = new FormData();
       
-      // Вызываем реальный метод API для создания товара
-      const createdProduct = await productService.createProduct(productData);
+      // Добавляем все текстовые поля
+      formDataToSend.append('title', formData.title);
+      formDataToSend.append('description', formData.description);
+      formDataToSend.append('price', formData.price.toString());
+      
+      // Добавляем необязательные поля, заменяя undefined на null
+      if (formData.brand_id !== null) {
+        formDataToSend.append('brand_id', formData.brand_id.toString());
+      }
+      
+      if (formData.unit_id !== null) {
+        formDataToSend.append('unit_id', formData.unit_id.toString());
+      }
+      
+      if (formData.category_id !== null) {
+        formDataToSend.append('category_id', formData.category_id.toString());
+      }
+      
+      if (formData.article !== undefined) {
+        formDataToSend.append('article', formData.article.toString());
+      }
+      
+      if (formData.length !== undefined) {
+        formDataToSend.append('length', formData.length.toString());
+      }
+      
+      if (formData.width !== undefined) {
+        formDataToSend.append('width', formData.width.toString());
+      }
+      
+      if (formData.height !== undefined) {
+        formDataToSend.append('height', formData.height.toString());
+      }
+      
+      if (formData.weight !== undefined) {
+        formDataToSend.append('weight', formData.weight.toString());
+      }
+      
+      if (formData.depth !== undefined) {
+        formDataToSend.append('depth', formData.depth.toString());
+      }
+      
+      // Добавляем все изображения в поле files
+      if (formData.images && formData.images.length > 0) {
+        formData.images.forEach(image => {
+          formDataToSend.append('files', image);
+        });
+      }
+      
+      // Вызываем метод API для создания товара с изображениями
+      const createdProduct = await productService.createProductWithImages(formDataToSend);
       
       console.log('Товар успешно создан:', createdProduct);
       navigate('/dashboard/products');

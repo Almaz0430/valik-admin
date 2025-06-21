@@ -1,26 +1,26 @@
 /**
  * Компонент формы создания/редактирования товара
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Input from '../ui/Input';
 import TextArea from '../ui/TextArea';
 import Select from '../ui/Select';
 import Button from '../ui/Button';
-import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
+import { QuestionMarkCircleIcon, XMarkIcon, PhotoIcon } from '@heroicons/react/24/outline';
 
 interface Brand {
   id: number;
-  name: string;
+  title: string;
 }
 
 interface Unit {
   id: number;
-  name: string;
+  title: string;
 }
 
 interface Category {
   id: number;
-  name: string;
+  title: string;
 }
 
 interface ProductFormData {
@@ -36,6 +36,7 @@ interface ProductFormData {
   weight?: number;
   depth?: number;
   price: number;
+  images?: File[];
 }
 
 interface ProductFormProps {
@@ -67,11 +68,15 @@ const ProductForm: React.FC<ProductFormProps> = ({
     height: initialData?.height,
     weight: initialData?.weight,
     depth: initialData?.depth,
-    price: initialData?.price || 0
+    price: initialData?.price || 0,
+    images: []
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [previewImages, setPreviewImages] = useState<string[]>([]);
 
   const handleChange = (field: keyof ProductFormData, value: string | number | null) => {
     setFormData(prev => ({
@@ -114,6 +119,49 @@ const ProductForm: React.FC<ProductFormProps> = ({
       }
     }
   };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      // Преобразуем FileList в массив File
+      const newFiles = Array.from(files);
+      
+      // Создаем URL для предпросмотра
+      const newPreviews = newFiles.map(file => URL.createObjectURL(file));
+      
+      // Обновляем состояние
+      setFormData(prev => ({
+        ...prev,
+        images: [...(prev.images || []), ...newFiles]
+      }));
+      
+      setPreviewImages(prev => [...prev, ...newPreviews]);
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setFormData(prev => {
+      const newImages = [...(prev.images || [])];
+      newImages.splice(index, 1);
+      return { ...prev, images: newImages };
+    });
+    
+    // Освобождаем URL для предотвращения утечек памяти
+    URL.revokeObjectURL(previewImages[index]);
+    
+    setPreviewImages(prev => {
+      const newPreviews = [...prev];
+      newPreviews.splice(index, 1);
+      return newPreviews;
+    });
+  };
+
+  // Очистка URL-ов при размонтировании компонента
+  useEffect(() => {
+    return () => {
+      previewImages.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, []);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -253,7 +301,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
               onChange={(value) => handleChange('brand_id', value ? parseInt(value) : null)}
               options={[
                 { value: '', label: 'Выберите бренд' },
-                ...brands.map(brand => ({ value: brand.id, label: brand.name }))
+                ...brands.map(brand => ({ value: brand.id, label: brand.title }))
               ]}
               error={errors.brand_id}
               fullWidth
@@ -272,7 +320,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
               onChange={(value) => handleChange('unit_id', value ? parseInt(value) : null)}
               options={[
                 { value: '', label: 'Выберите единицу' },
-                ...units.map(unit => ({ value: unit.id, label: unit.name }))
+                ...units.map(unit => ({ value: unit.id, label: unit.title }))
               ]}
               error={errors.unit_id}
               fullWidth
@@ -291,7 +339,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
               onChange={(value) => handleChange('category_id', value ? parseInt(value) : null)}
               options={[
                 { value: '', label: 'Выберите категорию' },
-                ...categories.map(category => ({ value: category.id, label: category.name }))
+                ...categories.map(category => ({ value: category.id, label: category.title }))
               ]}
               error={errors.category_id}
               fullWidth
@@ -396,6 +444,57 @@ const ProductForm: React.FC<ProductFormProps> = ({
               required
             />
           </div>
+        </div>
+      </div>
+      
+      <div className="bg-white shadow-md rounded-lg p-4 sm:p-6">
+        <h2 className="text-lg font-medium text-gray-900 mb-6">
+          Изображения товара
+        </h2>
+        
+        <div className="space-y-4">
+          <div className="flex flex-wrap gap-4">
+            {previewImages.map((preview, index) => (
+              <div key={index} className="relative group">
+                <div className="w-32 h-32 border rounded-md overflow-hidden bg-gray-50">
+                  <img 
+                    src={preview} 
+                    alt={`Предпросмотр ${index + 1}`} 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeImage(index)}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <XMarkIcon className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+            
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="w-32 h-32 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-md hover:border-gray-400 bg-gray-50"
+            >
+              <PhotoIcon className="h-8 w-8 text-gray-400" />
+              <span className="mt-2 text-sm text-gray-500">Добавить фото</span>
+            </button>
+          </div>
+          
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            accept="image/*"
+            multiple
+            className="hidden"
+          />
+          
+          <p className="text-xs text-gray-500">
+            Загрузите до 10 изображений в формате JPG или PNG. Рекомендуемый размер: 1000x1000 пикселей.
+          </p>
         </div>
       </div>
       

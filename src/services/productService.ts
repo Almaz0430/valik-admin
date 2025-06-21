@@ -21,17 +21,17 @@ const API_URL = 'http://localhost:8080';
  */
 export interface Category {
   id: number;
-  name: string;
+  title: string;
 }
 
 export interface Brand {
   id: number;
-  name: string;
+  title: string;
 }
 
 export interface Unit {
   id: number;
-  name: string;
+  title: string;
 }
 
 /**
@@ -246,6 +246,36 @@ class ProductService {
       console.error('Ошибка при запросе списка единиц измерения:', error);
       throw error;
     }
+  }
+
+  /**
+   * Создание нового товара с изображениями
+   */
+  async createProductWithImages(formData: FormData): Promise<Product> {
+    console.log('Отправка запроса на создание товара с изображениями');
+    
+    const response = await authService.fetchWithAuth(`${API_URL}/suppliers/products`, {
+      method: 'POST',
+      // Не указываем Content-Type, чтобы браузер автоматически установил правильный заголовок с boundary
+      body: formData,
+    });
+    
+    if (!response.ok) {
+      let errorMessage = 'Ошибка при создании товара';
+      try {
+        const error = await response.json();
+        errorMessage = error.message || errorMessage;
+      } catch (e) {
+        // Если не удалось распарсить JSON, используем текст ошибки
+        errorMessage = await response.text() || errorMessage;
+      }
+      console.error('Ошибка при создании товара:', errorMessage);
+      throw new Error(errorMessage);
+    }
+    
+    const data = await response.json() as ProductResponse;
+    console.log('Товар с изображениями успешно создан:', data);
+    return data.product;
   }
 }
 

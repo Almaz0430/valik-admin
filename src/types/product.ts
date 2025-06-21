@@ -72,6 +72,8 @@ export interface Product {
   created_at?: string;
   updated_at?: string;
   supplier_id?: number;
+  images?: string[];
+  rating?: number;
 }
 
 /**
@@ -79,17 +81,17 @@ export interface Product {
  */
 export interface CreateProductDTO {
   title: string;
-  description?: string;
-  brand_id?: number;
-  unit_id?: number;
-  category_id?: number;
-  article?: number;
+  description: string;
+  brand_id?: number | null;
+  unit_id?: number | null;
+  category_id?: number | null;
+  article?: number | null;
   price: number;
-  length?: number;
-  width?: number;
-  height?: number;
-  weight?: number;
-  depth?: number;
+  length?: number | null;
+  width?: number | null;
+  height?: number | null;
+  weight?: number | null;
+  depth?: number | null;
 }
 
 /**

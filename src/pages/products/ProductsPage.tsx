@@ -19,6 +19,8 @@ const ProductsPage: React.FC = () => {
     page: 1,
     limit: 10
   });
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   
   // Определение типа устройства
   const { isMobile, isReady } = useDeviceDetect();
@@ -88,6 +90,18 @@ const ProductsPage: React.FC = () => {
     }
   };
 
+  // Открытие модального окна с детальной информацией о товаре
+  const openProductDetails = (product: Product) => {
+    setSelectedProduct(product);
+    setIsModalOpen(true);
+  };
+
+  // Закрытие модального окна
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedProduct(null);
+  };
+
   // Получаем диапазон отображаемых товаров для информации
   const getDisplayRange = () => {
     const start = (queryParams.page! - 1) * queryParams.limit! + 1;
@@ -108,10 +122,23 @@ const ProductsPage: React.FC = () => {
       </Layout>
     );
   }
+
+  // Форматирование даты
+  const formatDate = (dateString: string | undefined) => {
+    if (!dateString) return 'Не указано';
+    const date = new Date(parseInt(dateString));
+    return date.toLocaleDateString('ru-RU', { 
+      day: '2-digit', 
+      month: '2-digit', 
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
   
   return (
     <Layout>
-      <div className="space-y-6 pb-16 lg:pb-0">
+      <div className={`space-y-6 pb-16 lg:pb-0 ${isModalOpen ? 'blur-sm' : ''}`}>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Управление товарами</h1>
@@ -157,20 +184,20 @@ const ProductsPage: React.FC = () => {
           {/* Заголовок таблицы */}
           <div className="bg-gray-50 px-4 sm:px-6 py-3 border-b border-gray-200">
             <div className="grid grid-cols-12 gap-4">
-              <div className="col-span-5 sm:col-span-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <div className="col-span-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Название
               </div>
               <div className="hidden sm:block col-span-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Категория
+                Артикул
               </div>
               <div className="col-span-3 sm:col-span-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Цена
               </div>
               <div className="hidden sm:block col-span-1 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Остаток
+                Рейтинг
               </div>
-              <div className="col-span-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Статус
+              <div className="col-span-3 sm:col-span-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Дата создания
               </div>
               <div className="col-span-2 sm:col-span-1 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Действия
@@ -238,12 +265,20 @@ const ProductsPage: React.FC = () => {
               {products.map((product) => (
                 <div key={product.id} className="px-4 sm:px-6 py-4 hover:bg-gray-50 transition-colors">
                   <div className="grid grid-cols-12 gap-4 items-center">
-                    <div className="col-span-5 sm:col-span-4">
+                    <div className="col-span-4">
                       <div className="flex items-center">
                         <div className="h-10 w-10 bg-gray-100 rounded-md flex-shrink-0 flex items-center justify-center">
-                          <svg className="h-6 w-6 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                          </svg>
+                          {product.images && product.images.length > 0 ? (
+                            <img 
+                              src={product.images[0]} 
+                              alt={product.title} 
+                              className="h-10 w-10 object-cover rounded-md"
+                            />
+                          ) : (
+                            <svg className="h-6 w-6 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                            </svg>
+                          )}
                         </div>
                         <div className="ml-3">
                           <div className="text-sm font-medium text-gray-900 line-clamp-1">{product.title}</div>
@@ -252,30 +287,32 @@ const ProductsPage: React.FC = () => {
                       </div>
                     </div>
                     <div className="hidden sm:block col-span-2">
-                      <div className="text-sm text-gray-900">{product.category_name || 'Не указана'}</div>
+                      <div className="text-sm text-gray-900">{product.article || 'Не указан'}</div>
                     </div>
                     <div className="col-span-3 sm:col-span-2">
                       <div className="text-sm font-medium text-gray-900">{product.price.toLocaleString()} ₸</div>
                     </div>
                     <div className="hidden sm:block col-span-1">
-                      <div className="text-sm text-gray-900">{product.stock || 0} шт.</div>
+                      <div className="text-sm text-gray-900">{product.rating || 0}</div>
                     </div>
-                    <div className="col-span-2">
-                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        product.status === 'active' ? 'bg-green-100 text-green-800' : 
-                        product.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {product.status === 'active' ? 'Активный' : 
-                         product.status === 'pending' ? 'На проверке' : 
-                         product.status === 'draft' ? 'Черновик' : 
-                         'Неактивный'}
-                      </span>
+                    <div className="col-span-3 sm:col-span-2">
+                      <div className="text-sm text-gray-900">{formatDate(product.created_at)}</div>
                     </div>
-                    <div className="col-span-2 sm:col-span-1 text-right">
+                    <div className="col-span-2 sm:col-span-1 text-right flex justify-end items-center space-x-2">
                       <button 
-                        className="text-orange-600 hover:text-orange-900 mr-2"
+                        className="text-blue-600 hover:text-blue-900"
+                        onClick={() => openProductDetails(product)}
+                        title="Детали"
+                      >
+                        <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      </button>
+                      <button 
+                        className="text-orange-600 hover:text-orange-900"
                         onClick={() => navigate(`/dashboard/products/edit/${product.id}`)}
+                        title="Редактировать"
                       >
                         <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -284,6 +321,7 @@ const ProductsPage: React.FC = () => {
                       <button 
                         className="text-red-600 hover:text-red-900"
                         onClick={() => handleDeleteProduct(product.id)}
+                        title="Удалить"
                       >
                         <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -325,6 +363,149 @@ const ProductsPage: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Модальное окно с детальной информацией о товаре */}
+      {isModalOpen && selectedProduct && (
+        <div className="fixed inset-0 overflow-y-auto z-[100]">
+          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 transition-opacity z-[90]" aria-hidden="true">
+              <div className="absolute inset-0 bg-gray-500 opacity-75 backdrop-blur-sm" onClick={closeModal}></div>
+            </div>
+
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl md:max-w-2xl sm:w-full z-[110] relative">
+              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div className="flex justify-between items-start">
+                  <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+                    Детали товара
+                  </h3>
+                  <button
+                    type="button"
+                    className="bg-white rounded-md text-gray-400 hover:text-gray-500 focus:outline-none"
+                    onClick={closeModal}
+                  >
+                    <span className="sr-only">Закрыть</span>
+                    <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                
+                <div className="bg-gray-50 p-4 rounded-md mb-4">
+                  <h4 className="text-md font-medium text-gray-900 mb-2">{selectedProduct.title}</h4>
+                  <p className="text-sm text-gray-600 mb-2">{selectedProduct.description || 'Описание отсутствует'}</p>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">ID товара</p>
+                    <p className="text-sm text-gray-900">{selectedProduct.id}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Артикул</p>
+                    <p className="text-sm text-gray-900">{selectedProduct.article || 'Не указан'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Цена</p>
+                    <p className="text-sm text-gray-900">{selectedProduct.price.toLocaleString()} ₸</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Рейтинг</p>
+                    <p className="text-sm text-gray-900">{selectedProduct.rating || 0}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">ID бренда</p>
+                    <p className="text-sm text-gray-900">{selectedProduct.brand_id || 'Не указан'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">ID категории</p>
+                    <p className="text-sm text-gray-900">{selectedProduct.category_id || 'Не указана'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">ID единицы измерения</p>
+                    <p className="text-sm text-gray-900">{selectedProduct.unit_id || 'Не указана'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">ID поставщика</p>
+                    <p className="text-sm text-gray-900">{selectedProduct.supplier_id || 'Не указан'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Дата создания</p>
+                    <p className="text-sm text-gray-900">{formatDate(selectedProduct.created_at)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Дата обновления</p>
+                    <p className="text-sm text-gray-900">{formatDate(selectedProduct.updated_at)}</p>
+                  </div>
+                </div>
+                
+                <div className="mt-4">
+                  <h4 className="text-sm font-medium text-gray-900 mb-2">Габариты и вес</h4>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Длина</p>
+                      <p className="text-sm text-gray-900">{selectedProduct.length ? `${selectedProduct.length} см` : 'Не указана'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Ширина</p>
+                      <p className="text-sm text-gray-900">{selectedProduct.width ? `${selectedProduct.width} см` : 'Не указана'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Высота</p>
+                      <p className="text-sm text-gray-900">{selectedProduct.height ? `${selectedProduct.height} см` : 'Не указана'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Вес</p>
+                      <p className="text-sm text-gray-900">{selectedProduct.weight ? `${selectedProduct.weight} кг` : 'Не указан'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Глубина</p>
+                      <p className="text-sm text-gray-900">{selectedProduct.depth ? `${selectedProduct.depth} см` : 'Не указана'}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-4">
+                  <h4 className="text-sm font-medium text-gray-900 mb-2">Изображения</h4>
+                  {selectedProduct.images && selectedProduct.images.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {selectedProduct.images.map((image: string, index: number) => (
+                        <div key={index} className="w-20 h-20 border rounded-md overflow-hidden">
+                          <img 
+                            src={image} 
+                            alt={`${selectedProduct.title} - ${index + 1}`} 
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500">Изображения отсутствуют</p>
+                  )}
+                </div>
+              </div>
+              
+              <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button
+                  type="button"
+                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-orange-600 text-base font-medium text-white hover:bg-orange-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm"
+                  onClick={() => navigate(`/dashboard/products/edit/${selectedProduct.id}`)}
+                >
+                  Редактировать
+                </button>
+                <button
+                  type="button"
+                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                  onClick={closeModal}
+                >
+                  Закрыть
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 };
