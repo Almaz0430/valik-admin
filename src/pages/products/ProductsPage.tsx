@@ -7,6 +7,7 @@ import Layout from '../../components/layout/Layout';
 import productService from '../../services/productService';
 import type { Product, ProductQueryParams } from '../../types/product';
 import useDeviceDetect from '../../hooks/useDeviceDetect';
+import ConfirmationModal from '../../components/ui/ConfirmationModal';
 
 const ProductsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -21,6 +22,8 @@ const ProductsPage: React.FC = () => {
   });
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
+  const [productToDelete, setProductToDelete] = useState<number | null>(null);
   
   // Определение типа устройства
   const { isMobile, isReady } = useDeviceDetect();
@@ -74,20 +77,34 @@ const ProductsPage: React.FC = () => {
   };
 
   // Обработчик удаления товара
-  const handleDeleteProduct = async (id: number) => {
-    if (window.confirm('Вы действительно хотите удалить этот товар?')) {
+  const handleDeleteClick = (id: number) => {
+    setProductToDelete(id);
+    setDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (productToDelete) {
       try {
-        await productService.deleteProduct(id);
+        await productService.deleteProduct(productToDelete);
         
         // Обновляем список товаров после удаления
-        setProducts(products.filter(product => product.id !== id));
+        setProducts(products.filter(product => product.id !== productToDelete));
         setTotalProducts(prev => prev - 1);
+        setDeleteModalOpen(false);
+        setProductToDelete(null);
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Произошла ошибка при удалении товара';
         alert(errorMessage);
         console.error(err);
+        setDeleteModalOpen(false);
+        setProductToDelete(null);
       }
     }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteModalOpen(false);
+    setProductToDelete(null);
   };
 
   // Открытие модального окна с детальной информацией о товаре
@@ -138,7 +155,7 @@ const ProductsPage: React.FC = () => {
   
   return (
     <Layout>
-      <div className={`space-y-6 pb-16 lg:pb-0 ${isModalOpen ? 'blur-sm' : ''}`}>
+      <div className={`space-y-6 pb-16 lg:pb-0 ${isModalOpen || deleteModalOpen ? 'blur-sm' : ''}`}>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Управление товарами</h1>
@@ -275,9 +292,9 @@ const ProductsPage: React.FC = () => {
                               className="h-10 w-10 object-cover rounded-md"
                             />
                           ) : (
-                            <svg className="h-6 w-6 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                            </svg>
+                          <svg className="h-6 w-6 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                          </svg>
                           )}
                         </div>
                         <div className="ml-3">
@@ -320,7 +337,7 @@ const ProductsPage: React.FC = () => {
                       </button>
                       <button 
                         className="text-red-600 hover:text-red-900"
-                        onClick={() => handleDeleteProduct(product.id)}
+                        onClick={() => handleDeleteClick(product.id)}
                         title="Удалить"
                       >
                         <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -364,7 +381,18 @@ const ProductsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Модальное окно с детальной информацией о товаре */}
+      {/* Модальное окно подтверждения удаления */}
+      <ConfirmationModal
+        isOpen={deleteModalOpen}
+        title="Удаление товара"
+        message="Вы действительно хотите удалить этот товар? Это действие нельзя отменить."
+        confirmText="Удалить"
+        cancelText="Отмена"
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+        type="danger"
+      />
+      
       {isModalOpen && selectedProduct && (
         <div className="fixed inset-0 overflow-y-auto z-[100]">
           <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">

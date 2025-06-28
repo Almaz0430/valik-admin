@@ -46,6 +46,7 @@ interface ProductFormProps {
   brands: Brand[];
   units: Unit[];
   categories: Category[];
+  isEditMode?: boolean;
 }
 
 const ProductForm: React.FC<ProductFormProps> = ({
@@ -54,7 +55,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
   isLoading = false,
   brands,
   units,
-  categories
+  categories,
+  isEditMode = false
 }) => {
   const [formData, setFormData] = useState<ProductFormData>({
     title: initialData?.title || '',
@@ -513,7 +515,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
           isLoading={isLoading}
           fullWidth={window.innerWidth < 640}
         >
-          Создать товар
+          {isEditMode ? 'Сохранить изменения' : 'Создать товар'}
         </Button>
       </div>
     </form>

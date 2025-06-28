@@ -7,6 +7,7 @@ import Layout from '../../components/layout/Layout';
 import productService from '../../services/productService';
 import type { Product, ProductQueryParams } from '../../types/product';
 import { CubeIcon, PlusIcon, ArrowPathIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import ConfirmationModal from '../../components/ui/ConfirmationModal';
 
 /**
  * Компонент карточки товара для мобильного отображения
@@ -81,8 +82,10 @@ const ProductsPageMobile: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [queryParams, setQueryParams] = useState<ProductQueryParams>({
     page: 1,
-    limit: 5 // Меньше товаров на странице для мобильной версии
+    limit: 10
   });
+  const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
+  const [productToDelete, setProductToDelete] = useState<number | null>(null);
 
   // Загрузка товаров
   useEffect(() => {
@@ -126,18 +129,32 @@ const ProductsPageMobile: React.FC = () => {
     navigate(`/dashboard/products/edit/${id}`);
   };
 
-  const handleDeleteProduct = async (id: number) => {
-    if (window.confirm('Вы действительно хотите удалить этот товар?')) {
+  const handleDeleteClick = (id: number) => {
+    setProductToDelete(id);
+    setDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (productToDelete) {
       try {
-        await productService.deleteProduct(id);
+        await productService.deleteProduct(productToDelete);
         
-        setProducts(products.filter(product => product.id !== id));
+        setProducts(products.filter(product => product.id !== productToDelete));
         setTotalProducts(prev => prev - 1);
+        setDeleteModalOpen(false);
+        setProductToDelete(null);
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Произошла ошибка при удалении товара';
         alert(errorMessage);
+        setDeleteModalOpen(false);
+        setProductToDelete(null);
       }
     }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteModalOpen(false);
+    setProductToDelete(null);
   };
 
   // Расчет данных для пагинации
@@ -155,7 +172,7 @@ const ProductsPageMobile: React.FC = () => {
 
   return (
     <Layout>
-      <div className="pb-20">
+      <div className={`pb-20 ${deleteModalOpen ? 'blur-sm' : ''}`}>
         {/* Заголовок страницы */}
         <div className="mb-4">
           <h1 className="text-xl font-bold text-gray-900">Товары</h1>
@@ -255,7 +272,7 @@ const ProductsPageMobile: React.FC = () => {
                     key={product.id}
                     product={product} 
                     onEdit={handleEditProduct}
-                    onDelete={handleDeleteProduct}
+                    onDelete={handleDeleteClick}
                   />
                 ))}
               </div>
@@ -304,6 +321,18 @@ const ProductsPageMobile: React.FC = () => {
           </>
         )}
       </div>
+
+      {/* Модальное окно подтверждения удаления */}
+      <ConfirmationModal
+        isOpen={deleteModalOpen}
+        title="Удаление товара"
+        message="Вы действительно хотите удалить этот товар? Это действие нельзя отменить."
+        confirmText="Удалить"
+        cancelText="Отмена"
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+        type="danger"
+      />
     </Layout>
   );
 };

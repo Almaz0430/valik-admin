@@ -12,6 +12,7 @@ import ProductsPageWrapper from './pages/products/ProductsPageWrapper';
 import CreateProductPage from './pages/products/CreateProductPage';
 import CreateProductPageMobile from './pages/products/CreateProductPageMobile';
 import CreateProductPageWrapper from './pages/products/CreateProductPageWrapper';
+import EditProductPage from './pages/products/EditProductPage';
 import OrdersPage from './pages/orders/OrdersPage';
 import ProfilePage from './pages/profile/ProfilePage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -64,6 +65,13 @@ function App() {
           <Route path="/dashboard/products/create/mobile" element={
             <ProtectedRoute>
               <CreateProductPageMobile />
+            </ProtectedRoute>
+          } />
+          
+          {/* Маршрут для редактирования товара */}
+          <Route path="/dashboard/products/edit/:id" element={
+            <ProtectedRoute>
+              <EditProductPage />
             </ProtectedRoute>
           } />
           

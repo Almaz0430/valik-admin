@@ -277,6 +277,54 @@ class ProductService {
     console.log('Товар с изображениями успешно создан:', data);
     return data.product;
   }
+
+  /**
+   * Обновление товара с изображениями
+   * 
+   * Использует эндпоинт PATCH /suppliers/products/:id для обновления информации о товаре
+   * Эндпоинт проверяет принадлежность товара авторизованному поставщику
+   * и обновляет только те поля, которые были переданы в запросе
+   * 
+   * @param id ID товара для обновления
+   * @param formData Данные товара в формате FormData (multipart/form-data)
+   * @returns Обновленный товар
+   */
+  async updateProductWithImages(id: number, formData: FormData): Promise<Product> {
+    console.log(`Отправка запроса на обновление товара с ID ${id} с изображениями`);
+    
+    // Используем эндпоинт для обновления товара поставщика
+    const response = await authService.fetchWithAuth(`${API_URL}/suppliers/products/${id}`, {
+      method: 'PATCH',
+      // Не указываем Content-Type, чтобы браузер автоматически установил правильный заголовок с boundary
+      body: formData,
+    });
+    
+    if (!response.ok) {
+      let errorMessage = `Ошибка при обновлении товара с ID ${id}`;
+      try {
+        const error = await response.json();
+        errorMessage = error.message || errorMessage;
+      } catch (e) {
+        // Если не удалось распарсить JSON, используем текст ошибки
+        errorMessage = await response.text() || errorMessage;
+      }
+      console.error('Ошибка при обновлении товара:', errorMessage);
+      throw new Error(errorMessage);
+    }
+    
+    const data = await response.json() as ProductResponse;
+    console.log('Товар с изображениями успешно обновлен:', data);
+    
+    // Проверяем структуру ответа
+    if (!data || !data.product) {
+      console.warn('Сервер вернул успешный ответ, но структура ответа не соответствует ожидаемой:', data);
+      // Если структура ответа не соответствует ожидаемой, но запрос успешен,
+      // возвращаем данные как есть, предполагая, что сервер вернул сам продукт, а не обертку
+      return data as unknown as Product;
+    }
+    
+    return data.product;
+  }
 }
 
 export default new ProductService(); 
