@@ -102,9 +102,7 @@ const DashboardPage = () => {
         />
 
         {/* Подсказка для новых пользователей */}
-        <HelpSection 
-          onOpenGuide={() => console.log('Открыть руководство')}
-        />
+        <HelpSection />
       </div>
       
       {/* Отображение активной подсказки */}

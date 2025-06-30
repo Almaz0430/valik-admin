@@ -15,6 +15,7 @@ import CreateProductPageWrapper from './pages/products/CreateProductPageWrapper'
 import EditProductPage from './pages/products/EditProductPage';
 import OrdersPage from './pages/orders/OrdersPage';
 import ProfilePage from './pages/profile/ProfilePage';
+import GuidePage from './pages/GuidePage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
 function App() {
@@ -85,6 +86,14 @@ function App() {
               <ProfilePage />
             </ProtectedRoute>
           } />
+          
+          {/* Маршрут для страницы руководства */}
+          <Route path="/dashboard/guide" element={
+            <ProtectedRoute>
+              <GuidePage />
+            </ProtectedRoute>
+          } />
+          
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </Router>

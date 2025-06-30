@@ -3,6 +3,7 @@
  */
 import React from 'react';
 import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
+import { Link } from 'react-router-dom';
 
 interface HelpSectionProps {
   title?: string;
@@ -29,12 +30,21 @@ const HelpSection: React.FC<HelpSectionProps> = ({
             {description}
           </p>
           <div className="mt-4">
-            <button 
-              className="inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-              onClick={onOpenGuide}
-            >
-              {buttonText}
-            </button>
+            {onOpenGuide ? (
+              <button 
+                className="inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                onClick={onOpenGuide}
+              >
+                {buttonText}
+              </button>
+            ) : (
+              <Link 
+                to="/dashboard/guide" 
+                className="inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+              >
+                {buttonText}
+              </Link>
+            )}
           </div>
         </div>
       </div>
