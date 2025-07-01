@@ -1,7 +1,7 @@
 /**
  * Главная страница дашборда для поставщиков строительных товаров
  */
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Layout from '../../components/layout/Layout';
 import ProductManagement from '../../components/dashboard/ProductManagement';
 import OrderManagement from '../../components/dashboard/OrderManagement';
@@ -9,7 +9,7 @@ import RecentActivities from '../../components/dashboard/RecentActivities';
 import HelpSection from '../../components/dashboard/HelpSection';
 import Tooltip from '../../components/dashboard/Tooltip';
 import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
-import { useAuth } from '../../contexts/AuthContext';
+// import { useAuth } from '../../contexts/AuthContext';
 
 interface Activity {
   id: number;
@@ -19,7 +19,7 @@ interface Activity {
 }
 
 const DashboardPage = () => {
-  const { supplier } = useAuth();
+  // const { supplier } = useAuth();
   
   // Имитация данных для дашборда
   const [stats] = useState({

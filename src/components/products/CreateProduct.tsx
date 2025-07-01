@@ -10,7 +10,7 @@ import {
   CheckCircleIcon 
 } from '@heroicons/react/24/outline';
 import productService from '../../services/productService';
-import type { CreateProductDTO, UpdateProductDTO } from '../../types/product';
+// import type { CreateProductDTO, UpdateProductDTO } from '../../types/product';
 import type { Brand, Category, Unit } from '../../services/productService';
 
 // Импортируем интерфейс ProductFormData из файла формы

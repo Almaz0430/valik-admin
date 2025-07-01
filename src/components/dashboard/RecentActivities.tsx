@@ -16,7 +16,7 @@ interface RecentActivitiesProps {
   onShowTooltip?: (id: string) => void;
 }
 
-const RecentActivities: React.FC<RecentActivitiesProps> = ({ activities, onShowTooltip }) => {
+const RecentActivities: React.FC<RecentActivitiesProps> = ({ onShowTooltip }) => {
   return (
     <section>
       <div className="flex items-center justify-between mb-6">

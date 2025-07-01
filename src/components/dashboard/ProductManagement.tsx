@@ -16,7 +16,6 @@ interface ProductManagementProps {
 }
 
 const ProductManagement: React.FC<ProductManagementProps> = ({
-  pendingProducts,
   onShowTooltip
 }) => {
   return (

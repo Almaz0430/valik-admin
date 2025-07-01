@@ -98,7 +98,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
   const handleNumberChange = (field: keyof ProductFormData, value: string) => {
     if (value === '') {
-      handleChange(field, undefined);
+      handleChange(field, null);
     } else {
       const numValue = parseFloat(value);
       if (!isNaN(numValue)) {

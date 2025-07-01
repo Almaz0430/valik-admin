@@ -3,7 +3,7 @@
  */
 import React from 'react';
 
-type ButtonVariant = 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'light' | 'dark' | 'link';
+type ButtonVariant = 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'light' | 'dark' | 'link' | 'custom';
 type ButtonSize = 'xs' | 'sm' | 'md' | 'lg';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -40,6 +40,7 @@ export const Button: React.FC<ButtonProps> = ({
     light: 'bg-gray-100 hover:bg-gray-200 text-gray-800 focus:ring-gray-300',
     dark: 'bg-gray-800 hover:bg-gray-900 text-white focus:ring-gray-700',
     link: 'bg-transparent text-orange-600 hover:text-orange-800 hover:underline focus:ring-orange-500 p-0',
+    custom: '',
   };
 
   const sizeStyles: Record<ButtonSize, string> = {
