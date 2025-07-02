@@ -14,7 +14,9 @@ import type {
 /**
  * Базовый URL API
  */
-const API_URL = 'http://localhost:8080';
+const API_URL = import.meta.env.VITE_NODE_ENV === 'development'
+  ? 'http://localhost:8080'
+  : 'https://api.valik.kz'
 
 /**
  * Интерфейсы для категорий, брендов и единиц измерения
