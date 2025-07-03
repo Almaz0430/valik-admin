@@ -129,6 +129,50 @@ const ProductsPage: React.FC = () => {
   // Общее количество страниц
   const totalPages = Math.ceil(totalProducts / queryParams.limit!);
   
+  // Функция для генерации массива страниц для пагинации
+  const getPaginationRange = () => {
+    const maxVisiblePages = 5;
+    const currentPage = queryParams.page || 1;
+    
+    if (totalPages <= maxVisiblePages) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    
+    const sidePages = Math.floor((maxVisiblePages - 3) / 2);
+    
+    let startPage = Math.max(2, currentPage - sidePages);
+    let endPage = Math.min(totalPages - 1, currentPage + sidePages);
+    
+    if (currentPage - sidePages < 2) {
+      endPage = Math.min(totalPages - 1, maxVisiblePages - 1);
+    }
+    if (currentPage + sidePages > totalPages - 1) {
+      startPage = Math.max(2, totalPages - maxVisiblePages + 2);
+    }
+    
+    const pages = [];
+    
+    pages.push(1);
+    
+    if (startPage > 2) {
+      pages.push('ellipsis-start');
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    
+    if (endPage < totalPages - 1) {
+      pages.push('ellipsis-end');
+    }
+    
+    if (totalPages > 1) {
+      pages.push(totalPages);
+    }
+    
+    return pages;
+  };
+
   // Если идет перенаправление, показываем загрузку
   if (isReady && isMobile) {
     return (
@@ -360,19 +404,32 @@ const ProductsPage: React.FC = () => {
                 </div>
                 {totalPages > 1 && (
                   <div className="flex space-x-1">
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                      <button
-                        key={page}
-                        onClick={() => handlePageChange(page)}
-                        className={`px-3 py-1 border border-gray-300 rounded-md text-sm font-medium ${
-                          page === queryParams.page
-                            ? 'bg-orange-500 text-white hover:bg-orange-600'
-                            : 'bg-white text-gray-700 hover:bg-gray-50'
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    ))}
+                    {getPaginationRange().map((page, index) => {
+                      if (page === 'ellipsis-start' || page === 'ellipsis-end') {
+                        return (
+                          <div 
+                            key={`ellipsis-${index}`} 
+                            className="px-3 py-1 text-gray-500 flex items-center justify-center"
+                          >
+                            ...
+                          </div>
+                        );
+                      }
+                      
+                      return (
+                        <button
+                          key={`page-${page}`}
+                          onClick={() => handlePageChange(Number(page))}
+                          className={`px-3 py-1 border border-gray-300 rounded-md text-sm font-medium ${
+                            page === queryParams.page
+                              ? 'bg-orange-500 text-white hover:bg-orange-600'
+                              : 'bg-white text-gray-700 hover:bg-gray-50'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>

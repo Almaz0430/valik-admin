@@ -23,7 +23,7 @@ interface Category {
   title: string;
 }
 
-interface ProductFormData {
+export interface ProductFormData {
   title: string;
   description: string;
   brand_id: number | null;
@@ -47,6 +47,7 @@ interface ProductFormProps {
   units: Unit[];
   categories: Category[];
   isEditMode?: boolean;
+  productId?: number;
 }
 
 const ProductForm: React.FC<ProductFormProps> = ({
@@ -56,7 +57,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
   brands,
   units,
   categories,
-  isEditMode = false
+  isEditMode = false,
+  productId
 }) => {
   const [formData, setFormData] = useState<ProductFormData>({
     title: initialData?.title || '',
@@ -79,6 +81,9 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewImages, setPreviewImages] = useState<string[]>([]);
+  const [isUploadingImages, setIsUploadingImages] = useState<boolean>(false);
+  const [uploadSuccess, setUploadSuccess] = useState<boolean>(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const handleChange = (field: keyof ProductFormData, value: string | number | null) => {
     setFormData(prev => ({
@@ -128,16 +133,60 @@ const ProductForm: React.FC<ProductFormProps> = ({
       // Преобразуем FileList в массив File
       const newFiles = Array.from(files);
       
-      // Создаем URL для предпросмотра
-      const newPreviews = newFiles.map(file => URL.createObjectURL(file));
+      // Если мы в режиме редактирования и есть ID товара, сразу загружаем изображения на сервер
+      if (isEditMode && productId) {
+        handleUploadImages(newFiles);
+      } else {
+        // В режиме создания просто добавляем файлы в состояние формы
+        // Создаем URL для предпросмотра
+        const newPreviews = newFiles.map(file => URL.createObjectURL(file));
+        
+        // Обновляем состояние
+        setFormData(prev => ({
+          ...prev,
+          images: [...(prev.images || []), ...newFiles]
+        }));
+        
+        setPreviewImages(prev => [...prev, ...newPreviews]);
+      }
+    }
+  };
+
+  // Функция для загрузки изображений в режиме редактирования
+  const handleUploadImages = async (files: File[]) => {
+    if (!productId || !isEditMode) return;
+    
+    setIsUploadingImages(true);
+    setUploadError(null);
+    setUploadSuccess(false);
+    
+    try {
+      // Импортируем сервис для работы с товарами
+      const productService = (await import('../../services/productService')).default;
       
-      // Обновляем состояние
-      setFormData(prev => ({
-        ...prev,
-        images: [...(prev.images || []), ...newFiles]
-      }));
+      // Загружаем изображения на сервер
+      const success = await productService.addProductImages(productId, files);
       
-      setPreviewImages(prev => [...prev, ...newPreviews]);
+      if (success) {
+        // Создаем URL для предпросмотра загруженных изображений
+        const newPreviews = files.map(file => URL.createObjectURL(file));
+        
+        // Обновляем состояние превью
+        setPreviewImages(prev => [...prev, ...newPreviews]);
+        setUploadSuccess(true);
+        
+        // Скрываем сообщение об успехе через 3 секунды
+        setTimeout(() => {
+          setUploadSuccess(false);
+        }, 3000);
+      } else {
+        setUploadError('Не удалось загрузить изображения. Пожалуйста, попробуйте снова.');
+      }
+    } catch (error) {
+      console.error('Ошибка при загрузке изображений:', error);
+      setUploadError(error instanceof Error ? error.message : 'Произошла ошибка при загрузке изображений');
+    } finally {
+      setIsUploadingImages(false);
     }
   };
 
@@ -194,6 +243,11 @@ const ProductForm: React.FC<ProductFormProps> = ({
       newErrors.price = 'Цена не может быть отрицательной';
     }
 
+    // Проверка наличия изображений
+    if (!isEditMode && (!formData.images || formData.images.length === 0)) {
+      newErrors.images = 'Загрузите хотя бы одно изображение товара';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -245,13 +299,13 @@ const ProductForm: React.FC<ProductFormProps> = ({
               id="title"
               value={formData.title}
               onChange={(e) => handleChange('title', e.target.value)}
-              placeholder="Например: Цемент М500 Д0 ПЦ, 50 кг"
+              placeholder="Например: Цемент"
               error={errors.title}
               fullWidth
               required
             />
             {!errors.title && (
-              <p className="mt-1 text-xs text-gray-500">Оптимальная длина: 50-70 символов</p>
+              <p className="mt-1 text-xs text-gray-500">Оптимальная длина: 10-15 символов</p>
             )}
           </div>
           
@@ -451,10 +505,22 @@ const ProductForm: React.FC<ProductFormProps> = ({
       
       <div className="bg-white shadow-md rounded-lg p-4 sm:p-6">
         <h2 className="text-lg font-medium text-gray-900 mb-6">
-          Изображения товара
+          Изображения товара *
         </h2>
         
         <div className="space-y-4">
+          {isEditMode && uploadSuccess && (
+            <div className="bg-green-50 border-l-4 border-green-500 p-3 mb-4 rounded-md">
+              <p className="text-sm text-green-700">Изображения успешно загружены</p>
+            </div>
+          )}
+          
+          {isEditMode && uploadError && (
+            <div className="bg-red-50 border-l-4 border-red-500 p-3 mb-4 rounded-md">
+              <p className="text-sm text-red-700">{uploadError}</p>
+            </div>
+          )}
+          
           <div className="flex flex-wrap gap-4">
             {previewImages.map((preview, index) => (
               <div key={index} className="relative group">
@@ -478,10 +544,20 @@ const ProductForm: React.FC<ProductFormProps> = ({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="w-32 h-32 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-md hover:border-gray-400 bg-gray-50"
+              disabled={isUploadingImages}
+              className={`w-32 h-32 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-md hover:border-gray-400 bg-gray-50 ${isUploadingImages ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              <PhotoIcon className="h-8 w-8 text-gray-400" />
-              <span className="mt-2 text-sm text-gray-500">Добавить фото</span>
+              {isUploadingImages ? (
+                <>
+                  <div className="animate-spin h-6 w-6 border-2 border-orange-500 border-t-transparent rounded-full"></div>
+                  <span className="mt-2 text-sm text-gray-500">Загрузка...</span>
+                </>
+              ) : (
+                <>
+                  <PhotoIcon className="h-8 w-8 text-gray-400" />
+                  <span className="mt-2 text-sm text-gray-500">Добавить фото</span>
+                </>
+              )}
             </button>
           </div>
           
@@ -492,11 +568,19 @@ const ProductForm: React.FC<ProductFormProps> = ({
             accept="image/*"
             multiple
             className="hidden"
+            required={!isEditMode && (!formData.images || formData.images.length === 0)}
           />
           
-          <p className="text-xs text-gray-500">
-            Загрузите до 10 изображений в формате JPG или PNG. Рекомендуемый размер: 1000x1000 пикселей.
-          </p>
+          {errors.images ? (
+            <p className="text-xs text-red-500">{errors.images}</p>
+          ) : (
+            <p className="text-xs text-gray-500">
+              {isEditMode 
+                ? 'Загрузите до 10 изображений в формате JPG или PNG. Максимальный размер каждого файла: 10 МБ.'
+                : 'Загрузите до 10 изображений в формате JPG или PNG. Рекомендуемый размер: 1000x1000 пикселей.'
+              }
+            </p>
+          )}
         </div>
       </div>
       

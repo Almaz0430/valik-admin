@@ -4,19 +4,25 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '../../components/layout/Layout';
-import CreateProduct from '../../components/products/CreateProduct';
+import ProductForm, { type ProductFormData } from '../../components/products/ProductForm';
 import productService from '../../services/productService';
 import type { Product } from '../../types/product';
+import type { Brand, Category, Unit } from '../../services/productService';
 
 const EditProductPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [units, setUnits] = useState<Unit[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchProduct = async () => {
+    const fetchProductData = async () => {
       if (!id) {
         setError('ID товара не указан');
         setIsLoading(false);
@@ -24,21 +30,27 @@ const EditProductPage: React.FC = () => {
       }
 
       try {
-        // Получаем список всех товаров
-        const response = await productService.getProducts({ limit: 100 });
+        const productId = parseInt(id);
         
-        // Ищем товар с нужным ID
-        const foundProduct = response.products.find(
-          (p) => p.id === parseInt(id) || p.id === Number(id) || p.id.toString() === id
-        );
+        // Параллельно загружаем данные товара и справочники
+        const [productData, brandsData, unitsData, categoriesData] = await Promise.all([
+          productService.getProduct(productId),
+          productService.getBrands(),
+          productService.getUnits(),
+          productService.getCategories()
+        ]);
         
-        if (!foundProduct) {
-          throw new Error(`Товар с ID ${id} не найден`);
-        }
+        const foundProduct = productData.hasOwnProperty('product') 
+          ? (productData as any).product 
+          : productData;
         
         setProduct(foundProduct);
+        setBrands(brandsData);
+        setUnits(unitsData);
+        setCategories(categoriesData);
+
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Произошла ошибка при загрузке товара';
+        const errorMessage = err instanceof Error ? err.message : 'Произошла ошибка при загрузке данных';
         setError(errorMessage);
         console.error(err);
       } finally {
@@ -46,10 +58,40 @@ const EditProductPage: React.FC = () => {
       }
     };
 
-    fetchProduct();
+    fetchProductData();
   }, [id]);
+  
+  const handleUpdateProduct = async (formData: ProductFormData) => {
+    if (!id) return;
+    
+    setIsSubmitting(true);
+    setSubmitError(null);
+    
+    try {
+      // Исключаем 'images' из данных перед отправкой
+      const { images, ...productData } = formData;
 
-  // Преобразуем данные товара в формат, понятный для компонента CreateProduct
+      // Преобразуем null в undefined для соответствия UpdateProductDTO
+      const payload = Object.fromEntries(
+        Object.entries(productData).map(([key, value]) => [key, value === null ? undefined : value])
+      );
+      
+      await productService.updateProduct(parseInt(id), payload);
+      
+      // Показываем сообщение об успехе и перенаправляем
+      alert('Товар успешно обновлен!');
+      navigate('/dashboard/products');
+      
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Не удалось обновить товар';
+      setSubmitError(errorMessage);
+      console.error('Ошибка при обновлении товара:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Преобразуем данные товара в формат, понятный для компонента ProductForm
   const getInitialData = () => {
     if (!product) return undefined;
 
@@ -66,7 +108,7 @@ const EditProductPage: React.FC = () => {
       weight: product.weight,
       depth: product.depth,
       price: product.price,
-      images: [] // Изображения будут загружены отдельно
+      images: [] // Изображения управляются отдельно внутри формы
     };
   };
 
@@ -98,11 +140,23 @@ const EditProductPage: React.FC = () => {
             </div>
           </div>
         ) : product ? (
-          <CreateProduct 
-            defaultValues={getInitialData()} 
-            isEditMode={true}
-            productId={parseInt(id!)}
-          />
+          <>
+            {submitError && (
+              <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md mb-6">
+                <p className="text-sm text-red-700">{submitError}</p>
+              </div>
+            )}
+            <ProductForm
+              initialData={getInitialData()} 
+              onSubmit={handleUpdateProduct}
+              isLoading={isSubmitting}
+              brands={brands}
+              units={units}
+              categories={categories}
+              isEditMode={true}
+              productId={parseInt(id!)}
+            />
+          </>
         ) : (
           <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-md">
             <div className="flex">

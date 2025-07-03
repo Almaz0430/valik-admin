@@ -15,8 +15,9 @@ import type {
  * Базовый URL API
  */
 const API_URL = import.meta.env.VITE_NODE_ENV === 'development'
-  ? 'http://localhost:8080'
-  : 'https://api.valik.kz'
+? 'http://localhost:8080'
+: 'https://api.valik.kz'
+
 
 /**
  * Интерфейсы для категорий, брендов и единиц измерения
@@ -110,9 +111,21 @@ class ProductService {
       throw new Error(`Товар с ID ${id} не найден`);
     }
     
-    const data = await response.json() as ProductResponse;
-    console.log('Получены данные о товаре:', data);
-    return data.product;
+    try {
+      const data = await response.json();
+      console.log('Получены данные о товаре:', data);
+      
+      // Проверяем, является ли возвращаемое значение оберткой или самим товаром
+      if (data && data.product) {
+        return data.product;
+      }
+      
+      // Если нет обертки product, возвращаем данные как есть
+      return data;
+    } catch (error) {
+      console.error(`Ошибка при обработке данных товара ${id}:`, error);
+      throw new Error(`Ошибка при обработке данных товара с ID ${id}`);
+    }
   }
   
   /**
@@ -145,7 +158,7 @@ class ProductService {
    */
   async updateProduct(id: number, productData: UpdateProductDTO): Promise<Product> {
     const response = await authService.fetchWithAuth(`${API_URL}/suppliers/products/${id}`, {
-      method: 'PUT',
+      method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -326,6 +339,60 @@ class ProductService {
     }
     
     return data.product;
+  }
+
+  /**
+   * Добавление новых изображений к существующему товару
+   * 
+   * @param id ID товара, к которому добавляются изображения
+   * @param files Массив файлов изображений
+   * @returns Успешность операции
+   */
+  async addProductImages(id: number, files: File[]): Promise<boolean> {
+    console.log(`Отправка запроса на добавление изображений к товару с ID ${id}`);
+    
+    const formData = new FormData();
+    
+    // Добавляем все изображения в поле files
+    files.forEach(file => {
+      formData.append('files', file);
+    });
+    
+    // Используем эндпоинт для добавления изображений к товару
+    const response = await authService.fetchWithAuth(`${API_URL}/suppliers/products/${id}`, {
+      method: 'POST',
+      // Не указываем Content-Type, чтобы браузер автоматически установил правильный заголовок с boundary
+      body: formData,
+    });
+    
+    if (!response.ok) {
+      let errorMessage = `Ошибка при добавлении изображений к товару с ID ${id}`;
+      try {
+        const error = await response.json();
+        errorMessage = error.message || errorMessage;
+      } catch (e) {
+        // Если не удалось распарсить JSON, используем текст ошибки
+        errorMessage = await response.text() || errorMessage;
+      }
+      console.error('Ошибка при добавлении изображений:', errorMessage);
+      throw new Error(errorMessage);
+    }
+    
+    try {
+      const data = await response.json();
+      console.log('Ответ сервера после добавления изображений:', data);
+      
+      // Проверяем успешность операции
+      if (data && data.message === "OK") {
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error(`Ошибка при обработке данных после добавления изображений к товару ${id}:`, error);
+      // Если не удалось распарсить JSON, но запрос успешен, считаем операцию успешной
+      return true;
+    }
   }
 }
 

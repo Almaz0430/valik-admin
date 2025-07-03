@@ -7,8 +7,9 @@ import type { AuthResponse, LoginCredentials, Supplier, TokenRefreshResponse } f
  * Базовый URL API
  */
 const API_URL = import.meta.env.VITE_NODE_ENV === 'development'
-  ? 'http://localhost:8080'
-  : 'https://api.valik.kz'
+? 'http://localhost:8080'
+: 'https://api.valik.kz'
+
 
 /**
  * Время жизни токена в миллисекундах (предположим 10 минут)

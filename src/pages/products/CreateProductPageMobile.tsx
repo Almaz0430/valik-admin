@@ -1,13 +1,15 @@
 /**
  * Мобильная версия страницы создания нового товара
  */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../../components/layout/Layout';
 import { 
   ArrowLeftIcon, 
   InformationCircleIcon, 
-  CheckIcon 
+  CheckIcon,
+  PhotoIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 import Input from '../../components/ui/Input';
 import TextArea from '../../components/ui/TextArea';
@@ -65,8 +67,12 @@ const CreateProductPageMobile: React.FC = () => {
     width: undefined as number | undefined,
     height: undefined as number | undefined,
     weight: undefined as number | undefined,
+    images: [] as File[]
   });
   
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [previewImages, setPreviewImages] = useState<string[]>([]);
+
   useEffect(() => {
     document.title = 'Создание товара | Valik.kz';
     return () => { document.title = 'Valik.kz'; };
@@ -109,6 +115,58 @@ const CreateProductPageMobile: React.FC = () => {
     }
   };
   
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      // Преобразуем FileList в массив File
+      const newFiles = Array.from(files);
+      
+      // Создаем URL для предпросмотра
+      const newPreviews = newFiles.map(file => URL.createObjectURL(file));
+      
+      // Обновляем состояние
+      setFormData(prev => ({
+        ...prev,
+        images: [...prev.images, ...newFiles]
+      }));
+      
+      setPreviewImages(prev => [...prev, ...newPreviews]);
+
+      // Очистка ошибки при добавлении изображений
+      if (errors.images) {
+        setErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.images;
+          return newErrors;
+        });
+      }
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setFormData(prev => {
+      const newImages = [...prev.images];
+      newImages.splice(index, 1);
+      return { ...prev, images: newImages };
+    });
+    
+    // Освобождаем URL для предотвращения утечек памяти
+    URL.revokeObjectURL(previewImages[index]);
+    
+    setPreviewImages(prev => {
+      const newPreviews = [...prev];
+      newPreviews.splice(index, 1);
+      return newPreviews;
+    });
+  };
+
+  // Очистка URL-ов при размонтировании компонента
+  useEffect(() => {
+    return () => {
+      previewImages.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, [previewImages]);
+  
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
     
@@ -122,6 +180,11 @@ const CreateProductPageMobile: React.FC = () => {
     
     if (!formData.price || formData.price <= 0) {
       newErrors.price = 'Укажите цену';
+    }
+    
+    // Проверка наличия изображений
+    if (!formData.images || formData.images.length === 0) {
+      newErrors.images = 'Загрузите хотя бы одно изображение товара';
     }
     
     setErrors(newErrors);
@@ -138,7 +201,43 @@ const CreateProductPageMobile: React.FC = () => {
     setIsLoading(true);
     
     try {
-      await productService.createProduct(formData);
+      // Создаем объект FormData для отправки multipart/form-data
+      const formDataToSend = new FormData();
+      
+      // Добавляем все текстовые поля
+      formDataToSend.append('title', formData.title);
+      formDataToSend.append('description', formData.description);
+      formDataToSend.append('price', formData.price.toString());
+      formDataToSend.append('brand_id', formData.brand_id.toString());
+      formDataToSend.append('unit_id', formData.unit_id.toString());
+      formDataToSend.append('category_id', formData.category_id.toString());
+      
+      if (formData.article) {
+        formDataToSend.append('article', formData.article.toString());
+      }
+      
+      if (formData.length !== undefined) {
+        formDataToSend.append('length', formData.length.toString());
+      }
+      
+      if (formData.width !== undefined) {
+        formDataToSend.append('width', formData.width.toString());
+      }
+      
+      if (formData.height !== undefined) {
+        formDataToSend.append('height', formData.height.toString());
+      }
+      
+      if (formData.weight !== undefined) {
+        formDataToSend.append('weight', formData.weight.toString());
+      }
+      
+      // Добавляем все изображения в поле files
+      formData.images.forEach(image => {
+        formDataToSend.append('files', image);
+      });
+      
+      await productService.createProductWithImages(formDataToSend);
       setSuccess(true);
       
       // Показываем сообщение об успехе и перенаправляем через 1.5 секунды
@@ -405,6 +504,63 @@ const CreateProductPageMobile: React.FC = () => {
                   fullWidth
                 />
               </div>
+            </div>
+          </div>
+          
+          {/* Изображения товара */}
+          <div className="bg-white rounded-lg p-4 shadow-sm">
+            <h2 className="text-base font-medium text-gray-900 mb-4">
+              Изображения товара *
+            </h2>
+            
+            <div className="space-y-4">
+              <div className="flex flex-wrap gap-3">
+                {previewImages.map((preview, index) => (
+                  <div key={index} className="relative">
+                    <div className="w-24 h-24 border rounded-md overflow-hidden bg-gray-50">
+                      <img 
+                        src={preview} 
+                        alt={`Предпросмотр ${index + 1}`} 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeImage(index)}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md"
+                    >
+                      <XMarkIcon className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+                
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-24 h-24 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-md"
+                >
+                  <PhotoIcon className="h-6 w-6 text-gray-400" />
+                  <span className="mt-1 text-xs text-gray-500">Добавить</span>
+                </button>
+              </div>
+              
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept="image/*"
+                multiple
+                className="hidden"
+                required
+              />
+              
+              {errors.images ? (
+                <p className="text-xs text-red-500">{errors.images}</p>
+              ) : (
+                <p className="text-xs text-gray-500">
+                  Загрузите хотя бы одно изображение товара
+                </p>
+              )}
             </div>
           </div>
         </form>
