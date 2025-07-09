@@ -16,8 +16,8 @@ import type {
  */
 const API_URL = import.meta.env.VITE_NODE_ENV === 'development'
 ? 'http://localhost:8080'
-: 'https://api.valik.kz'
-
+: 'http://localhost:8080';
+//: 'https://api.valik.kz';//
 
 /**
  * Интерфейсы для категорий, брендов и единиц измерения

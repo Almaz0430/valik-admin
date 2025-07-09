@@ -2,7 +2,7 @@
  * Страница руководства пользователя
  */
 import React from 'react';
-import Layout from '../components/layout/Layout';
+import Layout from '../../components/layout/Layout';
 import GuidePageContent from './GuidePageContent';
 
 const GuidePage: React.FC = () => {

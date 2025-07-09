@@ -8,15 +8,14 @@ import RegisterPage from './pages/auth/RegisterPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import ProductsPage from './pages/products/ProductsPage';
 import ProductsPageMobile from './pages/products/ProductsPageMobile';
-import ProductsPageWrapper from './pages/products/ProductsPageWrapper';
 import CreateProductPage from './pages/products/CreateProductPage';
 import CreateProductPageMobile from './pages/products/CreateProductPageMobile';
-import CreateProductPageWrapper from './pages/products/CreateProductPageWrapper';
 import EditProductPage from './pages/products/EditProductPage';
 import OrdersPage from './pages/orders/OrdersPage';
 import ProfilePage from './pages/profile/ProfilePage';
-import GuidePage from './pages/GuidePage';
+import GuidePage from './pages/guide/GuidePage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import { ProductsPageWrapper, CreateProductPageWrapper } from './utils/pageWrappers';
 
 function App() {
   return (
