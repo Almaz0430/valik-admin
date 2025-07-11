@@ -2,11 +2,79 @@
  * Компонент формы создания/редактирования товара
  */
 import React, { useState, useEffect, useRef } from 'react';
+import Select from 'react-select';
 import Input from '../ui/Input';
 import TextArea from '../ui/TextArea';
-import Select from '../ui/Select';
 import Button from '../ui/Button';
 import { QuestionMarkCircleIcon, XMarkIcon, PhotoIcon } from '@heroicons/react/24/outline';
+
+const selectStyles = {
+  control: (base: any, state: any) => ({
+    ...base,
+    minHeight: '42px',
+    border: 'none',
+    borderColor: 'transparent',
+    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+    '&:hover': {
+      borderColor: 'transparent',
+    },
+    borderRadius: '0.375rem',
+    backgroundColor: '#fff',
+    padding: '1px',
+    transition: 'box-shadow 0.15s ease-in-out',
+    '&:focus-within': {
+      boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+      border: 'none',
+      borderColor: 'transparent',
+    }
+  }),
+  placeholder: (base: any) => ({
+    ...base,
+    color: '#9ca3af',
+    fontSize: '0.875rem',
+  }),
+  option: (base: any, state: any) => ({
+    ...base,
+    backgroundColor: state.isSelected ? '#f97316' : state.isFocused ? '#ffedd5' : null,
+    color: state.isSelected ? 'white' : '#111827',
+    ':active': {
+      backgroundColor: state.isSelected ? '#f97316' : '#ffedd5',
+    },
+    fontSize: '0.875rem',
+    cursor: 'pointer',
+  }),
+  input: (base: any) => ({
+    ...base,
+    fontSize: '0.875rem',
+  }),
+  singleValue: (base: any) => ({
+    ...base,
+    fontSize: '0.875rem',
+  }),
+  indicatorSeparator: () => ({
+    display: 'none',
+  }),
+  dropdownIndicator: (base: any) => ({
+    ...base,
+    color: '#6b7280',
+    ':hover': {
+      color: '#4b5563',
+    },
+  }),
+  clearIndicator: (base: any) => ({
+    ...base,
+    color: '#6b7280',
+    ':hover': {
+      color: '#4b5563',
+    },
+  }),
+  menu: (base: any) => ({
+    ...base,
+    zIndex: 100,
+    borderRadius: '0.375rem',
+    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+  }),
+};
 
 interface Brand {
   id: number;
@@ -21,6 +89,12 @@ interface Unit {
 interface Category {
   id: number;
   title: string;
+}
+
+// Определяем тип для опций react-select
+interface SelectOption {
+  value: number;
+  label: string;
 }
 
 export interface ProductFormData {
@@ -85,6 +159,12 @@ const ProductForm: React.FC<ProductFormProps> = ({
   const [uploadSuccess, setUploadSuccess] = useState<boolean>(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
+  // Новые состояния для выбранных опций react-select
+  const [selectedBrand, setSelectedBrand] = useState<SelectOption | null>(null);
+  const [selectedUnit, setSelectedUnit] = useState<SelectOption | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<SelectOption | null>(null);
+
+
   const handleChange = (field: keyof ProductFormData, value: string | number | null) => {
     setFormData(prev => ({
       ...prev,
@@ -98,6 +178,21 @@ const ProductForm: React.FC<ProductFormProps> = ({
         delete newErrors[field];
         return newErrors;
       });
+    }
+  };
+
+  // Обновленный обработчик для react-select
+  const handleSelectChange = (field: keyof ProductFormData, selectedOption: SelectOption | null) => {
+    // Обновляем состояние формы
+    handleChange(field, selectedOption ? selectedOption.value : null);
+
+    // Обновляем состояние для каждого селекта
+    if (field === 'brand_id') {
+      setSelectedBrand(selectedOption);
+    } else if (field === 'unit_id') {
+      setSelectedUnit(selectedOption);
+    } else if (field === 'category_id') {
+      setSelectedCategory(selectedOption);
     }
   };
 
@@ -309,19 +404,20 @@ const ProductForm: React.FC<ProductFormProps> = ({
             )}
           </div>
           
-          <div>
-            <div className="flex items-center mb-3">
-              <label htmlFor="article" className="block text-sm font-medium text-gray-700">Артикул</label>
-              {renderTooltip('article', 'Уникальный код товара в вашей системе учета. Помогает быстро найти товар.')}
+          <div className="sm:col-span-2 relative">
+            <label htmlFor="article" className="block text-sm font-medium leading-6 text-gray-900">
+              Артикул
+            </label>
+            <div className="mt-2">
+              <Input
+                id="article"
+                value={formData.article?.toString() || ''}
+                onChange={(e) => handleNumberChange('article', e.target.value)}
+                placeholder="Например: 12345"
+                type="number"
+                fullWidth
+              />
             </div>
-            <Input
-              id="article"
-              value={formData.article?.toString() || ''}
-              onChange={(e) => handleNumberChange('article', e.target.value)}
-              placeholder="Например: 12345"
-              type="number"
-              fullWidth
-            />
           </div>
         </div>
         
@@ -339,6 +435,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
             error={errors.description}
             fullWidth
             required
+            resize="none"
           />
           {!errors.description && (
             <p className="mt-1 text-xs text-gray-500">Минимум 50 символов для хорошего описания</p>
@@ -346,61 +443,61 @@ const ProductForm: React.FC<ProductFormProps> = ({
         </div>
         
         <div className="grid grid-cols-1 gap-6 mt-6 sm:gap-8">
-          <div>
-            <div className="flex items-center mb-3">
-              <label htmlFor="brand" className="block text-sm font-medium text-gray-700">Бренд *</label>
-              {renderTooltip('brand', 'Выберите производителя товара из списка.')}
+          <div className="sm:col-span-4 relative">
+            <label htmlFor="brand_id" className="block text-sm font-medium leading-6 text-gray-900">
+              Бренд <span className="text-red-500">*</span>
+            </label>
+            <div className="mt-2">
+              <Select
+                id="brand_id"
+                options={brands.map(b => ({ value: b.id, label: b.title }))}
+                value={selectedBrand}
+                onChange={(option) => handleSelectChange('brand_id', option)}
+                placeholder="Выберите бренд"
+                isClearable
+                classNamePrefix="react-select"
+                styles={selectStyles}
+              />
             </div>
-            <Select
-              id="brand"
-              value={formData.brand_id?.toString() || ''}
-              onChange={(value) => handleChange('brand_id', value ? parseInt(value) : null)}
-              options={[
-                { value: '', label: 'Выберите бренд' },
-                ...brands.map(brand => ({ value: brand.id, label: brand.title }))
-              ]}
-              error={errors.brand_id}
-              fullWidth
-              required
-            />
+            {errors.brand_id && <p className="mt-2 text-sm text-red-600">{errors.brand_id}</p>}
           </div>
-          
-          <div>
-            <div className="flex items-center mb-3">
-              <label htmlFor="unit" className="block text-sm font-medium text-gray-700">Единица измерения *</label>
-              {renderTooltip('unit', 'Выберите единицу измерения, в которой продается товар (штуки, килограммы и т.д.).')}
+
+          <div className="sm:col-span-4 relative">
+            <label htmlFor="unit_id" className="block text-sm font-medium leading-6 text-gray-900">
+              Единица измерения <span className="text-red-500">*</span>
+            </label>
+            <div className="mt-2">
+              <Select
+                id="unit_id"
+                options={units.map(u => ({ value: u.id, label: u.title }))}
+                value={selectedUnit}
+                onChange={(option) => handleSelectChange('unit_id', option)}
+                placeholder="Выберите единицу измерения"
+                isClearable
+                classNamePrefix="react-select"
+                styles={selectStyles}
+              />
             </div>
-            <Select
-              id="unit"
-              value={formData.unit_id?.toString() || ''}
-              onChange={(value) => handleChange('unit_id', value ? parseInt(value) : null)}
-              options={[
-                { value: '', label: 'Выберите единицу' },
-                ...units.map(unit => ({ value: unit.id, label: unit.title }))
-              ]}
-              error={errors.unit_id}
-              fullWidth
-              required
-            />
+            {errors.unit_id && <p className="mt-2 text-sm text-red-600">{errors.unit_id}</p>}
           </div>
-          
-          <div>
-            <div className="flex items-center mb-3">
-              <label htmlFor="category" className="block text-sm font-medium text-gray-700">Категория *</label>
-              {renderTooltip('category', 'Выберите категорию, к которой относится товар. От этого зависит, где товар будет отображаться в каталоге.')}
+
+          <div className="sm:col-span-4 relative">
+            <label htmlFor="category_id" className="block text-sm font-medium leading-6 text-gray-900">
+              Категория <span className="text-red-500">*</span>
+            </label>
+            <div className="mt-2">
+              <Select
+                id="category_id"
+                options={categories.map(c => ({ value: c.id, label: c.title }))}
+                value={selectedCategory}
+                onChange={(option) => handleSelectChange('category_id', option)}
+                placeholder="Выберите категорию"
+                isClearable
+                classNamePrefix="react-select"
+                styles={selectStyles}
+              />
             </div>
-            <Select
-              id="category"
-              value={formData.category_id?.toString() || ''}
-              onChange={(value) => handleChange('category_id', value ? parseInt(value) : null)}
-              options={[
-                { value: '', label: 'Выберите категорию' },
-                ...categories.map(category => ({ value: category.id, label: category.title }))
-              ]}
-              error={errors.category_id}
-              fullWidth
-              required
-            />
+            {errors.category_id && <p className="mt-2 text-sm text-red-600">{errors.category_id}</p>}
           </div>
         </div>
       </div>
