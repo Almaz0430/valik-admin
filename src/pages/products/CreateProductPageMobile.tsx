@@ -13,8 +13,76 @@ import {
 } from '@heroicons/react/24/outline';
 import Input from '../../components/ui/Input';
 import TextArea from '../../components/ui/TextArea';
-import Select from '../../components/ui/Select';
+import Select from 'react-select';
 import productService from '../../services/productService';
+
+const selectStyles = {
+  control: (base: any, state: any) => ({
+    ...base,
+    minHeight: '42px',
+    border: 'none',
+    borderColor: 'transparent',
+    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+    '&:hover': {
+      borderColor: 'transparent',
+    },
+    borderRadius: '0.375rem',
+    backgroundColor: '#fff',
+    padding: '1px',
+    transition: 'box-shadow 0.15s ease-in-out',
+    '&:focus-within': {
+      boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+      border: 'none',
+      borderColor: 'transparent',
+    }
+  }),
+  placeholder: (base: any) => ({
+    ...base,
+    color: '#9ca3af',
+    fontSize: '0.875rem',
+  }),
+  option: (base: any, state: any) => ({
+    ...base,
+    backgroundColor: state.isSelected ? '#f97316' : state.isFocused ? '#ffedd5' : null,
+    color: state.isSelected ? 'white' : '#111827',
+    ':active': {
+      backgroundColor: state.isSelected ? '#f97316' : '#ffedd5',
+    },
+    fontSize: '0.875rem',
+    cursor: 'pointer',
+  }),
+  input: (base: any) => ({
+    ...base,
+    fontSize: '0.875rem',
+  }),
+  singleValue: (base: any) => ({
+    ...base,
+    fontSize: '0.875rem',
+  }),
+  indicatorSeparator: () => ({
+    display: 'none',
+  }),
+  dropdownIndicator: (base: any) => ({
+    ...base,
+    color: '#6b7280',
+    ':hover': {
+      color: '#4b5563',
+    },
+  }),
+  clearIndicator: (base: any) => ({
+    ...base,
+    color: '#6b7280',
+    ':hover': {
+      color: '#4b5563',
+    },
+  }),
+  menu: (base: any) => ({
+    ...base,
+    zIndex: 100,
+    borderRadius: '0.375rem',
+    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+  }),
+};
 
 // Заглушки для API, в реальном приложении заменить на реальные вызовы API
 const mockBrands = [
@@ -38,6 +106,12 @@ const mockCategories = [
   { id: 3, name: 'Инструменты' },
   { id: 4, name: 'Крепежные изделия' }
 ];
+
+// Определяем тип для опций react-select
+interface SelectOption {
+  value: number;
+  label: string;
+}
 
 // Временные значения для тестирования
 const defaultTestValues = {
@@ -70,6 +144,15 @@ const CreateProductPageMobile: React.FC = () => {
     images: [] as File[]
   });
   
+  // Состояния для выбранных опций react-select
+  const defaultBrand = mockBrands.find(b => b.id === defaultTestValues.brand_id);
+  const defaultUnit = mockUnits.find(u => u.id === defaultTestValues.unit_id);
+  const defaultCategory = mockCategories.find(c => c.id === defaultTestValues.category_id);
+
+  const [selectedBrand, setSelectedBrand] = useState<SelectOption | null>(defaultBrand ? { value: defaultBrand.id, label: defaultBrand.name } : null);
+  const [selectedUnit, setSelectedUnit] = useState<SelectOption | null>(defaultUnit ? { value: defaultUnit.id, label: defaultUnit.name } : null);
+  const [selectedCategory, setSelectedCategory] = useState<SelectOption | null>(defaultCategory ? { value: defaultCategory.id, label: defaultCategory.name } : null);
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewImages, setPreviewImages] = useState<string[]>([]);
 
@@ -88,6 +171,18 @@ const CreateProductPageMobile: React.FC = () => {
         delete newErrors[field];
         return newErrors;
       });
+    }
+  };
+
+  const handleSelectChange = (field: string, selectedOption: SelectOption | null) => {
+    handleChange(field, selectedOption ? selectedOption.value : null);
+
+    if (field === 'brand_id') {
+      setSelectedBrand(selectedOption);
+    } else if (field === 'unit_id') {
+      setSelectedUnit(selectedOption);
+    } else if (field === 'category_id') {
+      setSelectedCategory(selectedOption);
     }
   };
   
@@ -335,6 +430,7 @@ const CreateProductPageMobile: React.FC = () => {
                   error={errors.description}
                   fullWidth
                   required
+                  resize="none"
                 />
               </div>
               
@@ -360,16 +456,15 @@ const CreateProductPageMobile: React.FC = () => {
                 </label>
                 <Select
                   id="brand"
-                  value={formData.brand_id?.toString() || ''}
-                  onChange={(value) => handleChange('brand_id', value ? parseInt(value) : null)}
-                  options={[
-                    { value: '', label: 'Выберите бренд' },
-                    ...mockBrands.map(brand => ({ value: brand.id, label: brand.name }))
-                  ]}
-                  error={errors.brand_id}
-                  fullWidth
-                  required
+                  value={selectedBrand}
+                  onChange={(option) => handleSelectChange('brand_id', option)}
+                  options={mockBrands.map(brand => ({ value: brand.id, label: brand.name }))}
+                  placeholder="Выберите бренд"
+                  isClearable
+                  classNamePrefix="react-select"
+                  styles={selectStyles}
                 />
+                {errors.brand_id && <p className="mt-1 text-xs text-red-500">{errors.brand_id}</p>}
               </div>
               
               {/* Категория */}
@@ -379,16 +474,15 @@ const CreateProductPageMobile: React.FC = () => {
                 </label>
                 <Select
                   id="category"
-                  value={formData.category_id?.toString() || ''}
-                  onChange={(value) => handleChange('category_id', value ? parseInt(value) : null)}
-                  options={[
-                    { value: '', label: 'Выберите категорию' },
-                    ...mockCategories.map(category => ({ value: category.id, label: category.name }))
-                  ]}
-                  error={errors.category_id}
-                  fullWidth
-                  required
+                  value={selectedCategory}
+                  onChange={(option) => handleSelectChange('category_id', option)}
+                  options={mockCategories.map(category => ({ value: category.id, label: category.name }))}
+                  placeholder="Выберите категорию"
+                  isClearable
+                  classNamePrefix="react-select"
+                  styles={selectStyles}
                 />
+                {errors.category_id && <p className="mt-1 text-xs text-red-500">{errors.category_id}</p>}
               </div>
               
               {/* Единица измерения */}
@@ -398,16 +492,15 @@ const CreateProductPageMobile: React.FC = () => {
                 </label>
                 <Select
                   id="unit"
-                  value={formData.unit_id?.toString() || ''}
-                  onChange={(value) => handleChange('unit_id', value ? parseInt(value) : null)}
-                  options={[
-                    { value: '', label: 'Выберите единицу' },
-                    ...mockUnits.map(unit => ({ value: unit.id, label: unit.name }))
-                  ]}
-                  error={errors.unit_id}
-                  fullWidth
-                  required
+                  value={selectedUnit}
+                  onChange={(option) => handleSelectChange('unit_id', option)}
+                  options={mockUnits.map(unit => ({ value: unit.id, label: unit.name }))}
+                  placeholder="Выберите единицу"
+                  isClearable
+                  classNamePrefix="react-select"
+                  styles={selectStyles}
                 />
+                {errors.unit_id && <p className="mt-1 text-xs text-red-500">{errors.unit_id}</p>}
               </div>
             </div>
           </div>
