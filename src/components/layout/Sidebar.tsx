@@ -7,7 +7,8 @@ import {
   HomeIcon, 
   CubeIcon, 
   ShoppingCartIcon,
-  ArrowRightOnRectangleIcon
+  ArrowRightOnRectangleIcon,
+  BookOpenIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -25,6 +26,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { name: 'Главная', path: '/dashboard', icon: HomeIcon },
     { name: 'Товары', path: '/dashboard/products', icon: CubeIcon },
     { name: 'Заказы', path: '/dashboard/orders', icon: ShoppingCartIcon },
+    { name: 'Справочник', path: '/dashboard/attributes', icon: BookOpenIcon },
   ];
   
   const isActive = (path: string) => {

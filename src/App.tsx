@@ -14,6 +14,7 @@ import EditProductPage from './pages/products/EditProductPage';
 import OrdersPage from './pages/orders/OrdersPage';
 import ProfilePage from './pages/profile/ProfilePage';
 import GuidePage from './pages/guide/GuidePage';
+import { AttributesPage } from './pages/attributes';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import { ProductsPageWrapper, CreateProductPageWrapper } from './utils/pageWrappers';
 
@@ -90,6 +91,13 @@ function App() {
           <Route path="/dashboard/guide" element={
             <ProtectedRoute>
               <GuidePage />
+            </ProtectedRoute>
+          } />
+          
+          {/* Маршрут для страницы атрибутов (бренды и единицы измерения) */}
+          <Route path="/dashboard/attributes" element={
+            <ProtectedRoute>
+              <AttributesPage />
             </ProtectedRoute>
           } />
           
