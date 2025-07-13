@@ -6,7 +6,6 @@ import { useNavigate } from 'react-router-dom';
 import Layout from '../../components/layout/Layout';
 import brandUnitService from '../../services/brandUnitService';
 import type { Unit } from '../../services/brandUnitService';
-import type { QueryParams } from '../../services/brandUnitService';
 import ConfirmationModal from '../../components/ui/ConfirmationModal';
 
 interface UnitsPageProps {
@@ -19,25 +18,20 @@ const UnitsPage: React.FC<UnitsPageProps> = ({ isStandalone = false }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [totalUnits, setTotalUnits] = useState<number>(0);
-  const [searchTerm, setSearchTerm] = useState<string>('');
   const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
   const [unitToDelete, setUnitToDelete] = useState<number | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
-  const [editingUnit, setEditingUnit] = useState<Unit | null>(null);
   const [newUnitTitle, setNewUnitTitle] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
-  // Загрузка единиц измерения при монтировании компонента и при изменении параметров
+  // Загрузка единиц измерения при монтировании компонента
   useEffect(() => {
     const fetchUnits = async () => {
       setIsLoading(true);
       setError(null);
       
       try {
-        const response = await brandUnitService.getUnits({
-          search: searchTerm || undefined
-        });
+        const response = await brandUnitService.getUnits({});
         
         setUnits(response.units);
         setTotalUnits(response.total);
@@ -51,13 +45,8 @@ const UnitsPage: React.FC<UnitsPageProps> = ({ isStandalone = false }) => {
     };
     
     fetchUnits();
-  }, [searchTerm]);
+  }, []);
   
-  // Обработчик поиска по единицам измерения
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-  };
-
   // Обработчик удаления единицы измерения
   const handleDeleteClick = (id: number) => {
     setUnitToDelete(id);
@@ -116,52 +105,8 @@ const UnitsPage: React.FC<UnitsPageProps> = ({ isStandalone = false }) => {
       setTotalUnits(prev => prev + 1);
       
       closeCreateModal();
-      alert('Единица измерения успешно создана');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Произошла ошибка при создании единицы измерения';
-      alert(errorMessage);
-      console.error(err);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Обработчики для редактирования единицы измерения
-  const openEditModal = (unit: Unit) => {
-    setEditingUnit(unit);
-    setNewUnitTitle(unit.title);
-    setIsEditModalOpen(true);
-  };
-
-  const closeEditModal = () => {
-    setIsEditModalOpen(false);
-    setEditingUnit(null);
-    setNewUnitTitle('');
-  };
-
-  const handleUpdateUnit = async () => {
-    if (!editingUnit || !newUnitTitle.trim()) {
-      alert('Название единицы измерения не может быть пустым');
-      return;
-    }
-
-    setIsSubmitting(true);
-    
-    try {
-      const updatedUnit = await brandUnitService.updateUnit(
-        editingUnit.id, 
-        { title: newUnitTitle.trim() }
-      );
-      
-      // Обновляем единицу измерения в списке
-      setUnits(prev => prev.map(unit => 
-        unit.id === editingUnit.id ? updatedUnit : unit
-      ));
-      
-      closeEditModal();
-      alert('Единица измерения успешно обновлена');
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Произошла ошибка при обновлении единицы измерения';
       alert(errorMessage);
       console.error(err);
     } finally {
@@ -172,7 +117,25 @@ const UnitsPage: React.FC<UnitsPageProps> = ({ isStandalone = false }) => {
   // Форматирование даты
   const formatDate = (dateString: string | undefined) => {
     if (!dateString) return 'Не указано';
-    const date = new Date(dateString);
+
+    let date: Date;
+
+    if (/^\d+$/.test(dateString)) {
+      const timestamp = Number(dateString);
+      
+      if (dateString.length === 10) {
+        date = new Date(timestamp * 1000);
+      } else {
+        date = new Date(timestamp);
+      }
+    } else {
+      date = new Date(dateString);
+    }
+    
+    if (isNaN(date.getTime())) {
+      return 'Некорректная дата';
+    }
+
     return date.toLocaleDateString('ru-RU', { 
       day: '2-digit', 
       month: '2-digit', 
@@ -202,30 +165,6 @@ const UnitsPage: React.FC<UnitsPageProps> = ({ isStandalone = false }) => {
         )}
         
         <div className="flex flex-wrap gap-4">
-          {/* Поле поиска */}
-          <form onSubmit={handleSearch} className="relative w-full max-w-md">
-            <input 
-              type="text" 
-              placeholder="Поиск единиц измерения..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2.5 bg-white shadow-sm rounded-md w-full focus:outline-none"
-            />
-            <button type="submit" className="absolute left-3 top-3 h-5 w-5 text-gray-400">
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                viewBox="0 0 20 20" 
-                fill="currentColor"
-              >
-                <path 
-                  fillRule="evenodd" 
-                  d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" 
-                  clipRule="evenodd" 
-                />
-              </svg>
-            </button>
-          </form>
-          
           {/* Кнопка создания */}
           <button
             onClick={openCreateModal}
@@ -281,7 +220,7 @@ const UnitsPage: React.FC<UnitsPageProps> = ({ isStandalone = false }) => {
                 setError(null);
                 setIsLoading(true);
                 setTimeout(() => {
-                  brandUnitService.getUnits({ search: searchTerm || undefined })
+                  brandUnitService.getUnits({})
                     .then(response => {
                       setUnits(response.units);
                       setTotalUnits(response.total);
@@ -330,15 +269,6 @@ const UnitsPage: React.FC<UnitsPageProps> = ({ isStandalone = false }) => {
                   </div>
                   <div className="col-span-3 text-right flex justify-end items-center space-x-2">
                     <button 
-                      className="text-blue-600 hover:text-blue-900"
-                      onClick={() => openEditModal(unit)}
-                      title="Редактировать"
-                    >
-                      <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                      </svg>
-                    </button>
-                    <button 
                       className="text-red-600 hover:text-red-900"
                       onClick={() => handleDeleteClick(unit.id)}
                       title="Удалить"
@@ -377,7 +307,7 @@ const UnitsPage: React.FC<UnitsPageProps> = ({ isStandalone = false }) => {
             
             <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
             
-            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div className="relative z-10 inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
               <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">Создание новой единицы измерения</h3>
                 <div className="mt-2">
@@ -415,53 +345,6 @@ const UnitsPage: React.FC<UnitsPageProps> = ({ isStandalone = false }) => {
         </div>
       )}
       
-      {/* Модальное окно редактирования единицы измерения */}
-      {isEditModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
-            </div>
-            
-            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            
-            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">Редактирование единицы измерения</h3>
-                <div className="mt-2">
-                  <input
-                    type="text"
-                    value={newUnitTitle}
-                    onChange={(e) => setNewUnitTitle(e.target.value)}
-                    placeholder="Название единицы измерения"
-                    className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-              <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button
-                  type="button"
-                  onClick={handleUpdateUnit}
-                  disabled={isSubmitting}
-                  className={`w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-orange-500 text-base font-medium text-white hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 sm:ml-3 sm:w-auto sm:text-sm ${
-                    isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
-                  }`}
-                >
-                  {isSubmitting ? 'Сохранение...' : 'Сохранить'}
-                </button>
-                <button
-                  type="button"
-                  onClick={closeEditModal}
-                  disabled={isSubmitting}
-                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-                >
-                  Отмена
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
   

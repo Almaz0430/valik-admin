@@ -110,7 +110,7 @@ export interface ProductFormData {
   weight?: number;
   depth?: number;
   price: number;
-  images?: File[];
+  images?: (File | string)[];
 }
 
 interface ProductFormProps {
@@ -147,7 +147,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
     weight: initialData?.weight,
     depth: initialData?.depth,
     price: initialData?.price || 0,
-    images: []
+    images: initialData?.images || []
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -164,14 +164,22 @@ const ProductForm: React.FC<ProductFormProps> = ({
   const [selectedUnit, setSelectedUnit] = useState<SelectOption | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<SelectOption | null>(null);
 
+  useEffect(() => {
+    if (initialData?.images && initialData.images.length > 0) {
+      const existingImages = initialData.images.filter(
+        (img): img is string => typeof img === 'string'
+      );
+      setPreviewImages(existingImages);
+    }
+  }, [initialData]);
 
-  const handleChange = (field: keyof ProductFormData, value: string | number | null) => {
+
+  const handleChange = (field: keyof ProductFormData, value: string | number | null | (File | string)[]) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
 
-    // Очистка ошибки при изменении поля
     if (errors[field]) {
       setErrors(prev => {
         const newErrors = { ...prev };
@@ -181,12 +189,9 @@ const ProductForm: React.FC<ProductFormProps> = ({
     }
   };
 
-  // Обновленный обработчик для react-select
   const handleSelectChange = (field: keyof ProductFormData, selectedOption: SelectOption | null) => {
-    // Обновляем состояние формы
     handleChange(field, selectedOption ? selectedOption.value : null);
 
-    // Обновляем состояние для каждого селекта
     if (field === 'brand_id') {
       setSelectedBrand(selectedOption);
     } else if (field === 'unit_id') {
@@ -207,9 +212,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
     }
   };
 
-  // Специальный обработчик для цены, который не принимает отрицательные значения
   const handlePriceChange = (value: string) => {
-    // Удаляем все символы, кроме цифр и точек
     const sanitized = value.replace(/[^\d.]/g, '');
     
     if (sanitized === '') {
@@ -225,29 +228,20 @@ const ProductForm: React.FC<ProductFormProps> = ({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
-      // Преобразуем FileList в массив File
       const newFiles = Array.from(files);
       
-      // Если мы в режиме редактирования и есть ID товара, сразу загружаем изображения на сервер
       if (isEditMode && productId) {
         handleUploadImages(newFiles);
       } else {
-        // В режиме создания просто добавляем файлы в состояние формы
-        // Создаем URL для предпросмотра
         const newPreviews = newFiles.map(file => URL.createObjectURL(file));
         
-        // Обновляем состояние
-        setFormData(prev => ({
-          ...prev,
-          images: [...(prev.images || []), ...newFiles]
-        }));
+        handleChange('images', [...(formData.images || []), ...newFiles]);
         
         setPreviewImages(prev => [...prev, ...newPreviews]);
       }
     }
   };
 
-  // Функция для загрузки изображений в режиме редактирования
   const handleUploadImages = async (files: File[]) => {
     if (!productId || !isEditMode) return;
     
@@ -256,21 +250,16 @@ const ProductForm: React.FC<ProductFormProps> = ({
     setUploadSuccess(false);
     
     try {
-      // Импортируем сервис для работы с товарами
       const productService = (await import('../../services/productService')).default;
       
-      // Загружаем изображения на сервер
       const success = await productService.addProductImages(productId, files);
       
       if (success) {
-        // Создаем URL для предпросмотра загруженных изображений
         const newPreviews = files.map(file => URL.createObjectURL(file));
         
-        // Обновляем состояние превью
         setPreviewImages(prev => [...prev, ...newPreviews]);
         setUploadSuccess(true);
         
-        // Скрываем сообщение об успехе через 3 секунды
         setTimeout(() => {
           setUploadSuccess(false);
         }, 3000);
@@ -286,23 +275,25 @@ const ProductForm: React.FC<ProductFormProps> = ({
   };
 
   const removeImage = (index: number) => {
-    setFormData(prev => {
-      const newImages = [...(prev.images || [])];
-      newImages.splice(index, 1);
-      return { ...prev, images: newImages };
-    });
-    
-    // Освобождаем URL для предотвращения утечек памяти
-    URL.revokeObjectURL(previewImages[index]);
-    
-    setPreviewImages(prev => {
-      const newPreviews = [...prev];
-      newPreviews.splice(index, 1);
-      return newPreviews;
-    });
+    const imageToRemove = formData.images?.[index];
+    const previewToRemove = previewImages[index];
+
+    const updatedImages = formData.images?.filter((_, i) => i !== index) || [];
+    const updatedPreviews = previewImages.filter((_, i) => i !== index);
+
+    handleChange('images', updatedImages);
+    setPreviewImages(updatedPreviews);
+
+    if (typeof imageToRemove === 'string' && productId) {
+      console.log(`Запрос на удаление существующего изображения: ${imageToRemove}`);
+      // productService.deleteProductImage(productId, imageToRemove);
+    }
+
+    if (imageToRemove instanceof File) {
+      URL.revokeObjectURL(previewToRemove);
+    }
   };
 
-  // Очистка URL-ов при размонтировании компонента
   useEffect(() => {
     return () => {
       previewImages.forEach(url => URL.revokeObjectURL(url));
@@ -312,7 +303,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    // Проверка обязательных полей
     if (!formData.title.trim()) {
       newErrors.title = 'Название товара обязательно';
     }
@@ -333,12 +323,10 @@ const ProductForm: React.FC<ProductFormProps> = ({
       newErrors.category_id = 'Выберите категорию';
     }
 
-    // Проверка, что цена не отрицательная
     if (formData.price < 0) {
       newErrors.price = 'Цена не может быть отрицательной';
     }
 
-    // Проверка наличия изображений
     if (!isEditMode && (!formData.images || formData.images.length === 0)) {
       newErrors.images = 'Загрузите хотя бы одно изображение товара';
     }

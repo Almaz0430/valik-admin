@@ -108,7 +108,7 @@ const EditProductPage: React.FC = () => {
       weight: product.weight,
       depth: product.depth,
       price: product.price,
-      images: [] // Изображения управляются отдельно внутри формы
+      images: product.images || [] // Передаем существующие изображения
     };
   };
 

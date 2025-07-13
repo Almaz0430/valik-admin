@@ -7,7 +7,8 @@ import {
   HomeIcon, 
   CubeIcon, 
   ShoppingCartIcon,
-  UserCircleIcon
+  UserCircleIcon,
+  BookOpenIcon
 } from '@heroicons/react/24/outline';
 
 const MobileNavbar: React.FC = () => {
@@ -16,6 +17,7 @@ const MobileNavbar: React.FC = () => {
   const navItems = [
     { name: 'Главная', path: '/dashboard', icon: HomeIcon },
     { name: 'Товары', path: '/dashboard/products', icon: CubeIcon },
+    { name: 'Справочник', path: '/dashboard/attributes', icon: BookOpenIcon },
     { name: 'Заказы', path: '/dashboard/orders', icon: ShoppingCartIcon },
     { name: 'Профиль', path: '/dashboard/profile', icon: UserCircleIcon },
   ];
