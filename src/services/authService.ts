@@ -8,8 +8,7 @@ import type { AuthResponse, LoginCredentials, Supplier, TokenRefreshResponse } f
  */
 const API_URL = import.meta.env.VITE_NODE_ENV === 'development'
 ? 'http://localhost:8080'
-: 'http://localhost:8080';
-//: 'https://api.valik.kz';//
+: 'https://api.valik.kz';
 
 
 /**

@@ -8,7 +8,7 @@ import authService from './authService';
  */
 const API_URL = import.meta.env.VITE_NODE_ENV === 'development'
   ? 'http://localhost:8080'
-  : 'http://localhost:8080';
+  : 'https://api.valik.kz';
 
 /**
  * Интерфейсы для брендов и единиц измерения
