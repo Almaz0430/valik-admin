@@ -9,7 +9,7 @@ import Button from '../ui/Button';
 import { QuestionMarkCircleIcon, XMarkIcon, PhotoIcon } from '@heroicons/react/24/outline';
 
 const selectStyles = {
-  control: (base: any, state: any) => ({
+  control: (base: any) => ({
     ...base,
     minHeight: '42px',
     border: 'none',
@@ -115,7 +115,7 @@ export interface ProductFormData {
 
 interface ProductFormProps {
   initialData?: ProductFormData;
-  onSubmit: (data: ProductFormData) => void;
+  onSubmit: (data: any) => void;
   isLoading?: boolean;
   brands: Brand[];
   units: Unit[];

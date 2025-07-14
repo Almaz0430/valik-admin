@@ -2,16 +2,15 @@
  * Боковая панель навигации
  */
 import React from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { 
   HomeIcon, 
   CubeIcon, 
   ShoppingCartIcon,
-  ArrowRightOnRectangleIcon,
   BookOpenIcon,
   UserCircleIcon
 } from '@heroicons/react/24/outline';
-import { useAuth } from '../../contexts/AuthContext';
+// import { useAuth } from '../../contexts/AuthContext';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -20,8 +19,8 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const location = useLocation();
-  const navigate = useNavigate();
-  const { logout } = useAuth();
+  // const navigate = useNavigate();
+  // const { logout } = useAuth();
   
   const navItems = [
     { name: 'Главная', path: '/dashboard', icon: HomeIcon },
@@ -38,14 +37,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     return location.pathname.startsWith(path) && path !== '/dashboard';
   };
   
-  const handleLogout = async () => {
-    try {
-      await logout();
-      navigate('/login');
-    } catch (error) {
-      console.error('Ошибка при выходе:', error);
-    }
-  };
+  // const handleLogout = async () => {
+  //   try {
+  //     await logout();
+  //     navigate('/login');
+  //   } catch (error) {
+  //     console.error('Ошибка при выходе:', error);
+  //   }
+  // };
   
   return (
     <div 

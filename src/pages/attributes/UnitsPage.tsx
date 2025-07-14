@@ -2,7 +2,6 @@
  * Страница управления единицами измерения
  */
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import Layout from '../../components/layout/Layout';
 import brandUnitService from '../../services/brandUnitService';
 import type { Unit } from '../../services/brandUnitService';
@@ -13,7 +12,6 @@ interface UnitsPageProps {
 }
 
 const UnitsPage: React.FC<UnitsPageProps> = ({ isStandalone = false }) => {
-  const navigate = useNavigate();
   const [units, setUnits] = useState<Unit[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);

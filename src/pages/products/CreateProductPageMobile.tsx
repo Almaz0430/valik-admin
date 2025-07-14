@@ -17,7 +17,7 @@ import Select from 'react-select';
 import productService from '../../services/productService';
 
 const selectStyles = {
-  control: (base: any, state: any) => ({
+  control: (base: any) => ({
     ...base,
     minHeight: '42px',
     border: 'none',
@@ -457,7 +457,7 @@ const CreateProductPageMobile: React.FC = () => {
                 <Select
                   id="brand"
                   value={selectedBrand}
-                  onChange={(option) => handleSelectChange('brand_id', option)}
+                  onChange={(option: any) => handleSelectChange('brand_id', option)}
                   options={mockBrands.map(brand => ({ value: brand.id, label: brand.name }))}
                   placeholder="Выберите бренд"
                   isClearable
@@ -475,7 +475,7 @@ const CreateProductPageMobile: React.FC = () => {
                 <Select
                   id="category"
                   value={selectedCategory}
-                  onChange={(option) => handleSelectChange('category_id', option)}
+                  onChange={(option: any) => handleSelectChange('category_id', option)}
                   options={mockCategories.map(category => ({ value: category.id, label: category.name }))}
                   placeholder="Выберите категорию"
                   isClearable
@@ -493,7 +493,7 @@ const CreateProductPageMobile: React.FC = () => {
                 <Select
                   id="unit"
                   value={selectedUnit}
-                  onChange={(option) => handleSelectChange('unit_id', option)}
+                  onChange={(option: any) => handleSelectChange('unit_id', option)}
                   options={mockUnits.map(unit => ({ value: unit.id, label: unit.name }))}
                   placeholder="Выберите единицу"
                   isClearable

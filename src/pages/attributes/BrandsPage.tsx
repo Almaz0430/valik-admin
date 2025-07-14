@@ -2,11 +2,9 @@
  * Страница управления брендами
  */
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import Layout from '../../components/layout/Layout';
 import brandUnitService from '../../services/brandUnitService';
 import type { Brand } from '../../services/brandUnitService';
-import type { QueryParams } from '../../services/brandUnitService';
 import ConfirmationModal from '../../components/ui/ConfirmationModal';
 
 interface BrandsPageProps {
@@ -14,7 +12,6 @@ interface BrandsPageProps {
 }
 
 const BrandsPage: React.FC<BrandsPageProps> = ({ isStandalone = false }) => {
-  const navigate = useNavigate();
   const [brands, setBrands] = useState<Brand[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
