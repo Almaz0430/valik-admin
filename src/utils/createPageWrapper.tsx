@@ -5,6 +5,16 @@ import React from 'react';
 import { lazy } from 'react';
 import PageWrapper from '../pages/PageWrapper';
 
+const desktopComponentsMap = {
+  ProductsPage: () => import('../pages/products/ProductsPage'),
+  CreateProductPage: () => import('../pages/products/CreateProductPage'),
+};
+
+const mobileComponentsMap = {
+  ProductsPageMobile: () => import('../pages/products/ProductsPageMobile'),
+  CreateProductPageMobile: () => import('../pages/products/CreateProductPageMobile'),
+};
+
 /**
  * Функция для создания компонента-обертки с автоматическим определением устройства
  * @param desktopPath
@@ -12,20 +22,11 @@ import PageWrapper from '../pages/PageWrapper';
  * @returns 
  */
 export function createPageWrapper(
-  desktopPath: string,
-  mobilePath: string
+  desktopKey: keyof typeof desktopComponentsMap,
+  mobileKey: keyof typeof mobileComponentsMap
 ): React.FC<Record<string, any>> {
-
-  const DesktopComponent = lazy(() => import(
-    /* webpackChunkName: "desktop" */
-    /* @vite-ignore */
-    `${desktopPath}`
-  ));
-  const MobileComponent = lazy(() => import(
-    /* webpackChunkName: "mobile" */
-    /* @vite-ignore */
-    `${mobilePath}`
-  ));
+  const DesktopComponent = lazy(desktopComponentsMap[desktopKey]);
+  const MobileComponent = lazy(mobileComponentsMap[mobileKey]);
 
   const WrappedComponent: React.FC<Record<string, any>> = (props) => {
     return (
