@@ -1,16 +1,15 @@
 /**
  * Утилита для создания компонентов-оберток с общей функциональностью
  */
-import React from 'react';
-import { lazy } from 'react';
+import React, { lazy } from 'react';
 import PageWrapper from '../pages/PageWrapper';
 
-const desktopComponentsMap = {
+const desktopComponentsMap: Record<string, () => Promise<{ default: React.ComponentType<any> }>> = {
   ProductsPage: () => import('../pages/products/ProductsPage'),
   CreateProductPage: () => import('../pages/products/CreateProductPage'),
 };
 
-const mobileComponentsMap = {
+const mobileComponentsMap: Record<string, () => Promise<{ default: React.ComponentType<any> }>> = {
   ProductsPageMobile: () => import('../pages/products/ProductsPageMobile'),
   CreateProductPageMobile: () => import('../pages/products/CreateProductPageMobile'),
 };
