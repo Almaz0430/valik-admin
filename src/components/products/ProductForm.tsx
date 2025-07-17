@@ -274,7 +274,9 @@ const ProductForm: React.FC<ProductFormProps> = ({
     }
   };
 
-  const removeImage = (index: number) => {
+  const removeImage = async (index: number) => {
+    const productService = (await import('../../services/productService')).default;
+
     const imageToRemove = formData.images?.[index];
     const previewToRemove = previewImages[index];
 
@@ -286,7 +288,11 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
     if (typeof imageToRemove === 'string' && productId) {
       console.log(`Запрос на удаление существующего изображения: ${imageToRemove}`);
-      // productService.deleteProductImage(productId, imageToRemove);
+      const formData = new FormData();
+      console.log('imageToRemove', imageToRemove);
+      // imageToRemove http://localhost:8080/uploads/1752695049606.png
+      formData.append('link', imageToRemove);
+      await productService.deleteProductImage(productId, formData);
     }
 
     if (imageToRemove instanceof File) {

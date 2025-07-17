@@ -358,7 +358,7 @@ class ProductService {
     });
     
     // Используем эндпоинт для добавления изображений к товару
-    const response = await authService.fetchWithAuth(`${API_URL}/suppliers/products/${id}`, {
+    const response = await authService.fetchWithAuth(`${API_URL}/suppliers/products/photos/add/${id}`, {
       method: 'POST',
       // Не указываем Content-Type, чтобы браузер автоматически установил правильный заголовок с boundary
       body: formData,
@@ -393,6 +393,36 @@ class ProductService {
       return true;
     }
   }
+
+    /**
+   * Удаление изображения у существующего товара
+   * 
+   * @param id ID товара, у которого удаляем фото 
+   * @param formData Путь на сервере к изображению
+   * @returns Успешность операции
+   */
+    async deleteProductImage(id: number, formData: FormData): Promise<boolean> {
+      const response = await authService.fetchWithAuth(`${API_URL}/suppliers/products/photos/delete/${id}`, {
+        method: 'POST',
+        body: formData,
+      });
+      
+      try {
+        const data = await response.json();
+        console.log('Ответ сервера после удаления изображения:', data);
+        
+        // Проверяем успешность операции
+        if (data && data.message === "OK") {
+          return true;
+        }
+        
+        return false;
+      } catch (error) {
+        console.error(`Ошибка при обработке данных после удаления изображения у товара ${id}:`, error);
+        // Если не удалось распарсить JSON, но запрос успешен, считаем операцию успешной
+        return true;
+      }
+    }
 }
 
 export default new ProductService(); 
