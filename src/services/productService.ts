@@ -36,6 +36,8 @@ export interface Unit {
   title: string;
 }
 
+import { api } from '@/utils/axiosConfig';
+
 /**
  * Класс для работы с API товаров поставщика
  */
@@ -58,23 +60,23 @@ class ProductService {
     if (params.max_price) queryParams.append('max_price', params.max_price.toString());
     if (params.status) queryParams.append('status', params.status);
     
-    const url = `${API_URL}/suppliers/products?${queryParams.toString()}`;
-    console.log('Запрос списка товаров:', url);
-    
     try {
       const token = authService.getToken();
       console.log('Токен доступа:', token ? 'Присутствует' : 'Отсутствует');
       
-      const response = await authService.fetchWithAuth(url);
+      // const response = await authService.fetchWithAuth(url);
+      const response = await api({ 
+        url: `${API_URL}/suppliers/products?${queryParams.toString()}`
+      });
       console.log('Статус ответа:', response.status);
       
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Ошибка при получении списка товаров:', response.status, errorText);
+      if (response.status !== 200) {
+        // const errorText = await response.text();
+        // console.error('Ошибка при получении списка товаров:', response.status, errorText);
         throw new Error(`Ошибка при получении списка товаров: ${response.status}`);
       }
       
-      const data = await response.json();
+      const data = response.data;
       console.log('Получены данные о товарах:', data);
       
       // Проверка структуры ответа
@@ -394,35 +396,35 @@ class ProductService {
     }
   }
 
-    /**
+  /**
    * Удаление изображения у существующего товара
    * 
    * @param id ID товара, у которого удаляем фото 
    * @param formData Путь на сервере к изображению
    * @returns Успешность операции
    */
-    async deleteProductImage(id: number, formData: FormData): Promise<boolean> {
-      const response = await authService.fetchWithAuth(`${API_URL}/suppliers/products/photos/delete/${id}`, {
-        method: 'POST',
-        body: formData,
-      });
+  async deleteProductImage(id: number, formData: FormData): Promise<boolean> {
+    const response = await authService.fetchWithAuth(`${API_URL}/suppliers/products/photos/delete/${id}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    try {
+      const data = await response.json();
+      console.log('Ответ сервера после удаления изображения:', data);
       
-      try {
-        const data = await response.json();
-        console.log('Ответ сервера после удаления изображения:', data);
-        
-        // Проверяем успешность операции
-        if (data && data.message === "OK") {
-          return true;
-        }
-        
-        return false;
-      } catch (error) {
-        console.error(`Ошибка при обработке данных после удаления изображения у товара ${id}:`, error);
-        // Если не удалось распарсить JSON, но запрос успешен, считаем операцию успешной
+      // Проверяем успешность операции
+      if (data && data.message === "OK") {
         return true;
       }
+      
+      return false;
+    } catch (error) {
+      console.error(`Ошибка при обработке данных после удаления изображения у товара ${id}:`, error);
+      // Если не удалось распарсить JSON, но запрос успешен, считаем операцию успешной
+      return true;
     }
+  }
 }
 
 export default new ProductService(); 

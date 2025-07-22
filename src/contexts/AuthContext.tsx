@@ -12,6 +12,10 @@ interface AuthContextType {
   refreshToken: () => Promise<string>;
 }
 
+export const useAuthContext = () => {
+  return useContext(AuthContext);
+};
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
