@@ -6,10 +6,7 @@ import authService from './authService';
 /**
  * Базовый URL API
  */
-const API_URL = import.meta.env.VITE_NODE_ENV === 'development'
-  ? 'http://localhost:8080'
-  : 'https://api.valik.kz';
-
+const API_URL = import.meta.env.VITE_API_URL;
 /**
  * Интерфейсы для брендов и единиц измерения
  */

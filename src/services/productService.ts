@@ -14,10 +14,7 @@ import type {
 /**
  * Базовый URL API
  */
-const API_URL = import.meta.env.VITE_NODE_ENV === 'development'
-? 'http://localhost:8080'
-: 'https://api.valik.kz';
-
+const API_URL = import.meta.env.VITE_API_URL;
 /**
  * Интерфейсы для категорий, брендов и единиц измерения
  */
@@ -397,32 +394,31 @@ class ProductService {
   }
 
   /**
-   * Удаление изображения у существующего товара
-   * 
-   * @param id ID товара, у которого удаляем фото 
-   * @param formData Путь на сервере к изображению
-   * @returns Успешность операции
+   * Удаление фотографии товара
    */
-  async deleteProductImage(id: number, formData: FormData): Promise<boolean> {
-    const response = await authService.fetchWithAuth(`${API_URL}/suppliers/products/photos/delete/${id}`, {
-      method: 'POST',
-      body: formData,
-    });
-    
+  async deleteProductImage(productId: number, imageUrl: string): Promise<boolean> {
+    console.log(`Отправка запроса на удаление фотографии товара с ID ${productId}`);
     try {
-      const data = await response.json();
-      console.log('Ответ сервера после удаления изображения:', data);
-      
-      // Проверяем успешность операции
-      if (data && data.message === "OK") {
-        return true;
+      const response = await authService.fetchWithAuth(`${API_URL}/suppliers/products/photos/delete/${productId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ link: imageUrl }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Ошибка при удалении фотографии:', response.status, errorText);
+        return false;
       }
-      
-      return false;
-    } catch (error) {
-      console.error(`Ошибка при обработке данных после удаления изображения у товара ${id}:`, error);
-      // Если не удалось распарсить JSON, но запрос успешен, считаем операцию успешной
+
+      console.log('Фотография успешно удалена');
       return true;
+
+    } catch (error) {
+      console.error('Критическая ошибка при удалении фотографии:', error);
+      return false;
     }
   }
 }

@@ -78,8 +78,7 @@ const EditProductPage: React.FC = () => {
       
       await productService.updateProduct(parseInt(id), payload);
       
-      // Показываем сообщение об успехе и перенаправляем
-      alert('Товар успешно обновлен!');
+      // Перенаправляем на список товаров
       navigate('/dashboard/products');
       
     } catch (err) {
@@ -88,6 +87,33 @@ const EditProductPage: React.FC = () => {
       console.error('Ошибка при обновлении товара:', err);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteImage = async (imageUrl: string): Promise<void> => {
+    if (!id) return;
+    
+    try {
+      const success = await productService.deleteProductImage(parseInt(id), imageUrl);
+      
+      if (success) {
+        // Обновляем состояние, удалив изображение из списка
+        setProduct(prevProduct => {
+          if (!prevProduct) return null;
+          
+          return {
+            ...prevProduct,
+            images: prevProduct.images?.filter(img => img !== imageUrl) || []
+          };
+        });
+      } else {
+        setSubmitError('Не удалось удалить фотографию');
+        throw new Error('Не удалось удалить фотографию');
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Произошла ошибка при удалении';
+      setSubmitError(errorMessage);
+      throw err;
     }
   };
 
@@ -155,6 +181,7 @@ const EditProductPage: React.FC = () => {
               categories={categories}
               isEditMode={true}
               productId={parseInt(id!)}
+              onDeleteImage={handleDeleteImage}
             />
           </>
         ) : (

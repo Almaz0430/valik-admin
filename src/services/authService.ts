@@ -6,9 +6,7 @@ import type { AuthResponse, LoginCredentials, Supplier, TokenRefreshResponse } f
 /**
  * Базовый URL API
  */
-const API_URL = import.meta.env.VITE_NODE_ENV === 'development'
-? 'http://localhost:8080'
-: 'https://api.valik.kz';
+const API_URL = import.meta.env.VITE_API_URL;
 
 
 /**
@@ -187,6 +185,11 @@ class AuthService {
         });
         
         if (!response.ok) {
+          // Если ошибка 'Unauthorized', значит сессия истекла
+          if (response.status === 401) {
+            await this.logout();
+            throw new Error('Сессия истекла. Пожалуйста, войдите заново.');
+          }
           throw new Error('Не удалось обновить токен');
         }
         

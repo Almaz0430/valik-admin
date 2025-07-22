@@ -122,6 +122,7 @@ interface ProductFormProps {
   categories: Category[];
   isEditMode?: boolean;
   productId?: number;
+  onDeleteImage?: (imageUrl: string) => Promise<void>;
 }
 
 const ProductForm: React.FC<ProductFormProps> = ({
@@ -132,7 +133,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
   units,
   categories,
   isEditMode = false,
-  productId
+  productId,
+  onDeleteImage
 }) => {
   const [formData, setFormData] = useState<ProductFormData>({
     title: initialData?.title || '',
@@ -165,11 +167,33 @@ const ProductForm: React.FC<ProductFormProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<SelectOption | null>(null);
 
   useEffect(() => {
-    if (initialData?.images && initialData.images.length > 0) {
-      const existingImages = initialData.images.filter(
-        (img): img is string => typeof img === 'string'
-      );
-      setPreviewImages(existingImages);
+    if (initialData) {
+      // Обновляем все formData при изменении initialData
+      setFormData({
+        title: initialData.title || '',
+        description: initialData.description || '',
+        brand_id: initialData.brand_id || null,
+        unit_id: initialData.unit_id || null,
+        category_id: initialData.category_id || null,
+        article: initialData.article,
+        length: initialData.length,
+        width: initialData.width,
+        height: initialData.height,
+        weight: initialData.weight,
+        depth: initialData.depth,
+        price: initialData.price || 0,
+        images: initialData.images || []
+      });
+      
+      // Обновляем предпросмотр изображений
+      if (initialData.images && initialData.images.length > 0) {
+        const existingImages = initialData.images.filter(
+          (img): img is string => typeof img === 'string'
+        );
+        setPreviewImages(existingImages);
+      } else {
+        setPreviewImages([]);
+      }
     }
   }, [initialData]);
 
@@ -275,28 +299,24 @@ const ProductForm: React.FC<ProductFormProps> = ({
   };
 
   const removeImage = async (index: number) => {
-    const productService = (await import('../../services/productService')).default;
+    const imageToRemove = (formData.images || [])[index];
 
-    const imageToRemove = formData.images?.[index];
-    const previewToRemove = previewImages[index];
+    try {
+      // Если это существующее изображение (строка URL), вызываем onDeleteImage
+      if (typeof imageToRemove === 'string' && onDeleteImage) {
+        await onDeleteImage(imageToRemove);
+      }
+      
+      // Обновляем локальное состояние после удаления
+      const newImages = [...(formData.images || [])];
+      newImages.splice(index, 1);
+      handleChange('images', newImages);
 
-    const updatedImages = formData.images?.filter((_, i) => i !== index) || [];
-    const updatedPreviews = previewImages.filter((_, i) => i !== index);
-
-    handleChange('images', updatedImages);
-    setPreviewImages(updatedPreviews);
-
-    if (typeof imageToRemove === 'string' && productId) {
-      console.log(`Запрос на удаление существующего изображения: ${imageToRemove}`);
-      const formData = new FormData();
-      console.log('imageToRemove', imageToRemove);
-      // imageToRemove http://localhost:8080/uploads/1752695049606.png
-      formData.append('link', imageToRemove);
-      await productService.deleteProductImage(productId, formData);
-    }
-
-    if (imageToRemove instanceof File) {
-      URL.revokeObjectURL(previewToRemove);
+      const newPreviews = [...previewImages];
+      newPreviews.splice(index, 1);
+      setPreviewImages(newPreviews);
+    } catch (error) {
+      console.error('Ошибка при удалении изображения:', error);
     }
   };
 
