@@ -36,6 +36,7 @@ const BrandsPage: React.FC<BrandsPageProps> = ({ isStandalone = false }) => {
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Произошла ошибка при загрузке брендов';
         setError(errorMessage);
+        setBrands([]); // Устанавливаем пустой массив в случае ошибки
         console.error(err);
       } finally {
         setIsLoading(false);

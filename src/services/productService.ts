@@ -1,7 +1,6 @@
 /**
  * Сервис для работы с товарами поставщика
  */
-import authService from './authService';
 import type { 
   Product, 
   ProductQueryParams, 
@@ -10,11 +9,8 @@ import type {
   CreateProductDTO,
   UpdateProductDTO
 } from '../types/product';
+import { api } from '../utils/axiosConfig';
 
-/**
- * Базовый URL API
- */
-const API_URL = import.meta.env.VITE_API_URL;
 /**
  * Интерфейсы для категорий, брендов и единиц измерения
  */
@@ -33,8 +29,6 @@ export interface Unit {
   title: string;
 }
 
-import { api } from '@/utils/axiosConfig';
-
 /**
  * Класс для работы с API товаров поставщика
  */
@@ -43,55 +37,19 @@ class ProductService {
    * Получение списка товаров поставщика с пагинацией и фильтрацией
    */
   async getProducts(params: ProductQueryParams = { page: 1, limit: 10 }): Promise<ProductListResponse> {
-    // Собираем query-параметры
-    const queryParams = new URLSearchParams();
-    
-    // Добавляем параметры в URL, если они заданы
-    if (params.page) queryParams.append('page', params.page.toString());
-    if (params.limit) queryParams.append('limit', params.limit.toString());
-    if (params.sort) queryParams.append('sort', params.sort);
-    if (params.order) queryParams.append('order', params.order);
-    if (params.search) queryParams.append('search', params.search);
-    if (params.category_id) queryParams.append('category_id', params.category_id.toString());
-    if (params.min_price) queryParams.append('min_price', params.min_price.toString());
-    if (params.max_price) queryParams.append('max_price', params.max_price.toString());
-    if (params.status) queryParams.append('status', params.status);
-    
     try {
-      const token = authService.getToken();
-      console.log('Токен доступа:', token ? 'Присутствует' : 'Отсутствует');
+      const response = await api.get<{ products: Product[]; total: number }>('/suppliers/products', { params });
+      const { products, total } = response.data;
       
-      // const response = await authService.fetchWithAuth(url);
-      const response = await api({ 
-        url: `${API_URL}/suppliers/products?${queryParams.toString()}`
-      });
-      console.log('Статус ответа:', response.status);
-      
-      if (response.status !== 200) {
-        // const errorText = await response.text();
-        // console.error('Ошибка при получении списка товаров:', response.status, errorText);
-        throw new Error(`Ошибка при получении списка товаров: ${response.status}`);
-      }
-      
-      const data = response.data;
-      console.log('Получены данные о товарах:', data);
-      
-      // Проверка структуры ответа
-      if (!data.products || !Array.isArray(data.products)) {
-        console.error('Неверная структура ответа API:', data);
-        throw new Error('Неверная структура ответа API');
-      }
-      
-      // Адаптация под структуру ProductListResponse
       return {
-        products: data.products,
-        total: data.total || data.products.length,
+        products,
+        total,
         page: params.page || 1,
         limit: params.limit || 10
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Ошибка при запросе списка товаров:', error);
-      throw error;
+      throw new Error(error.response?.data?.message || 'Ошибка при получении списка товаров');
     }
   }
   
@@ -99,30 +57,12 @@ class ProductService {
    * Получение информации о конкретном товаре
    */
   async getProduct(id: number): Promise<Product> {
-    console.log(`Запрос информации о товаре с ID ${id}`);
-    
-    const response = await authService.fetchWithAuth(`${API_URL}/suppliers/products/${id}`);
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Ошибка при получении товара ${id}:`, response.status, errorText);
-      throw new Error(`Товар с ID ${id} не найден`);
-    }
-    
     try {
-      const data = await response.json();
-      console.log('Получены данные о товаре:', data);
-      
-      // Проверяем, является ли возвращаемое значение оберткой или самим товаром
-      if (data && data.product) {
-        return data.product;
-      }
-      
-      // Если нет обертки product, возвращаем данные как есть
-      return data;
-    } catch (error) {
-      console.error(`Ошибка при обработке данных товара ${id}:`, error);
-      throw new Error(`Ошибка при обработке данных товара с ID ${id}`);
+      const response = await api.get<ProductResponse>(`/suppliers/products/${id}`);
+      return response.data.product;
+    } catch (error: any) {
+      console.error(`Ошибка при получении товара ${id}:`, error);
+      throw new Error(error.response?.data?.message || `Товар с ID ${id} не найден`);
     }
   }
   
@@ -130,59 +70,37 @@ class ProductService {
    * Создание нового товара
    */
   async createProduct(productData: CreateProductDTO): Promise<Product> {
-    console.log('Отправка запроса на создание товара:', productData);
-    
-    const response = await authService.fetchWithAuth(`${API_URL}/suppliers/products`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(productData),
-    });
-    
-    if (!response.ok) {
-      const error = await response.json();
+    try {
+      const response = await api.post<ProductResponse>('/suppliers/products', productData);
+      return response.data.product;
+    } catch (error: any) {
       console.error('Ошибка при создании товара:', error);
-      throw new Error(error.message || 'Ошибка при создании товара');
+      throw new Error(error.response?.data?.message || 'Ошибка при создании товара');
     }
-    
-    const data = await response.json() as ProductResponse;
-    console.log('Товар успешно создан:', data);
-    return data.product;
   }
   
   /**
    * Обновление существующего товара
    */
   async updateProduct(id: number, productData: UpdateProductDTO): Promise<Product> {
-    const response = await authService.fetchWithAuth(`${API_URL}/suppliers/products/${id}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(productData),
-    });
-    
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || `Ошибка при обновлении товара с ID ${id}`);
+    try {
+      const response = await api.patch<ProductResponse>(`/suppliers/products/${id}`, productData);
+      return response.data.product;
+    } catch (error: any) {
+      console.error(`Ошибка при обновлении товара ${id}:`, error);
+      throw new Error(error.response?.data?.message || `Ошибка при обновлении товара с ID ${id}`);
     }
-    
-    const data = await response.json() as ProductResponse;
-    return data.product;
   }
   
   /**
    * Удаление товара
    */
   async deleteProduct(id: number): Promise<void> {
-    const response = await authService.fetchWithAuth(`${API_URL}/suppliers/products/${id}`, {
-      method: 'DELETE',
-    });
-    
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || `Ошибка при удалении товара с ID ${id}`);
+    try {
+      await api.delete(`/suppliers/products/${id}`);
+    } catch (error: any) {
+      console.error(`Ошибка при удалении товара ${id}:`, error);
+      throw new Error(error.response?.data?.message || `Ошибка при удалении товара с ID ${id}`);
     }
   }
 
@@ -190,24 +108,12 @@ class ProductService {
    * Получение списка категорий
    */
   async getCategories(): Promise<Category[]> {
-    console.log('Запрос списка категорий');
-    
     try {
-      const response = await authService.fetchWithAuth(`${API_URL}/categories`);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Ошибка при получении списка категорий:', response.status, errorText);
-        throw new Error(`Ошибка при получении списка категорий: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      console.log('Получены данные о категориях:', data);
-      
-      return data.categories || data;
-    } catch (error) {
+      const response = await api.get<{ categories: Category[] }>('/categories');
+      return response.data.categories;
+    } catch (error: any) {
       console.error('Ошибка при запросе списка категорий:', error);
-      throw error;
+      throw new Error(error.response?.data?.message || 'Ошибка при получении списка категорий');
     }
   }
 
@@ -215,24 +121,12 @@ class ProductService {
    * Получение списка брендов
    */
   async getBrands(): Promise<Brand[]> {
-    console.log('Запрос списка брендов');
-    
     try {
-      const response = await authService.fetchWithAuth(`${API_URL}/brands`);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Ошибка при получении списка брендов:', response.status, errorText);
-        throw new Error(`Ошибка при получении списка брендов: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      console.log('Получены данные о брендах:', data);
-      
-      return data.brands || data;
-    } catch (error) {
+      const response = await api.get<{ brands: Brand[] }>('/brands');
+      return response.data.brands;
+    } catch (error: any) {
       console.error('Ошибка при запросе списка брендов:', error);
-      throw error;
+      throw new Error(error.response?.data?.message || 'Ошибка при получении списка брендов');
     }
   }
 
@@ -240,24 +134,12 @@ class ProductService {
    * Получение списка единиц измерения
    */
   async getUnits(): Promise<Unit[]> {
-    console.log('Запрос списка единиц измерения');
-    
     try {
-      const response = await authService.fetchWithAuth(`${API_URL}/units`);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Ошибка при получении списка единиц измерения:', response.status, errorText);
-        throw new Error(`Ошибка при получении списка единиц измерения: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      console.log('Получены данные о единицах измерения:', data);
-      
-      return data.units || data;
-    } catch (error) {
+      const response = await api.get<{ units: Unit[] }>('/units');
+      return response.data.units;
+    } catch (error: any) {
       console.error('Ошибка при запросе списка единиц измерения:', error);
-      throw error;
+      throw new Error(error.response?.data?.message || 'Ошибка при получении списка единиц измерения');
     }
   }
 
@@ -265,160 +147,52 @@ class ProductService {
    * Создание нового товара с изображениями
    */
   async createProductWithImages(formData: FormData): Promise<Product> {
-    console.log('Отправка запроса на создание товара с изображениями');
-    
-    const response = await authService.fetchWithAuth(`${API_URL}/suppliers/products`, {
-      method: 'POST',
-      // Не указываем Content-Type, чтобы браузер автоматически установил правильный заголовок с boundary
-      body: formData,
-    });
-    
-    if (!response.ok) {
-      let errorMessage = 'Ошибка при создании товара';
-      try {
-        const error = await response.json();
-        errorMessage = error.message || errorMessage;
-      } catch (e) {
-        // Если не удалось распарсить JSON, используем текст ошибки
-        errorMessage = await response.text() || errorMessage;
-      }
-      console.error('Ошибка при создании товара:', errorMessage);
-      throw new Error(errorMessage);
+    try {
+      const response = await api.post<ProductResponse>('/suppliers/products', formData);
+      return response.data.product;
+    } catch (error: any) {
+      console.error('Ошибка при создании товара с изображениями:', error);
+      throw new Error(error.response?.data?.message || 'Ошибка при создании товара с изображениями');
     }
-    
-    const data = await response.json() as ProductResponse;
-    console.log('Товар с изображениями успешно создан:', data);
-    return data.product;
   }
 
   /**
    * Обновление товара с изображениями
-   * 
-   * Использует эндпоинт PATCH /suppliers/products/:id для обновления информации о товаре
-   * Эндпоинт проверяет принадлежность товара авторизованному поставщику
-   * и обновляет только те поля, которые были переданы в запросе
-   * 
-   * @param id ID товара для обновления
-   * @param formData Данные товара в формате FormData (multipart/form-data)
-   * @returns Обновленный товар
    */
   async updateProductWithImages(id: number, formData: FormData): Promise<Product> {
-    console.log(`Отправка запроса на обновление товара с ID ${id} с изображениями`);
-    
-    // Используем эндпоинт для обновления товара поставщика
-    const response = await authService.fetchWithAuth(`${API_URL}/suppliers/products/${id}`, {
-      method: 'PATCH',
-      // Не указываем Content-Type, чтобы браузер автоматически установил правильный заголовок с boundary
-      body: formData,
-    });
-    
-    if (!response.ok) {
-      let errorMessage = `Ошибка при обновлении товара с ID ${id}`;
-      try {
-        const error = await response.json();
-        errorMessage = error.message || errorMessage;
-      } catch (e) {
-        // Если не удалось распарсить JSON, используем текст ошибки
-        errorMessage = await response.text() || errorMessage;
-      }
-      console.error('Ошибка при обновлении товара:', errorMessage);
-      throw new Error(errorMessage);
+    try {
+      const response = await api.patch<ProductResponse>(`/suppliers/products/${id}`, formData);
+      return response.data.product;
+    } catch (error: any) {
+      console.error(`Ошибка при обновлении товара с ID ${id} с изображениями:`, error);
+      throw new Error(error.response?.data?.message || `Ошибка при обновлении товара с ID ${id}`);
     }
-    
-    const data = await response.json() as ProductResponse;
-    console.log('Товар с изображениями успешно обновлен:', data);
-    
-    // Проверяем структуру ответа
-    if (!data || !data.product) {
-      console.warn('Сервер вернул успешный ответ, но структура ответа не соответствует ожидаемой:', data);
-      // Если структура ответа не соответствует ожидаемой, но запрос успешен,
-      // возвращаем данные как есть, предполагая, что сервер вернул сам продукт, а не обертку
-      return data as unknown as Product;
-    }
-    
-    return data.product;
   }
 
   /**
    * Добавление новых изображений к существующему товару
-   * 
-   * @param id ID товара, к которому добавляются изображения
-   * @param files Массив файлов изображений
-   * @returns Успешность операции
    */
-  async addProductImages(id: number, files: File[]): Promise<boolean> {
-    console.log(`Отправка запроса на добавление изображений к товару с ID ${id}`);
-    
+  async addProductImages(id: number, files: File[]): Promise<void> {
     const formData = new FormData();
-    
-    // Добавляем все изображения в поле files
-    files.forEach(file => {
-      formData.append('files', file);
-    });
-    
-    // Используем эндпоинт для добавления изображений к товару
-    const response = await authService.fetchWithAuth(`${API_URL}/suppliers/products/photos/add/${id}`, {
-      method: 'POST',
-      // Не указываем Content-Type, чтобы браузер автоматически установил правильный заголовок с boundary
-      body: formData,
-    });
-    
-    if (!response.ok) {
-      let errorMessage = `Ошибка при добавлении изображений к товару с ID ${id}`;
-      try {
-        const error = await response.json();
-        errorMessage = error.message || errorMessage;
-      } catch (e) {
-        // Если не удалось распарсить JSON, используем текст ошибки
-        errorMessage = await response.text() || errorMessage;
-      }
-      console.error('Ошибка при добавлении изображений:', errorMessage);
-      throw new Error(errorMessage);
-    }
+    files.forEach(file => formData.append('files', file));
     
     try {
-      const data = await response.json();
-      console.log('Ответ сервера после добавления изображений:', data);
-      
-      // Проверяем успешность операции
-      if (data && data.message === "OK") {
-        return true;
-      }
-      
-      return false;
-    } catch (error) {
-      console.error(`Ошибка при обработке данных после добавления изображений к товару ${id}:`, error);
-      // Если не удалось распарсить JSON, но запрос успешен, считаем операцию успешной
-      return true;
+      await api.post(`/suppliers/products/photos/add/${id}`, formData);
+    } catch (error: any) {
+      console.error(`Ошибка при добавлении изображений к товару ${id}:`, error);
+      throw new Error(error.response?.data?.message || `Ошибка при добавлении изображений к товару с ID ${id}`);
     }
   }
 
   /**
    * Удаление фотографии товара
    */
-  async deleteProductImage(productId: number, imageUrl: string): Promise<boolean> {
-    console.log(`Отправка запроса на удаление фотографии товара с ID ${productId}`);
+  async deleteProductImage(productId: number, imageUrl: string): Promise<void> {
     try {
-      const response = await authService.fetchWithAuth(`${API_URL}/suppliers/products/photos/delete/${productId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ link: imageUrl }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Ошибка при удалении фотографии:', response.status, errorText);
-        return false;
-      }
-
-      console.log('Фотография успешно удалена');
-      return true;
-
-    } catch (error) {
-      console.error('Критическая ошибка при удалении фотографии:', error);
-      return false;
+      await api.post(`/suppliers/products/photos/delete/${productId}`, { link: imageUrl });
+    } catch (error: any) {
+      console.error('Ошибка при удалении фотографии:', error);
+      throw new Error(error.response?.data?.message || 'Ошибка при удалении фотографии');
     }
   }
 }
