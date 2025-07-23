@@ -9,7 +9,6 @@ interface AuthContextType {
   isAuthenticated: boolean;
   setAuthData: (supplier: Supplier, token: string) => void;
   logout: () => Promise<void>;
-  refreshToken: () => Promise<string>;
 }
 
 export const useAuthContext = () => {
@@ -23,64 +22,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   
-  // При инициализации проверяем наличие токена
+  // При инициализации проверяем наличие токена и данных пользователя в localStorage
   useEffect(() => {
-    const initAuth = async () => {
-      try {
-        const token = authService.getToken();
-        if (token) {
-          // Пытаемся получить информацию о поставщике с текущим токеном
-          // без принудительного обновления токена
-          const userData = await authService.getCurrentUser();
-          if (userData) {
-            setSupplier(userData);
-            setAccessToken(token);
-          } else {
-            // Если не удалось получить данные, очищаем состояние
-            await authService.logout();
-            setAccessToken(null);
-            setSupplier(null);
-          }
-        } else {
-          // Если токен отсутствует, состояние и так пустое
-        }
-      } catch (error) {
-        console.error('Ошибка при инициализации авторизации:', error);
-        // При ошибке очищаем состояние
-        await authService.logout();
-        setAccessToken(null);
-        setSupplier(null);
-      } finally {
-        // Помечаем инициализацию как завершенную
-        setIsInitialized(true);
+    try {
+      const token = localStorage.getItem('accessToken');
+      const storedSupplier = localStorage.getItem('supplier');
+
+      if (token && storedSupplier) {
+        setAccessToken(token);
+        setSupplier(JSON.parse(storedSupplier));
       }
-    };
-    
-    initAuth();
+    } catch (error) {
+      console.error('Ошибка при инициализации авторизации:', error);
+      // При ошибке очищаем состояние
+      setAccessToken(null);
+      setSupplier(null);
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('supplier');
+    } finally {
+      // Помечаем инициализацию как завершенную
+      setIsInitialized(true);
+    }
   }, []);
 
   const setAuthData = (supplier: Supplier, token: string) => {
     setSupplier(supplier);
     setAccessToken(token);
+    localStorage.setItem('accessToken', token);
+    localStorage.setItem('supplier', JSON.stringify(supplier));
   };
 
   const logout = async () => {
     await authService.logout();
     setSupplier(null);
     setAccessToken(null);
-  };
-  
-  const refreshToken = async (): Promise<string> => {
-    try {
-      const newToken = await authService.refreshToken();
-      setAccessToken(newToken);
-      return newToken;
-    } catch (error) {
-      // Если не удалось обновить токен, очищаем состояние
-      setAccessToken(null);
-      setSupplier(null);
-      throw error;
-    }
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('supplier');
   };
 
   const value = {
@@ -89,7 +66,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     isAuthenticated: !!accessToken,
     setAuthData,
     logout,
-    refreshToken
   };
 
   // Если инициализация не завершена, можно показать загрузку
