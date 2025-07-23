@@ -5,8 +5,9 @@ import React, { useState } from 'react';
 import Layout from '../../components/layout/Layout';
 import BrandsPage from './BrandsPage';
 import UnitsPage from './UnitsPage';
+import CategoriesPage from './CategoriesPage';
 
-type TabType = 'brands' | 'units';
+type TabType = 'brands' | 'units' | 'categories';
 
 const AttributesPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('brands');
@@ -51,6 +52,17 @@ const AttributesPage: React.FC = () => {
             >
               Единицы измерения
             </button>
+            <button
+              onClick={() => handleTabChange('categories')}
+              className={`
+                whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
+                ${activeTab === 'categories'
+                  ? 'border-orange-500 text-orange-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}
+              `}
+            >
+              Категории
+            </button>
           </nav>
         </div>
         
@@ -58,6 +70,7 @@ const AttributesPage: React.FC = () => {
         <div>
           {activeTab === 'brands' && <BrandsPage isStandalone={false} />}
           {activeTab === 'units' && <UnitsPage isStandalone={false} />}
+          {activeTab === 'categories' && <CategoriesPage isStandalone={false} />}
         </div>
       </div>
     </Layout>
