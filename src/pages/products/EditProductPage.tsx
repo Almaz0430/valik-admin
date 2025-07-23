@@ -94,25 +94,19 @@ const EditProductPage: React.FC = () => {
     if (!id) return;
     
     try {
-      const success = await productService.deleteProductImage(parseInt(id), imageUrl);
+      await productService.deleteProductImage(parseInt(id), imageUrl);
       
-      if (success) {
-        // Обновляем состояние, удалив изображение из списка
-        setProduct(prevProduct => {
-          if (!prevProduct) return null;
-          
-          return {
-            ...prevProduct,
-            images: prevProduct.images?.filter(img => img !== imageUrl) || []
-          };
-        });
-      } else {
-        setSubmitError('Не удалось удалить фотографию');
-        throw new Error('Не удалось удалить фотографию');
-      }
+      // Обновляем состояние, удалив изображение из списка
+      setProduct(prevProduct => {
+        if (!prevProduct) return null;
+        
+        return {
+          ...prevProduct,
+          images: prevProduct.images?.filter(img => img !== imageUrl) || []
+        };
+      });
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Произошла ошибка при удалении';
-      setSubmitError(errorMessage);
+      setSubmitError('Не удалось удалить фотографию');
       throw err;
     }
   };

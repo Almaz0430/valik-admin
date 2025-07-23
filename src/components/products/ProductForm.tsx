@@ -276,20 +276,16 @@ const ProductForm: React.FC<ProductFormProps> = ({
     try {
       const productService = (await import('../../services/productService')).default;
       
-      const success = await productService.addProductImages(productId, files);
+      await productService.addProductImages(productId, files);
       
-      if (success) {
-        const newPreviews = files.map(file => URL.createObjectURL(file));
-        
-        setPreviewImages(prev => [...prev, ...newPreviews]);
-        setUploadSuccess(true);
-        
-        setTimeout(() => {
-          setUploadSuccess(false);
-        }, 3000);
-      } else {
-        setUploadError('Не удалось загрузить изображения. Пожалуйста, попробуйте снова.');
-      }
+      const newPreviews = files.map(file => URL.createObjectURL(file));
+      
+      setPreviewImages(prev => [...prev, ...newPreviews]);
+      setUploadSuccess(true);
+      
+      setTimeout(() => {
+        setUploadSuccess(false);
+      }, 3000);
     } catch (error) {
       console.error('Ошибка при загрузке изображений:', error);
       setUploadError(error instanceof Error ? error.message : 'Произошла ошибка при загрузке изображений');

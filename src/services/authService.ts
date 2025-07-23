@@ -7,9 +7,9 @@ import { api } from '../utils/axiosConfig';
 /**
  * Интерфейс для структуры ошибок API
  */
-interface ApiError {
-  message: string;
-}
+// interface ApiError {
+//   message: string;
+// }
 
 /**
  * Класс для работы с API аутентификации
