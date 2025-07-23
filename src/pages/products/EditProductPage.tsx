@@ -39,7 +39,7 @@ const EditProductPage: React.FC = () => {
           productService.getUnits(),
           productService.getCategories()
         ]);
-        
+
         const foundProduct = productData.hasOwnProperty('product') 
           ? (productData as any).product 
           : productData;

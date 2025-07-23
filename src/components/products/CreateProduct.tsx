@@ -59,6 +59,8 @@ const CreateProduct: React.FC<CreateProductProps> = ({ defaultValues, isEditMode
           productService.getUnits()
         ]);
         
+        console.log(categoriesData);
+        
         setCategories(categoriesData);
         setBrands(brandsData);
         setUnits(unitsData);
@@ -232,6 +234,10 @@ const CreateProduct: React.FC<CreateProductProps> = ({ defaultValues, isEditMode
       setIsLoading(false);
     }
   };
+
+  if (isDataLoading) {
+    return <div>Загрузка...</div>;
+  }
 
   return (
     <div className="space-y-6 pb-16 lg:pb-0">

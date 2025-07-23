@@ -58,8 +58,8 @@ class ProductService {
    */
   async getProduct(id: number): Promise<Product> {
     try {
-      const response = await api.get<ProductResponse>(`/suppliers/products/${id}`);
-      return response.data.product;
+      const response = await api.get<Product>(`/suppliers/products/${id}`);
+      return response.data;
     } catch (error: any) {
       console.error(`Ошибка при получении товара ${id}:`, error);
       throw new Error(error.response?.data?.message || `Товар с ID ${id} не найден`);
@@ -109,8 +109,8 @@ class ProductService {
    */
   async getCategories(): Promise<Category[]> {
     try {
-      const response = await api.get<{ categories: Category[] }>('/categories');
-      return response.data.categories;
+      const response = await api.get<Category[]>('/categories');
+      return response.data;
     } catch (error: any) {
       console.error('Ошибка при запросе списка категорий:', error);
       throw new Error(error.response?.data?.message || 'Ошибка при получении списка категорий');
@@ -122,8 +122,8 @@ class ProductService {
    */
   async getBrands(): Promise<Brand[]> {
     try {
-      const response = await api.get<{ brands: Brand[] }>('/brands');
-      return response.data.brands;
+      const response = await api.get<Brand[]>('/brands');
+      return response.data;
     } catch (error: any) {
       console.error('Ошибка при запросе списка брендов:', error);
       throw new Error(error.response?.data?.message || 'Ошибка при получении списка брендов');
@@ -135,8 +135,8 @@ class ProductService {
    */
   async getUnits(): Promise<Unit[]> {
     try {
-      const response = await api.get<{ units: Unit[] }>('/units');
-      return response.data.units;
+      const response = await api.get<Unit[]>('units');
+      return response.data;
     } catch (error: any) {
       console.error('Ошибка при запросе списка единиц измерения:', error);
       throw new Error(error.response?.data?.message || 'Ошибка при получении списка единиц измерения');
