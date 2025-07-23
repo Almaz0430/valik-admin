@@ -257,7 +257,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
       if (isEditMode && productId) {
         handleUploadImages(newFiles);
       } else {
-        const newPreviews = newFiles.map(file => URL.createObjectURL(file));
+        const newPreviews = (newFiles || []).map(file => URL.createObjectURL(file));
         
         handleChange('images', [...(formData.images || []), ...newFiles]);
         
@@ -278,7 +278,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
       
       await productService.addProductImages(productId, files);
       
-      const newPreviews = files.map(file => URL.createObjectURL(file));
+      const newPreviews = (files || []).map(file => URL.createObjectURL(file));
       
       setPreviewImages(prev => [...prev, ...newPreviews]);
       setUploadSuccess(true);
@@ -460,7 +460,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
             <div className="mt-2">
               <Select
                 id="brand_id"
-                options={brands.map(b => ({ value: b.id, label: b.title }))}
+                options={(brands || []).map(b => ({ value: b.id, label: b.title }))}
                 value={selectedBrand}
                 onChange={(option) => handleSelectChange('brand_id', option)}
                 placeholder="Выберите бренд"
@@ -479,7 +479,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
             <div className="mt-2">
               <Select
                 id="unit_id"
-                options={units.map(u => ({ value: u.id, label: u.title }))}
+                options={(units || []).map(u => ({ value: u.id, label: u.title }))}
                 value={selectedUnit}
                 onChange={(option) => handleSelectChange('unit_id', option)}
                 placeholder="Выберите единицу измерения"
@@ -498,7 +498,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
             <div className="mt-2">
               <Select
                 id="category_id"
-                options={categories.map(c => ({ value: c.id, label: c.title }))}
+                options={(categories || []).map(c => ({ value: c.id, label: c.title }))}
                 value={selectedCategory}
                 onChange={(option) => handleSelectChange('category_id', option)}
                 placeholder="Выберите категорию"
@@ -629,7 +629,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
           )}
           
           <div className="flex flex-wrap gap-4">
-            {previewImages.map((preview, index) => (
+            {previewImages.length > 0 && previewImages?.map((preview, index) => (
               <div key={index} className="relative group">
                 <div className="w-32 h-32 border rounded-md overflow-hidden bg-gray-50">
                   <img 
