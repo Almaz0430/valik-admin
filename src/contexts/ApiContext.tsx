@@ -41,6 +41,7 @@ export const ApiProvider = ({ children }: ApiProviderProps) => {
           } catch (refreshError: any) {
             if (refreshError?.response?.status === 401) {
               await authService.logout();
+              navigate('/login');
               // TODO: show session expired message
             }
             return Promise.reject(refreshError);
@@ -48,7 +49,7 @@ export const ApiProvider = ({ children }: ApiProviderProps) => {
         }
 
         if (error.response?.status === 500) {
-          navigate('/');
+          navigate('/login');
           // TODO: show server error notification
         }
 
