@@ -2,7 +2,7 @@
  * Утилита для создания компонентов-оберток с общей функциональностью
  */
 import React, { lazy } from 'react';
-import PageWrapper from '../pages/PageWrapper';
+import PageWrapper from '../components/layout/PageWrapper';
 
 const desktopComponentsMap: Record<string, () => Promise<{ default: React.ComponentType<any> }>> = {
   ProductsPage: () => import('../pages/products/ProductsPage'),
@@ -39,6 +39,3 @@ export function createPageWrapper(
 
   return WrappedComponent;
 }
-
-// Пример использования:
-// export const ProductsPageWrapper = createPageWrapper('./ProductsPage', './ProductsPageMobile'); 

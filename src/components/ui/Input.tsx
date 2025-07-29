@@ -25,8 +25,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
   }, ref) => {
     const inputClasses = `
       block px-4 py-2 w-full rounded-md border-gray-300 shadow-sm 
-      focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50
-      ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}
+      focus:border-transparent focus:ring-0 focus:outline-none
+      ${error ? 'border-red-500 focus:border-transparent' : ''}
       ${leftIcon ? 'pl-10' : ''}
       ${rightIcon ? 'pr-10' : ''}
     `;

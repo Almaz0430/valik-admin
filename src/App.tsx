@@ -18,12 +18,24 @@ import { AttributesPage } from './pages/attributes';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import { ProductsPageWrapper, CreateProductPageWrapper } from './utils/pageWrappers';
 import { ApiProvider } from './contexts/ApiContext';
+import { Toaster } from 'react-hot-toast';
 
 function App() {
   return (
     <AuthProvider>
       <Router>
         <ApiProvider>
+          <Toaster 
+            position="top-center"
+            reverseOrder={false}
+            toastOptions={{
+              duration: 3000,
+              style: {
+                background: '#333',
+                color: '#fff',
+              },
+            }}
+          />
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
