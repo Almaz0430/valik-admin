@@ -2,13 +2,11 @@
  * Компонент создания/редактирования товара для десктопной версии.
  * Использует кастомный хук useProductForm для управления всей логикой.
  */
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { useProductForm } from '../../hooks/useProductForm';
 import {
-  InformationCircleIcon,
   ArrowLeftIcon,
-  CheckCircleIcon,
   XCircleIcon
 } from '@heroicons/react/24/outline';
 import Input from '../ui/Input';
@@ -50,12 +48,10 @@ const selectStyles: StylesConfig<SelectOption, false> = {
 
 const CreateProduct: React.FC<CreateProductProps> = ({ isEditMode = false, productId }) => {
   const {
-    navigate,
     formData,
     isLoading,
     isDataLoading,
     errors,
-    // success больше не нужен
     brands,
     categories,
     units,

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import productService from '../services/productService';
-import type { Product } from '../types/product';
+// import type { Product } from '../types/product'; // Убираем неиспользуемый импорт
 
 // Определяем тип для опций react-select
 export interface SelectOption {
@@ -85,9 +85,9 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
           setFormData({
             title: productData.title,
             description: productData.description || '',
-            brand_id: productData.brand.id,
-            unit_id: productData.unit.id,
-            category_id: productData.category.id,
+            brand_id: productData.brand_id || null,
+            unit_id: productData.unit_id || null,
+            category_id: productData.category_id || null,
             price: productData.price,
             article: productData.article || 0,
             length: productData.length,
@@ -98,12 +98,12 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
           });
           
           // Устанавливаем выбранные значения для селектов
-          setSelectedBrand(brandsOptions.find(b => b.value === productData.brand.id) || null);
-          setSelectedCategory(categoriesOptions.find(c => c.value === productData.category.id) || null);
-          setSelectedUnit(unitsOptions.find(u => u.value === productData.unit.id) || null);
+          setSelectedBrand(brandsOptions.find(b => b.value === productData.brand_id) || null);
+          setSelectedCategory(categoriesOptions.find(c => c.value === productData.category_id) || null);
+          setSelectedUnit(unitsOptions.find(u => u.value === productData.unit_id) || null);
           
-          if (productData.photos) {
-            setPreviewImages(productData.photos.map(p => p.link));
+          if (productData.images) {
+            setPreviewImages(productData.images.map((img: string) => img));
           }
         }
 

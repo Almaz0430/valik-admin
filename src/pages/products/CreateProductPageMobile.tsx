@@ -2,11 +2,11 @@
  * Мобильная версия страницы создания нового товара
  */
 import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Layout from '../../components/layout/Layout';
-import { 
-  ArrowLeftIcon, 
-  InformationCircleIcon, 
-  CheckIcon,
+import {
+  ArrowLeftIcon,
+  InformationCircleIcon,
   PhotoIcon,
   XMarkIcon
 } from '@heroicons/react/24/outline';
@@ -14,7 +14,6 @@ import Input from '../../components/ui/Input';
 import TextArea from '../../components/ui/TextArea';
 import Select from 'react-select';
 import { useProductForm } from '../../hooks/useProductForm';
-import type { SelectOption } from '../../hooks/useProductForm';
 
 const selectStyles = {
   control: (base: any) => ({
@@ -88,13 +87,12 @@ const selectStyles = {
  * Компонент мобильного формы создания товара
  */
 const CreateProductPageMobile: React.FC = () => {
+  const navigate = useNavigate();
   const {
-    navigate,
     formData,
     isLoading,
     isDataLoading,
     errors,
-    // success больше не нужен
     brands,
     categories,
     units,
@@ -122,8 +120,8 @@ const CreateProductPageMobile: React.FC = () => {
     <Layout>
       {/* Шапка страницы с кнопкой возврата */}
       <div className="sticky top-0 z-10 -mx-4 px-4 py-3 bg-white shadow-sm flex items-center mb-4">
-        <button 
-          type="button" 
+        <button
+          type="button"
           onClick={() => navigate(-1)}
           className="mr-3 text-gray-500"
         >
@@ -135,7 +133,7 @@ const CreateProductPageMobile: React.FC = () => {
       {/* Основная форма */}
       <div className="pb-24">
         {/* Сообщение об успешном создании удалено, т.к. используется toast */}
-        
+
         {/* Подсказка */}
         <div className="bg-orange-50 border-l-4 border-orange-500 p-3 mb-6 rounded-md">
           <div className="flex">
@@ -145,21 +143,21 @@ const CreateProductPageMobile: React.FC = () => {
             </p>
           </div>
         </div>
-        
+
         {/* Сообщение об ошибке при отправке формы */}
         {errors.submit && (
           <div className="bg-red-50 border-l-4 border-red-500 p-3 mb-4 rounded-md">
             <p className="text-sm text-red-700">{errors.submit}</p>
           </div>
         )}
-        
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Основная информация */}
           <div className="bg-white rounded-lg p-4 shadow-sm">
             <h2 className="text-base font-medium text-gray-900 mb-4">
               Основная информация
             </h2>
-            
+
             <div className="space-y-4">
               {/* Название */}
               <div>
@@ -176,7 +174,7 @@ const CreateProductPageMobile: React.FC = () => {
                   required
                 />
               </div>
-              
+
               {/* Описание */}
               <div>
                 <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
@@ -194,7 +192,7 @@ const CreateProductPageMobile: React.FC = () => {
                   resize="none"
                 />
               </div>
-              
+
               {/* Артикул */}
               <div>
                 <label htmlFor="article" className="block text-sm font-medium text-gray-700 mb-1">
@@ -209,7 +207,7 @@ const CreateProductPageMobile: React.FC = () => {
                   fullWidth
                 />
               </div>
-              
+
               {/* Бренд */}
               <div>
                 <label htmlFor="brand" className="block text-sm font-medium text-gray-700 mb-1">
@@ -228,7 +226,7 @@ const CreateProductPageMobile: React.FC = () => {
                 />
                 {errors.brand_id && <p className="mt-1 text-xs text-red-500">{errors.brand_id}</p>}
               </div>
-              
+
               {/* Категория */}
               <div>
                 <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
@@ -247,7 +245,7 @@ const CreateProductPageMobile: React.FC = () => {
                 />
                 {errors.category_id && <p className="mt-1 text-xs text-red-500">{errors.category_id}</p>}
               </div>
-              
+
               {/* Единица измерения */}
               <div>
                 <label htmlFor="unit" className="block text-sm font-medium text-gray-700 mb-1">
@@ -268,13 +266,13 @@ const CreateProductPageMobile: React.FC = () => {
               </div>
             </div>
           </div>
-          
+
           {/* Блок цены */}
           <div className="bg-white rounded-lg p-4 shadow-sm">
             <h2 className="text-base font-medium text-gray-900 mb-4">
               Цена
             </h2>
-            
+
             <div>
               <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">
                 Цена (₸) *
@@ -293,14 +291,14 @@ const CreateProductPageMobile: React.FC = () => {
               />
             </div>
           </div>
-          
+
           {/* Габариты (опциональные) */}
           <div className="bg-white rounded-lg p-4 shadow-sm">
             <h2 className="text-base font-medium text-gray-900 mb-4">
               Габариты
               <span className="ml-2 text-xs font-normal text-gray-500">(необязательно)</span>
             </h2>
-            
+
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label htmlFor="length" className="block text-sm font-medium text-gray-700 mb-1">
@@ -316,7 +314,7 @@ const CreateProductPageMobile: React.FC = () => {
                   fullWidth
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="width" className="block text-sm font-medium text-gray-700 mb-1">
                   Ширина (см)
@@ -331,7 +329,7 @@ const CreateProductPageMobile: React.FC = () => {
                   fullWidth
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="height" className="block text-sm font-medium text-gray-700 mb-1">
                   Высота (см)
@@ -346,7 +344,7 @@ const CreateProductPageMobile: React.FC = () => {
                   fullWidth
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="weight" className="block text-sm font-medium text-gray-700 mb-1">
                   Вес (кг)
@@ -363,21 +361,21 @@ const CreateProductPageMobile: React.FC = () => {
               </div>
             </div>
           </div>
-          
+
           {/* Изображения товара */}
           <div className="bg-white rounded-lg p-4 shadow-sm">
             <h2 className="text-base font-medium text-gray-900 mb-4">
               Изображения товара *
             </h2>
-            
+
             <div className="space-y-4">
               <div className="flex flex-wrap gap-3">
                 {previewImages.map((preview, index) => (
                   <div key={index} className="relative">
                     <div className="w-24 h-24 border rounded-md overflow-hidden bg-gray-50">
-                      <img 
-                        src={preview} 
-                        alt={`Предпросмотр ${index + 1}`} 
+                      <img
+                        src={preview}
+                        alt={`Предпросмотр ${index + 1}`}
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -390,7 +388,7 @@ const CreateProductPageMobile: React.FC = () => {
                     </button>
                   </div>
                 ))}
-                
+
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
@@ -400,7 +398,7 @@ const CreateProductPageMobile: React.FC = () => {
                   <span className="mt-1 text-xs text-gray-500">Добавить</span>
                 </button>
               </div>
-              
+
               <input
                 type="file"
                 ref={fileInputRef}
@@ -410,7 +408,7 @@ const CreateProductPageMobile: React.FC = () => {
                 className="hidden"
                 required
               />
-              
+
               {errors.images ? (
                 <p className="text-xs text-red-500">{errors.images}</p>
               ) : (
@@ -422,7 +420,7 @@ const CreateProductPageMobile: React.FC = () => {
           </div>
         </form>
       </div>
-      
+
       {/* Фиксированное нижнее меню с кнопками */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 flex z-20">
         <button
