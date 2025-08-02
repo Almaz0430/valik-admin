@@ -1,20 +1,19 @@
 /**
  * Мобильная версия страницы создания нового товара
  */
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../../components/layout/Layout';
-import { 
-  ArrowLeftIcon, 
-  InformationCircleIcon, 
-  CheckIcon,
+import {
+  ArrowLeftIcon,
+  InformationCircleIcon,
   PhotoIcon,
   XMarkIcon
 } from '@heroicons/react/24/outline';
 import Input from '../../components/ui/Input';
 import TextArea from '../../components/ui/TextArea';
 import Select from 'react-select';
-import productService from '../../services/productService';
+import { useProductForm } from '../../hooks/useProductForm';
 
 const selectStyles = {
   control: (base: any) => ({
@@ -84,275 +83,45 @@ const selectStyles = {
   }),
 };
 
-// Заглушки для API, в реальном приложении заменить на реальные вызовы API
-const mockBrands = [
-  { id: 1, name: 'Knauf' },
-  { id: 2, name: 'Ceresit' },
-  { id: 3, name: 'Технониколь' },
-  { id: 4, name: 'Волма' }
-];
-
-const mockUnits = [
-  { id: 1, name: 'шт' },
-  { id: 2, name: 'кг' },
-  { id: 3, name: 'м²' },
-  { id: 4, name: 'м³' },
-  { id: 5, name: 'упак' }
-];
-
-const mockCategories = [
-  { id: 1, name: 'Строительные смеси' },
-  { id: 2, name: 'Отделочные материалы' },
-  { id: 3, name: 'Инструменты' },
-  { id: 4, name: 'Крепежные изделия' }
-];
-
-// Определяем тип для опций react-select
-interface SelectOption {
-  value: number;
-  label: string;
-}
-
-// Временные значения для тестирования
-const defaultTestValues = {
-  brand_id: 1,   
-  unit_id: 1,    
-  category_id: 1
-};
-
 /**
  * Компонент мобильного формы создания товара
  */
 const CreateProductPageMobile: React.FC = () => {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [success, setSuccess] = useState(false);
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    brand_id: defaultTestValues.brand_id,
-    unit_id: defaultTestValues.unit_id,
-    category_id: defaultTestValues.category_id,
-    price: 0,
-    article: 0,
-    // Опциональные поля
-    length: undefined as number | undefined,
-    width: undefined as number | undefined,
-    height: undefined as number | undefined,
-    weight: undefined as number | undefined,
-    images: [] as File[]
-  });
-  
-  // Состояния для выбранных опций react-select
-  const defaultBrand = mockBrands.find(b => b.id === defaultTestValues.brand_id);
-  const defaultUnit = mockUnits.find(u => u.id === defaultTestValues.unit_id);
-  const defaultCategory = mockCategories.find(c => c.id === defaultTestValues.category_id);
+  const {
+    formData,
+    isLoading,
+    isDataLoading,
+    errors,
+    brands,
+    categories,
+    units,
+    selectedBrand,
+    selectedCategory,
+    selectedUnit,
+    previewImages,
+    fileInputRef,
+    handleSelectChange,
+    handleChange,
+    handleNumberChange,
+    handlePriceChange,
+    handleFileChange,
+    removeImage,
+    handleSubmit,
+  } = useProductForm({ isEditMode: false }); // Явно указываем, что это не режим редактирования
 
-  const [selectedBrand, setSelectedBrand] = useState<SelectOption | null>(defaultBrand ? { value: defaultBrand.id, label: defaultBrand.name } : null);
-  const [selectedUnit, setSelectedUnit] = useState<SelectOption | null>(defaultUnit ? { value: defaultUnit.id, label: defaultUnit.name } : null);
-  const [selectedCategory, setSelectedCategory] = useState<SelectOption | null>(defaultCategory ? { value: defaultCategory.id, label: defaultCategory.name } : null);
-  
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [previewImages, setPreviewImages] = useState<string[]>([]);
-
+  // Установка заголовка страницы
   useEffect(() => {
     document.title = 'Создание товара | Valik.kz';
     return () => { document.title = 'Valik.kz'; };
   }, []);
 
-  const handleChange = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    
-    // Очистка ошибки при изменении поля
-    if (errors[field]) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
-      });
-    }
-  };
-
-  const handleSelectChange = (field: string, selectedOption: SelectOption | null) => {
-    handleChange(field, selectedOption ? selectedOption.value : null);
-
-    if (field === 'brand_id') {
-      setSelectedBrand(selectedOption);
-    } else if (field === 'unit_id') {
-      setSelectedUnit(selectedOption);
-    } else if (field === 'category_id') {
-      setSelectedCategory(selectedOption);
-    }
-  };
-  
-  const handleNumberChange = (field: string, value: string) => {
-    if (value === '') {
-      handleChange(field, undefined);
-    } else {
-      const numValue = parseFloat(value);
-      if (!isNaN(numValue)) {
-        handleChange(field, numValue);
-      }
-    }
-  };
-  
-  const handlePriceChange = (value: string) => {
-    const sanitized = value.replace(/[^\d.]/g, '');
-    
-    if (sanitized === '') {
-      handleChange('price', 0);
-    } else {
-      const numValue = parseFloat(sanitized);
-      if (!isNaN(numValue) && numValue >= 0) {
-        handleChange('price', numValue);
-      }
-    }
-  };
-  
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      // Преобразуем FileList в массив File
-      const newFiles = Array.from(files);
-      
-      // Создаем URL для предпросмотра
-      const newPreviews = newFiles.map(file => URL.createObjectURL(file));
-      
-      // Обновляем состояние
-      setFormData(prev => ({
-        ...prev,
-        images: [...prev.images, ...newFiles]
-      }));
-      
-      setPreviewImages(prev => [...prev, ...newPreviews]);
-
-      // Очистка ошибки при добавлении изображений
-      if (errors.images) {
-        setErrors(prev => {
-          const newErrors = { ...prev };
-          delete newErrors.images;
-          return newErrors;
-        });
-      }
-    }
-  };
-
-  const removeImage = (index: number) => {
-    setFormData(prev => {
-      const newImages = [...prev.images];
-      newImages.splice(index, 1);
-      return { ...prev, images: newImages };
-    });
-    
-    // Освобождаем URL для предотвращения утечек памяти
-    URL.revokeObjectURL(previewImages[index]);
-    
-    setPreviewImages(prev => {
-      const newPreviews = [...prev];
-      newPreviews.splice(index, 1);
-      return newPreviews;
-    });
-  };
-
-  // Очистка URL-ов при размонтировании компонента
-  useEffect(() => {
-    return () => {
-      previewImages.forEach(url => URL.revokeObjectURL(url));
-    };
-  }, [previewImages]);
-  
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
-    
-    if (!formData.title.trim()) {
-      newErrors.title = 'Введите название';
-    }
-    
-    if (!formData.description.trim()) {
-      newErrors.description = 'Введите описание';
-    }
-    
-    if (!formData.price || formData.price <= 0) {
-      newErrors.price = 'Укажите цену';
-    }
-    
-    // Проверка наличия изображений
-    if (!formData.images || formData.images.length === 0) {
-      newErrors.images = 'Загрузите хотя бы одно изображение товара';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-  
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-    
-    setIsLoading(true);
-    
-    try {
-      // Создаем объект FormData для отправки multipart/form-data
-      const formDataToSend = new FormData();
-      
-      // Добавляем все текстовые поля
-      formDataToSend.append('title', formData.title);
-      formDataToSend.append('description', formData.description);
-      formDataToSend.append('price', formData.price.toString());
-      formDataToSend.append('brand_id', formData.brand_id.toString());
-      formDataToSend.append('unit_id', formData.unit_id.toString());
-      formDataToSend.append('category_id', formData.category_id.toString());
-      
-      if (formData.article) {
-        formDataToSend.append('article', formData.article.toString());
-      }
-      
-      if (formData.length !== undefined) {
-        formDataToSend.append('length', formData.length.toString());
-      }
-      
-      if (formData.width !== undefined) {
-        formDataToSend.append('width', formData.width.toString());
-      }
-      
-      if (formData.height !== undefined) {
-        formDataToSend.append('height', formData.height.toString());
-      }
-      
-      if (formData.weight !== undefined) {
-        formDataToSend.append('weight', formData.weight.toString());
-      }
-      
-      // Добавляем все изображения в поле files
-      formData.images.forEach(image => {
-        formDataToSend.append('files', image);
-      });
-      
-      await productService.createProductWithImages(formDataToSend);
-      setSuccess(true);
-      
-      // Показываем сообщение об успехе и перенаправляем через 1.5 секунды
-      setTimeout(() => {
-        navigate('/dashboard/products/mobile');
-      }, 1500);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Произошла ошибка при создании товара';
-      setErrors({ submit: errorMessage });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <Layout>
       {/* Шапка страницы с кнопкой возврата */}
       <div className="sticky top-0 z-10 -mx-4 px-4 py-3 bg-white shadow-sm flex items-center mb-4">
-        <button 
-          type="button" 
+        <button
+          type="button"
           onClick={() => navigate(-1)}
           className="mr-3 text-gray-500"
         >
@@ -363,18 +132,8 @@ const CreateProductPageMobile: React.FC = () => {
 
       {/* Основная форма */}
       <div className="pb-24">
-        {/* Сообщение об успешном создании */}
-        {success && (
-          <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-4 rounded-md">
-            <div className="flex items-center">
-              <CheckIcon className="h-5 w-5 text-green-500 mr-3" />
-              <p className="text-sm text-green-700">
-                Товар успешно создан!
-              </p>
-            </div>
-          </div>
-        )}
-        
+        {/* Сообщение об успешном создании удалено, т.к. используется toast */}
+
         {/* Подсказка */}
         <div className="bg-orange-50 border-l-4 border-orange-500 p-3 mb-6 rounded-md">
           <div className="flex">
@@ -384,21 +143,21 @@ const CreateProductPageMobile: React.FC = () => {
             </p>
           </div>
         </div>
-        
+
         {/* Сообщение об ошибке при отправке формы */}
         {errors.submit && (
           <div className="bg-red-50 border-l-4 border-red-500 p-3 mb-4 rounded-md">
             <p className="text-sm text-red-700">{errors.submit}</p>
           </div>
         )}
-        
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Основная информация */}
           <div className="bg-white rounded-lg p-4 shadow-sm">
             <h2 className="text-base font-medium text-gray-900 mb-4">
               Основная информация
             </h2>
-            
+
             <div className="space-y-4">
               {/* Название */}
               <div>
@@ -415,7 +174,7 @@ const CreateProductPageMobile: React.FC = () => {
                   required
                 />
               </div>
-              
+
               {/* Описание */}
               <div>
                 <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
@@ -433,7 +192,7 @@ const CreateProductPageMobile: React.FC = () => {
                   resize="none"
                 />
               </div>
-              
+
               {/* Артикул */}
               <div>
                 <label htmlFor="article" className="block text-sm font-medium text-gray-700 mb-1">
@@ -448,7 +207,7 @@ const CreateProductPageMobile: React.FC = () => {
                   fullWidth
                 />
               </div>
-              
+
               {/* Бренд */}
               <div>
                 <label htmlFor="brand" className="block text-sm font-medium text-gray-700 mb-1">
@@ -458,15 +217,16 @@ const CreateProductPageMobile: React.FC = () => {
                   id="brand"
                   value={selectedBrand}
                   onChange={(option: any) => handleSelectChange('brand_id', option)}
-                  options={mockBrands.map(brand => ({ value: brand.id, label: brand.name }))}
-                  placeholder="Выберите бренд"
+                  options={brands}
+                  placeholder={isDataLoading ? "Загрузка..." : "Выберите бренд"}
                   isClearable
+                  isLoading={isDataLoading}
                   classNamePrefix="react-select"
                   styles={selectStyles}
                 />
                 {errors.brand_id && <p className="mt-1 text-xs text-red-500">{errors.brand_id}</p>}
               </div>
-              
+
               {/* Категория */}
               <div>
                 <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
@@ -476,15 +236,16 @@ const CreateProductPageMobile: React.FC = () => {
                   id="category"
                   value={selectedCategory}
                   onChange={(option: any) => handleSelectChange('category_id', option)}
-                  options={mockCategories.map(category => ({ value: category.id, label: category.name }))}
-                  placeholder="Выберите категорию"
+                  options={categories}
+                  placeholder={isDataLoading ? "Загрузка..." : "Выберите категорию"}
                   isClearable
+                  isLoading={isDataLoading}
                   classNamePrefix="react-select"
                   styles={selectStyles}
                 />
                 {errors.category_id && <p className="mt-1 text-xs text-red-500">{errors.category_id}</p>}
               </div>
-              
+
               {/* Единица измерения */}
               <div>
                 <label htmlFor="unit" className="block text-sm font-medium text-gray-700 mb-1">
@@ -494,9 +255,10 @@ const CreateProductPageMobile: React.FC = () => {
                   id="unit"
                   value={selectedUnit}
                   onChange={(option: any) => handleSelectChange('unit_id', option)}
-                  options={mockUnits.map(unit => ({ value: unit.id, label: unit.name }))}
-                  placeholder="Выберите единицу"
+                  options={units}
+                  placeholder={isDataLoading ? "Загрузка..." : "Выберите единицу"}
                   isClearable
+                  isLoading={isDataLoading}
                   classNamePrefix="react-select"
                   styles={selectStyles}
                 />
@@ -504,13 +266,13 @@ const CreateProductPageMobile: React.FC = () => {
               </div>
             </div>
           </div>
-          
+
           {/* Блок цены */}
           <div className="bg-white rounded-lg p-4 shadow-sm">
             <h2 className="text-base font-medium text-gray-900 mb-4">
               Цена
             </h2>
-            
+
             <div>
               <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">
                 Цена (₸) *
@@ -529,14 +291,14 @@ const CreateProductPageMobile: React.FC = () => {
               />
             </div>
           </div>
-          
+
           {/* Габариты (опциональные) */}
           <div className="bg-white rounded-lg p-4 shadow-sm">
             <h2 className="text-base font-medium text-gray-900 mb-4">
               Габариты
               <span className="ml-2 text-xs font-normal text-gray-500">(необязательно)</span>
             </h2>
-            
+
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label htmlFor="length" className="block text-sm font-medium text-gray-700 mb-1">
@@ -552,7 +314,7 @@ const CreateProductPageMobile: React.FC = () => {
                   fullWidth
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="width" className="block text-sm font-medium text-gray-700 mb-1">
                   Ширина (см)
@@ -567,7 +329,7 @@ const CreateProductPageMobile: React.FC = () => {
                   fullWidth
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="height" className="block text-sm font-medium text-gray-700 mb-1">
                   Высота (см)
@@ -582,7 +344,7 @@ const CreateProductPageMobile: React.FC = () => {
                   fullWidth
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="weight" className="block text-sm font-medium text-gray-700 mb-1">
                   Вес (кг)
@@ -599,21 +361,21 @@ const CreateProductPageMobile: React.FC = () => {
               </div>
             </div>
           </div>
-          
+
           {/* Изображения товара */}
           <div className="bg-white rounded-lg p-4 shadow-sm">
             <h2 className="text-base font-medium text-gray-900 mb-4">
               Изображения товара *
             </h2>
-            
+
             <div className="space-y-4">
               <div className="flex flex-wrap gap-3">
                 {previewImages.map((preview, index) => (
                   <div key={index} className="relative">
                     <div className="w-24 h-24 border rounded-md overflow-hidden bg-gray-50">
-                      <img 
-                        src={preview} 
-                        alt={`Предпросмотр ${index + 1}`} 
+                      <img
+                        src={preview}
+                        alt={`Предпросмотр ${index + 1}`}
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -626,7 +388,7 @@ const CreateProductPageMobile: React.FC = () => {
                     </button>
                   </div>
                 ))}
-                
+
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
@@ -636,7 +398,7 @@ const CreateProductPageMobile: React.FC = () => {
                   <span className="mt-1 text-xs text-gray-500">Добавить</span>
                 </button>
               </div>
-              
+
               <input
                 type="file"
                 ref={fileInputRef}
@@ -646,7 +408,7 @@ const CreateProductPageMobile: React.FC = () => {
                 className="hidden"
                 required
               />
-              
+
               {errors.images ? (
                 <p className="text-xs text-red-500">{errors.images}</p>
               ) : (
@@ -658,7 +420,7 @@ const CreateProductPageMobile: React.FC = () => {
           </div>
         </form>
       </div>
-      
+
       {/* Фиксированное нижнее меню с кнопками */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 flex z-20">
         <button
@@ -671,15 +433,11 @@ const CreateProductPageMobile: React.FC = () => {
         <button
           type="button"
           onClick={handleSubmit}
-          disabled={isLoading || success}
-          className="flex-1 py-2.5 px-4 bg-orange-600 text-white rounded-lg text-sm font-medium flex items-center justify-center"
+          disabled={isLoading}
+          className="flex-1 py-2.5 px-4 bg-orange-600 text-white rounded-lg text-sm font-medium flex items-center justify-center disabled:opacity-50"
         >
-          {isLoading ? (
-            <span className="inline-block h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
-          ) : success ? (
-            <CheckIcon className="h-4 w-4 mr-1" />
-          ) : null}
-          {isLoading ? 'Создание...' : success ? 'Создано!' : 'Создать товар'}
+          {isLoading && <span className="inline-block h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>}
+          {isLoading ? 'Создание...' : 'Создать товар'}
         </button>
       </div>
     </Layout>

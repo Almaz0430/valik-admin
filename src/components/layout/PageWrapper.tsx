@@ -3,8 +3,8 @@
  */
 import React, { Suspense } from 'react';
 import type { ComponentType } from 'react';
-import MobileDetector from '../components/common/MobileDetector';
-import Layout from '../components/layout/Layout';
+import MobileDetector from '@components/common/MobileDetector';
+import Layout from '@components/layout/Layout';
 
 interface PageWrapperProps {
   // Компоненты для разных устройств

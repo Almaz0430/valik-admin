@@ -17,5 +17,43 @@ export default defineConfig({
       '@styles': '/src/styles',
       '@types': '/src/types',
     }
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => {
+          // React и связанные библиотеки
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom') || id.includes('node_modules/react-router')) {
+            return 'react-vendor';
+          }
+
+          // UI библиотеки
+          if (id.includes('@heroicons/react') || id.includes('react-select') || id.includes('react-hot-toast')) {
+            return 'ui-vendor';
+          }
+
+          // Страницы продуктов
+          if (id.includes('/pages/products/')) {
+            return 'products';
+          }
+
+          // Остальные страницы
+          if (id.includes('/pages/')) {
+            return 'pages';
+          }
+
+          // Компоненты
+          if (id.includes('/components/')) {
+            return 'components';
+          }
+
+          // Остальные node_modules
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
+        }
+      }
+    },
+    chunkSizeWarningLimit: 300
   }
 })
