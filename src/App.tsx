@@ -6,10 +6,6 @@ import { AuthProvider } from './contexts/AuthContext';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
-import ProductsPage from './pages/products/ProductsPage';
-import ProductsPageMobile from './pages/products/ProductsPageMobile';
-import CreateProductPage from './pages/products/CreateProductPage';
-import CreateProductPageMobile from './pages/products/CreateProductPageMobile';
 import EditProductPage from './pages/products/EditProductPage';
 import OrdersPage from './pages/orders/OrdersPage';
 import ProfilePage from './pages/profile/ProfilePage';
@@ -52,34 +48,10 @@ function App() {
               </ProtectedRoute>
             } />
             
-            {/* Прямые маршруты для десктопной и мобильной версий */}
-            <Route path="/dashboard/products/desktop" element={
-              <ProtectedRoute>
-                <ProductsPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/dashboard/products/mobile" element={
-              <ProtectedRoute>
-                <ProductsPageMobile />
-              </ProtectedRoute>
-            } />
-            
             {/* Основной маршрут для создания товара с автоопределением устройства */}
             <Route path="/dashboard/products/create" element={
               <ProtectedRoute>
                 <CreateProductPageWrapper />
-              </ProtectedRoute>
-            } />
-            
-            {/* Прямые маршруты для десктопной и мобильной версий создания товара */}
-            <Route path="/dashboard/products/create/desktop" element={
-              <ProtectedRoute>
-                <CreateProductPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/dashboard/products/create/mobile" element={
-              <ProtectedRoute>
-                <CreateProductPageMobile />
               </ProtectedRoute>
             } />
             

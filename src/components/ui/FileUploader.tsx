@@ -1,14 +1,16 @@
 /**
- * Компонент для загрузки изображений с возможностью предпросмотра
+ * Компонент для загрузки изображений с возможностью предпросмотра и редактирования
  */
-import React from 'react';
-import { PhotoIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import React, { useState } from 'react';
+import { PhotoIcon, XMarkIcon, PencilIcon } from '@heroicons/react/24/outline';
+import ImageEditor from './ImageEditor';
 
 interface FileUploaderProps {
   fileInputRef: React.RefObject<HTMLInputElement>;
   previewImages: string[];
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onRemoveImage: (index: number) => void;
+  onEditImage?: (index: number, editedFile: File) => void;
   error?: string;
   multiple?: boolean;
 }
@@ -18,26 +20,67 @@ const FileUploader: React.FC<FileUploaderProps> = ({
   previewImages,
   onFileChange,
   onRemoveImage,
+  onEditImage,
   error,
   multiple = true,
 }) => {
+  const [editingImage, setEditingImage] = useState<{
+    index: number;
+    url: string;
+    fileName: string;
+  } | null>(null);
+
+  const handleEditImage = (index: number) => {
+    const imageUrl = previewImages[index];
+    const fileName = `image_${index + 1}.jpg`;
+    setEditingImage({ index, url: imageUrl, fileName });
+  };
+
+  const handleSaveEditedImage = (editedFile: File) => {
+    if (editingImage && onEditImage) {
+      onEditImage(editingImage.index, editedFile);
+    }
+    setEditingImage(null);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingImage(null);
+  };
+
   return (
     <div className="space-y-2">
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
         {previewImages.map((preview, index) => (
-          <div key={index} className="relative aspect-square">
+          <div key={index} className="relative aspect-square group">
             <img
               src={preview}
               alt={`Предпросмотр ${index + 1}`}
               className="w-full h-full object-cover rounded-lg border border-gray-200"
             />
-            <button
-              type="button"
-              onClick={() => onRemoveImage(index)}
-              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 shadow-lg hover:bg-red-600 transition-colors"
-            >
-              <XMarkIcon className="h-4 w-4" />
-            </button>
+            
+            {/* Кнопки управления изображением */}
+            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100">
+              <div className="flex space-x-2">
+                {onEditImage && (
+                  <button
+                    type="button"
+                    onClick={() => handleEditImage(index)}
+                    className="bg-blue-500 text-white rounded-full p-2 shadow-lg hover:bg-blue-600 transition-colors"
+                    title="Редактировать изображение"
+                  >
+                    <PencilIcon className="h-4 w-4" />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => onRemoveImage(index)}
+                  className="bg-red-500 text-white rounded-full p-2 shadow-lg hover:bg-red-600 transition-colors"
+                  title="Удалить изображение"
+                >
+                  <XMarkIcon className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
           </div>
         ))}
 
@@ -64,8 +107,18 @@ const FileUploader: React.FC<FileUploaderProps> = ({
         <p className="text-xs text-red-500">{error}</p>
       ) : (
         <p className="text-xs text-gray-500">
-          Вы можете загрузить несколько изображений в формате JPG, PNG, WebP.
+          Вы можете загрузить несколько изображений в формате JPG, PNG, WebP. Наведите на изображение для редактирования.
         </p>
+      )}
+
+      {/* Модальное окно редактора изображений */}
+      {editingImage && (
+        <ImageEditor
+          imageUrl={editingImage.url}
+          fileName={editingImage.fileName}
+          onSave={handleSaveEditedImage}
+          onCancel={handleCancelEdit}
+        />
       )}
     </div>
   );

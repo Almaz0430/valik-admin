@@ -88,7 +88,7 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
             brand_id: productData.brand_id || null,
             unit_id: productData.unit_id || null,
             category_id: productData.category_id || null,
-            price: productData.price,
+            price: productData.price, // Отображаем полную цену как есть
             article: productData.article || 0,
             length: productData.length,
             width: productData.width,
@@ -205,6 +205,25 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
     });
   };
 
+  const editImage = (index: number, editedFile: File) => {
+    // Заменяем файл в массиве изображений
+    setFormData(prev => {
+      const newImages = [...prev.images];
+      newImages[index] = editedFile;
+      return { ...prev, images: newImages };
+    });
+    
+    // Освобождаем старый URL и создаем новый для предпросмотра
+    URL.revokeObjectURL(previewImages[index]);
+    const newPreviewUrl = URL.createObjectURL(editedFile);
+    
+    setPreviewImages(prev => {
+      const newPreviews = [...prev];
+      newPreviews[index] = newPreviewUrl;
+      return newPreviews;
+    });
+  };
+
   useEffect(() => {
     return () => {
       previewImages.forEach(url => URL.revokeObjectURL(url));
@@ -237,42 +256,62 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
     const toastId = toast.loading(isEditMode ? 'Обновление товара...' : 'Создание товара...');
     
     try {
-      const formDataToSend = new FormData();
-      
       // Обязательно проверяем на null, т.к. начальное состояние - null
       if (formData.brand_id === null || formData.unit_id === null || formData.category_id === null) {
         throw new Error("Бренд, категория и ед. измерения должны быть выбраны");
       }
 
-      formDataToSend.append('title', formData.title);
-      formDataToSend.append('description', formData.description);
-      formDataToSend.append('price', formData.price.toString());
-      formDataToSend.append('brand_id', formData.brand_id.toString());
-      formDataToSend.append('unit_id', formData.unit_id.toString());
-      formDataToSend.append('category_id', formData.category_id.toString());
-      
-      if (formData.article) formDataToSend.append('article', formData.article.toString());
-      if (formData.length !== undefined) formDataToSend.append('length', formData.length.toString());
-      if (formData.width !== undefined) formDataToSend.append('width', formData.width.toString());
-      if (formData.height !== undefined) formDataToSend.append('height', formData.height.toString());
-      if (formData.weight !== undefined) formDataToSend.append('weight', formData.weight.toString());
-      
-      formData.images.forEach(image => {
-        formDataToSend.append('files', image);
-      });
-      
       if (isEditMode && productId) {
-        await productService.updateProductWithImages(productId, formDataToSend);
-        toast.success('Товар успешно обновлен!', { id: toastId });
+        // Для редактирования используем JSON данные (без изображений)
+        const updateData: any = {
+          title: formData.title,
+          description: formData.description,
+          price: formData.price, // Отправляем полную цену как есть
+          brand_id: formData.brand_id,
+          unit_id: formData.unit_id,
+          category_id: formData.category_id,
+        };
 
-        // Через 1.5 секунды можно сделать редирект или обновить данные
+        // Добавляем опциональные поля только если они заданы
+        if (formData.article) updateData.article = formData.article;
+        if (formData.length !== undefined && formData.length !== null) updateData.length = formData.length;
+        if (formData.width !== undefined && formData.width !== null) updateData.width = formData.width;
+        if (formData.height !== undefined && formData.height !== null) updateData.height = formData.height;
+        if (formData.weight !== undefined && formData.weight !== null) updateData.weight = formData.weight;
+
+        await productService.updateProduct(productId, updateData);
+        
+        // Если есть новые изображения, добавляем их отдельно
+        if (formData.images.length > 0) {
+          await productService.addProductImages(productId, formData.images);
+        }
+
+        toast.success('Товар успешно обновлен!', { id: toastId });
         setTimeout(() => navigate('/dashboard/products'), 1500);
 
       } else {
+        // Для создания используем FormData с изображениями
+        const formDataToSend = new FormData();
+        
+        formDataToSend.append('title', formData.title);
+        formDataToSend.append('description', formData.description);
+        formDataToSend.append('price', formData.price.toString()); // Отправляем полную цену как есть
+        formDataToSend.append('brand_id', formData.brand_id.toString());
+        formDataToSend.append('unit_id', formData.unit_id.toString());
+        formDataToSend.append('category_id', formData.category_id.toString());
+        
+        if (formData.article) formDataToSend.append('article', formData.article.toString());
+        if (formData.length !== undefined && formData.length !== null) formDataToSend.append('length', formData.length.toString());
+        if (formData.width !== undefined && formData.width !== null) formDataToSend.append('width', formData.width.toString());
+        if (formData.height !== undefined && formData.height !== null) formDataToSend.append('height', formData.height.toString());
+        if (formData.weight !== undefined && formData.weight !== null) formDataToSend.append('weight', formData.weight.toString());
+        
+        formData.images.forEach(image => {
+          formDataToSend.append('files', image);
+        });
+
         await productService.createProductWithImages(formDataToSend);
         toast.success('Товар успешно создан!', { id: toastId });
-
-        // Перенаправляем на список товаров после успеха
         setTimeout(() => navigate('/dashboard/products'), 1500);
       }
       
@@ -306,6 +345,7 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
     handlePriceChange,
     handleFileChange,
     removeImage,
+    editImage,
     handleSubmit,
   };
 }; 

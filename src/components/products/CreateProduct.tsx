@@ -66,6 +66,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ isEditMode = false, produ
     handlePriceChange,
     handleFileChange,
     removeImage,
+    editImage,
     handleSubmit,
   } = useProductForm({ isEditMode, productId });
 
@@ -143,6 +144,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ isEditMode = false, produ
               previewImages={previewImages}
               onFileChange={handleFileChange}
               onRemoveImage={removeImage}
+              onEditImage={editImage}
               error={errors.images}
             />
           </div>
