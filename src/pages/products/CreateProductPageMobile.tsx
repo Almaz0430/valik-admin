@@ -2,13 +2,12 @@
  * Мобильная версия страницы создания нового товара
  */
 import React, { useEffect } from 'react';
+import FileUploader from '../../components/ui/FileUploader';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../../components/layout/Layout';
 import {
   ArrowLeftIcon,
-  InformationCircleIcon,
-  PhotoIcon,
-  XMarkIcon
+  InformationCircleIcon
 } from '@heroicons/react/24/outline';
 import Input from '../../components/ui/Input';
 import TextArea from '../../components/ui/TextArea';
@@ -107,6 +106,7 @@ const CreateProductPageMobile: React.FC = () => {
     handlePriceChange,
     handleFileChange,
     removeImage,
+    editImage,
     handleSubmit,
   } = useProductForm({ isEditMode: false }); // Явно указываем, что это не режим редактирования
 
@@ -151,271 +151,153 @@ const CreateProductPageMobile: React.FC = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
           {/* Основная информация */}
           <div className="bg-white rounded-lg p-4 shadow-sm">
-            <h2 className="text-base font-medium text-gray-900 mb-4">
-              Основная информация
-            </h2>
-
+            <h2 className="text-base font-medium text-gray-900 mb-4">Основная информация</h2>
             <div className="space-y-4">
-              {/* Название */}
-              <div>
-                <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
-                  Название товара *
-                </label>
-                <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) => handleChange('title', e.target.value)}
-                  placeholder="Например: Цемент М500 Д0 ПЦ, 50 кг"
-                  error={errors.title}
-                  fullWidth
-                  required
-                />
-              </div>
-
-              {/* Описание */}
-              <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                  Описание товара *
-                </label>
-                <TextArea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => handleChange('description', e.target.value)}
-                  placeholder="Опишите характеристики товара..."
-                  rows={3}
-                  error={errors.description}
-                  fullWidth
-                  required
-                  resize="none"
-                />
-              </div>
-
-              {/* Артикул */}
-              <div>
-                <label htmlFor="article" className="block text-sm font-medium text-gray-700 mb-1">
-                  Артикул
-                </label>
-                <Input
-                  id="article"
-                  value={formData.article?.toString() || ''}
-                  onChange={(e) => handleNumberChange('article', e.target.value)}
-                  placeholder="Например: 12345"
-                  type="number"
-                  fullWidth
-                />
-              </div>
-
-              {/* Бренд */}
-              <div>
-                <label htmlFor="brand" className="block text-sm font-medium text-gray-700 mb-1">
-                  Бренд *
-                </label>
-                <Select
-                  id="brand"
-                  value={selectedBrand}
-                  onChange={(option: any) => handleSelectChange('brand_id', option)}
-                  options={brands}
-                  placeholder={isDataLoading ? "Загрузка..." : "Выберите бренд"}
-                  isClearable
-                  isLoading={isDataLoading}
-                  classNamePrefix="react-select"
-                  styles={selectStyles}
-                />
-                {errors.brand_id && <p className="mt-1 text-xs text-red-500">{errors.brand_id}</p>}
-              </div>
-
-              {/* Категория */}
-              <div>
-                <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
-                  Категория *
-                </label>
-                <Select
-                  id="category"
-                  value={selectedCategory}
-                  onChange={(option: any) => handleSelectChange('category_id', option)}
-                  options={categories}
-                  placeholder={isDataLoading ? "Загрузка..." : "Выберите категорию"}
-                  isClearable
-                  isLoading={isDataLoading}
-                  classNamePrefix="react-select"
-                  styles={selectStyles}
-                />
-                {errors.category_id && <p className="mt-1 text-xs text-red-500">{errors.category_id}</p>}
-              </div>
-
-              {/* Единица измерения */}
-              <div>
-                <label htmlFor="unit" className="block text-sm font-medium text-gray-700 mb-1">
-                  Единица измерения *
-                </label>
-                <Select
-                  id="unit"
-                  value={selectedUnit}
-                  onChange={(option: any) => handleSelectChange('unit_id', option)}
-                  options={units}
-                  placeholder={isDataLoading ? "Загрузка..." : "Выберите единицу"}
-                  isClearable
-                  isLoading={isDataLoading}
-                  classNamePrefix="react-select"
-                  styles={selectStyles}
-                />
-                {errors.unit_id && <p className="mt-1 text-xs text-red-500">{errors.unit_id}</p>}
-              </div>
-            </div>
-          </div>
-
-          {/* Блок цены */}
-          <div className="bg-white rounded-lg p-4 shadow-sm">
-            <h2 className="text-base font-medium text-gray-900 mb-4">
-              Цена
-            </h2>
-
-            <div>
-              <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">
-                Цена (₸) *
-              </label>
               <Input
-                id="price"
-                value={formData.price.toString()}
-                onChange={(e) => handlePriceChange(e.target.value)}
-                placeholder="0"
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                fullWidth
-                error={errors.price}
+                id="title"
+                label="Название товара *"
+                placeholder="Введите название товара"
+                value={formData.title}
+                onChange={(e) => handleChange('title', e.target.value)}
+                error={errors.title}
+                required
+              />
+              <TextArea
+                id="description"
+                label="Описание *"
+                placeholder="Опишите характеристики и особенности товара"
+                value={formData.description}
+                onChange={(e) => handleChange('description', e.target.value)}
+                error={errors.description}
+                rows={4}
+                resize="none"
                 required
               />
             </div>
           </div>
 
-          {/* Габариты (опциональные) */}
+          {/* Изображения */}
           <div className="bg-white rounded-lg p-4 shadow-sm">
-            <h2 className="text-base font-medium text-gray-900 mb-4">
-              Габариты
-              <span className="ml-2 text-xs font-normal text-gray-500">(необязательно)</span>
-            </h2>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label htmlFor="length" className="block text-sm font-medium text-gray-700 mb-1">
-                  Длина (см)
-                </label>
-                <Input
-                  id="length"
-                  value={formData.length?.toString() || ''}
-                  onChange={(e) => handleNumberChange('length', e.target.value)}
-                  placeholder="0"
-                  type="number"
-                  step="0.1"
-                  fullWidth
-                />
-              </div>
-
-              <div>
-                <label htmlFor="width" className="block text-sm font-medium text-gray-700 mb-1">
-                  Ширина (см)
-                </label>
-                <Input
-                  id="width"
-                  value={formData.width?.toString() || ''}
-                  onChange={(e) => handleNumberChange('width', e.target.value)}
-                  placeholder="0"
-                  type="number"
-                  step="0.1"
-                  fullWidth
-                />
-              </div>
-
-              <div>
-                <label htmlFor="height" className="block text-sm font-medium text-gray-700 mb-1">
-                  Высота (см)
-                </label>
-                <Input
-                  id="height"
-                  value={formData.height?.toString() || ''}
-                  onChange={(e) => handleNumberChange('height', e.target.value)}
-                  placeholder="0"
-                  type="number"
-                  step="0.1"
-                  fullWidth
-                />
-              </div>
-
-              <div>
-                <label htmlFor="weight" className="block text-sm font-medium text-gray-700 mb-1">
-                  Вес (кг)
-                </label>
-                <Input
-                  id="weight"
-                  value={formData.weight?.toString() || ''}
-                  onChange={(e) => handleNumberChange('weight', e.target.value)}
-                  placeholder="0"
-                  type="number"
-                  step="0.1"
-                  fullWidth
-                />
-              </div>
-            </div>
+            <h2 className="text-base font-medium text-gray-900 mb-4">Изображения</h2>
+            <FileUploader
+              fileInputRef={fileInputRef as React.RefObject<HTMLInputElement>}
+              previewImages={previewImages}
+              onFileChange={handleFileChange}
+              onRemoveImage={removeImage}
+              onEditImage={editImage}
+              error={errors.images}
+            />
           </div>
 
-          {/* Изображения товара */}
+          {/* Организация */}
           <div className="bg-white rounded-lg p-4 shadow-sm">
-            <h2 className="text-base font-medium text-gray-900 mb-4">
-              Изображения товара *
-            </h2>
-
+            <h2 className="text-base font-medium text-gray-900 mb-4">Организация</h2>
             <div className="space-y-4">
-              <div className="flex flex-wrap gap-3">
-                {previewImages.map((preview, index) => (
-                  <div key={index} className="relative">
-                    <div className="w-24 h-24 border rounded-md overflow-hidden bg-gray-50">
-                      <img
-                        src={preview}
-                        alt={`Предпросмотр ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => removeImage(index)}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md"
-                    >
-                      <XMarkIcon className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))}
-
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-24 h-24 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-md"
-                >
-                  <PhotoIcon className="h-6 w-6 text-gray-400" />
-                  <span className="mt-1 text-xs text-gray-500">Добавить</span>
-                </button>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Категория *</label>
+                <Select
+                  value={selectedCategory}
+                  onChange={(option) => handleSelectChange('category_id', option)}
+                  options={categories}
+                  styles={selectStyles}
+                  placeholder="Выберите категорию"
+                  isLoading={isDataLoading}
+                  isDisabled={isDataLoading}
+                />
+                {errors.category_id && <p className="text-xs text-red-500 mt-1">{errors.category_id}</p>}
               </div>
-
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                accept="image/*"
-                multiple
-                className="hidden"
-                required
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Бренд *</label>
+                <Select
+                  value={selectedBrand}
+                  onChange={(option) => handleSelectChange('brand_id', option)}
+                  options={brands}
+                  styles={selectStyles}
+                  placeholder="Выберите бренд"
+                  isLoading={isDataLoading}
+                  isDisabled={isDataLoading}
+                />
+                {errors.brand_id && <p className="text-xs text-red-500 mt-1">{errors.brand_id}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Ед. измерения *</label>
+                <Select
+                  value={selectedUnit}
+                  onChange={(option) => handleSelectChange('unit_id', option)}
+                  options={units}
+                  styles={selectStyles}
+                  placeholder="Выберите единицу"
+                  isLoading={isDataLoading}
+                  isDisabled={isDataLoading}
+                />
+                {errors.unit_id && <p className="text-xs text-red-500 mt-1">{errors.unit_id}</p>}
+              </div>
+              <Input
+                id="article"
+                label="Артикул"
+                placeholder="Введите артикул товара"
+                value={formData.article || ''}
+                onChange={(e) => handleNumberChange('article', e.target.value)}
               />
+            </div>
+          </div>
 
-              {errors.images ? (
-                <p className="text-xs text-red-500">{errors.images}</p>
-              ) : (
-                <p className="text-xs text-gray-500">
-                  Загрузите хотя бы одно изображение товара
-                </p>
-              )}
+          {/* Цена */}
+          <div className="bg-white rounded-lg p-4 shadow-sm">
+            <h2 className="text-base font-medium text-gray-900 mb-4">Цена</h2>
+            <Input
+              id="price"
+              label="Цена (₸) *"
+              value={formData.price.toString()}
+              onChange={(e) => handlePriceChange(e.target.value)}
+              placeholder="0"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              error={errors.price}
+              required
+            />
+          </div>
+
+          {/* Габариты */}
+          <div className="bg-white rounded-lg p-4 shadow-sm">
+            <h2 className="text-base font-medium text-gray-900 mb-4">Габариты</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                id="length"
+                label="Длина (см)"
+                value={formData.length?.toString() || ''}
+                onChange={(e) => handleNumberChange('length', e.target.value)}
+                placeholder="0"
+                type="number"
+              />
+              <Input
+                id="width"
+                label="Ширина (см)"
+                value={formData.width?.toString() || ''}
+                onChange={(e) => handleNumberChange('width', e.target.value)}
+                placeholder="0"
+                type="number"
+              />
+              <Input
+                id="height"
+                label="Высота (см)"
+                value={formData.height?.toString() || ''}
+                onChange={(e) => handleNumberChange('height', e.target.value)}
+                placeholder="0"
+                type="number"
+              />
+              <Input
+                id="weight"
+                label="Вес (кг)"
+                value={formData.weight?.toString() || ''}
+                onChange={(e) => handleNumberChange('weight', e.target.value)}
+                placeholder="0"
+                type="number"
+              />
             </div>
           </div>
         </form>

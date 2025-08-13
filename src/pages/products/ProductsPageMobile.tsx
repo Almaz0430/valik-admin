@@ -197,7 +197,7 @@ const ProductsPageMobile: React.FC = () => {
           </form>
           
           <Link 
-            to="/dashboard/products/create/mobile" 
+            to="/dashboard/products/create" 
             className="flex items-center justify-center w-12 h-10 bg-orange-600 text-white rounded-full shadow-md hover:bg-orange-700"
           >
             <PlusIcon className="h-5 w-5" />
@@ -258,7 +258,7 @@ const ProductsPageMobile: React.FC = () => {
                 <p className="text-xl text-gray-800 font-medium mb-2">Товары не найдены</p>
                 <p className="text-gray-500 text-sm mb-4">Добавьте новый товар или измените параметры поиска</p>
                 <Link 
-                  to="/dashboard/products/create/mobile"
+                  to="/dashboard/products/create"
                   className="inline-flex items-center px-4 py-2 bg-orange-600 text-white text-sm font-medium rounded-full hover:bg-orange-700"
                 >
                   <PlusIcon className="h-4 w-4 mr-1.5" />
