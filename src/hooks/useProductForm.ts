@@ -96,12 +96,12 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
             weight: productData.weight,
             images: [] // Изображения загружаются отдельно
           });
-          
+
           // Устанавливаем выбранные значения для селектов
-          setSelectedBrand(brandsOptions.find(b => b.value === productData.brand_id) || null);
-          setSelectedCategory(categoriesOptions.find(c => c.value === productData.category_id) || null);
-          setSelectedUnit(unitsOptions.find(u => u.value === productData.unit_id) || null);
-          
+          setSelectedBrand(brandsOptions.find(b => b.value == productData.brand_id) || null);
+          setSelectedCategory(categoriesOptions.find(c => c.value == productData.category_id) || null);
+          setSelectedUnit(unitsOptions.find(u => u.value == productData.unit_id) || null);
+
           if (productData.images) {
             setPreviewImages(productData.images.map((img: string) => img));
           }
@@ -117,7 +117,7 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
 
     fetchSelectData();
   }, [productId, isEditMode]);
-  
+
   const handleChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
 
@@ -141,7 +141,7 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
       setSelectedCategory(selectedOption);
     }
   };
-  
+
   const handleNumberChange = (field: string, value: string) => {
     if (value === '') {
       handleChange(field, undefined);
@@ -152,10 +152,10 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
       }
     }
   };
-  
+
   const handlePriceChange = (value: string) => {
     const sanitized = value.replace(/[^\d.]/g, '');
-    
+
     if (sanitized === '') {
       handleChange('price', 0);
     } else {
@@ -171,12 +171,12 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
     if (files && files.length > 0) {
       const newFiles = Array.from(files);
       const newPreviews = newFiles.map(file => URL.createObjectURL(file));
-      
+
       setFormData(prev => ({
         ...prev,
         images: [...prev.images, ...newFiles]
       }));
-      
+
       setPreviewImages(prev => [...prev, ...newPreviews]);
 
       if (errors.images) {
@@ -195,9 +195,9 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
       newImages.splice(index, 1);
       return { ...prev, images: newImages };
     });
-    
+
     URL.revokeObjectURL(previewImages[index]);
-    
+
     setPreviewImages(prev => {
       const newPreviews = [...prev];
       newPreviews.splice(index, 1);
@@ -212,11 +212,11 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
       newImages[index] = editedFile;
       return { ...prev, images: newImages };
     });
-    
+
     // Освобождаем старый URL и создаем новый для предпросмотра
     URL.revokeObjectURL(previewImages[index]);
     const newPreviewUrl = URL.createObjectURL(editedFile);
-    
+
     setPreviewImages(prev => {
       const newPreviews = [...prev];
       newPreviews[index] = newPreviewUrl;
@@ -229,10 +229,10 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
       previewImages.forEach(url => URL.revokeObjectURL(url));
     };
   }, [previewImages]);
-  
+
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!formData.title.trim()) newErrors.title = 'Введите название';
     if (!formData.description.trim()) newErrors.description = 'Введите описание';
     if (!formData.brand_id) newErrors.brand_id = 'Выберите бренд';
@@ -243,18 +243,18 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
     if (!isEditMode && (!formData.images || formData.images.length === 0)) {
       newErrors.images = 'Загрузите хотя бы одно изображение товара';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
-    
+
     setIsLoading(true);
     const toastId = toast.loading(isEditMode ? 'Обновление товара...' : 'Создание товара...');
-    
+
     try {
       // Обязательно проверяем на null, т.к. начальное состояние - null
       if (formData.brand_id === null || formData.unit_id === null || formData.category_id === null) {
@@ -280,7 +280,7 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
         if (formData.weight !== undefined && formData.weight !== null) updateData.weight = formData.weight;
 
         await productService.updateProduct(productId, updateData);
-        
+
         // Если есть новые изображения, добавляем их отдельно
         if (formData.images.length > 0) {
           await productService.addProductImages(productId, formData.images);
@@ -292,20 +292,20 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
       } else {
         // Для создания используем FormData с изображениями
         const formDataToSend = new FormData();
-        
+
         formDataToSend.append('title', formData.title);
         formDataToSend.append('description', formData.description);
         formDataToSend.append('price', formData.price.toString()); // Отправляем полную цену как есть
         formDataToSend.append('brand_id', formData.brand_id.toString());
         formDataToSend.append('unit_id', formData.unit_id.toString());
         formDataToSend.append('category_id', formData.category_id.toString());
-        
+
         if (formData.article) formDataToSend.append('article', formData.article.toString());
         if (formData.length !== undefined && formData.length !== null) formDataToSend.append('length', formData.length.toString());
         if (formData.width !== undefined && formData.width !== null) formDataToSend.append('width', formData.width.toString());
         if (formData.height !== undefined && formData.height !== null) formDataToSend.append('height', formData.height.toString());
         if (formData.weight !== undefined && formData.weight !== null) formDataToSend.append('weight', formData.weight.toString());
-        
+
         formData.images.forEach(image => {
           formDataToSend.append('files', image);
         });
@@ -314,7 +314,7 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
         toast.success('Товар успешно создан!', { id: toastId });
         setTimeout(() => navigate('/dashboard/products'), 1500);
       }
-      
+
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Произошла неизвестная ошибка';
       toast.error(errorMessage, { id: toastId });
@@ -348,4 +348,4 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
     editImage,
     handleSubmit,
   };
-}; 
+};

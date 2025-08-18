@@ -275,4 +275,4 @@ const CreateProduct: React.FC<CreateProductProps> = ({ isEditMode = false, produ
   );
 };
 
-export default CreateProduct; 
+export default CreateProduct;
