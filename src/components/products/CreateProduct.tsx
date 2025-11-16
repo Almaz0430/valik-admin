@@ -4,7 +4,7 @@
  */
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useProductForm } from '../../hooks/useProductForm';
+import { useProductForm } from '../../features/products';
 import {
   ArrowLeftIcon,
   XCircleIcon
@@ -14,7 +14,7 @@ import TextArea from '../ui/TextArea';
 import Select from 'react-select';
 import type { StylesConfig } from 'react-select';
 import FileUploader from '../ui/FileUploader';
-import type { SelectOption } from '../../hooks/useProductForm';
+import type { SelectOption } from '../../features/products/hooks/useProductForm';
 
 interface CreateProductProps {
   isEditMode?: boolean;
@@ -145,6 +145,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ isEditMode = false, produ
               onFileChange={handleFileChange}
               onRemoveImage={removeImage}
               onEditImage={editImage}
+              onPasteFiles={handlePasteFiles}
               error={errors.images}
             />
           </div>

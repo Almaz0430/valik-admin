@@ -2,6 +2,7 @@
  * Главный компонент приложения
  */
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './contexts/AuthContext';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
@@ -16,11 +17,14 @@ import { ProductsPageWrapper, CreateProductPageWrapper } from './utils/pageWrapp
 import { ApiProvider } from './contexts/ApiContext';
 import { Toaster } from 'react-hot-toast';
 
+const queryClient = new QueryClient();
+
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <ApiProvider>
+      <QueryClientProvider client={queryClient}>
+        <Router>
+          <ApiProvider>
           <Toaster 
             position="top-center"
             reverseOrder={false}
@@ -89,8 +93,9 @@ function App() {
             
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
           </Routes>
-        </ApiProvider>
-      </Router>
+          </ApiProvider>
+        </Router>
+      </QueryClientProvider>
     </AuthProvider>
   );
 }

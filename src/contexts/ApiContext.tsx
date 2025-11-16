@@ -2,7 +2,9 @@
 import { useEffect, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../utils/axiosConfig';
-import authService from '@/services/authService';
+import { authService } from '../features/auth';
+import type { InternalAxiosRequestConfig } from 'axios';
+import { AxiosError } from 'axios';
 
 interface ApiProviderProps {
   children: ReactNode;
@@ -13,7 +15,7 @@ export const ApiProvider = ({ children }: ApiProviderProps) => {
 
   useEffect(() => {
     const requestInterceptor = api.interceptors.request.use(
-      (config) => {
+      (config: InternalAxiosRequestConfig) => {
         const token = authService.getToken();
         if (token) {
           config.headers['Authorization'] = `Bearer ${token}`;
@@ -25,21 +27,21 @@ export const ApiProvider = ({ children }: ApiProviderProps) => {
 
     const responseInterceptor = api.interceptors.response.use(
       (response) => response,
-      async (error) => {
-        const originalRequest = error.config;
+      async (error: AxiosError) => {
+        const originalRequest = error.config as (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;
 
         if (error.response?.status === 400) {
           // TODO: show user-friendly notification
         }
 
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
           originalRequest._retry = true;
           try {
             const accessToken = await authService.refreshToken();
             originalRequest.headers['Authorization'] = `Bearer ${accessToken}`;
             return api(originalRequest);
-          } catch (refreshError: any) {
-            if (refreshError?.response?.status === 401) {
+          } catch (refreshError) {
+            if (refreshError instanceof AxiosError && refreshError.response?.status === 401) {
               await authService.logout();
               navigate('/login');
               // TODO: show session expired message

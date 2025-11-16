@@ -1,11 +1,11 @@
 /**
  * Мобильная версия страницы управления товарами
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Layout from '../../components/layout/Layout';
-import productService from '../../services/productService';
-import type { Product, ProductQueryParams } from '../../types/product';
+import { productService, useProducts } from '../../features/products';
+import type { Product } from '../../types/product';
 import { CubeIcon, PlusIcon, ArrowPathIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import ConfirmationModal from '../../components/ui/ConfirmationModal';
 
@@ -75,54 +75,24 @@ const ProductCard: React.FC<{
 
 const ProductsPageMobile: React.FC = () => {
   const navigate = useNavigate();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [totalProducts, setTotalProducts] = useState<number>(0);
-  const [searchTerm, setSearchTerm] = useState<string>('');
-  const [queryParams, setQueryParams] = useState<ProductQueryParams>({
-    page: 1,
-    limit: 10
-  });
+  const {
+    products,
+    total,
+    isLoading,
+    error,
+    queryParams,
+    searchTerm,
+    setSearchTerm,
+    refetch,
+    handlePageChange,
+    resetToFirstPage,
+  } = useProducts({ initialParams: { page: 1, limit: 10 } });
   const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
   const [productToDelete, setProductToDelete] = useState<number | null>(null);
 
-  // Загрузка товаров
-  useEffect(() => {
-    const fetchProducts = async () => {
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        const response = await productService.getProducts({
-          ...queryParams,
-          search: searchTerm || undefined
-        });
-        
-        setProducts(response.products);
-        setTotalProducts(response.total);
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Произошла ошибка при загрузке товаров';
-        setError(errorMessage);
-        console.error(err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchProducts();
-  }, [queryParams, searchTerm]);
-
-  // Обработчики
-  const handlePageChange = (page: number) => {
-    setQueryParams(prev => ({ ...prev, page }));
-    // Прокрутка вверх при смене страницы
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-  
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setQueryParams(prev => ({ ...prev, page: 1 }));
+    resetToFirstPage();
   };
   
   const handleEditProduct = (id: number) => {
@@ -138,9 +108,6 @@ const ProductsPageMobile: React.FC = () => {
     if (productToDelete) {
       try {
         await productService.deleteProduct(productToDelete);
-        
-        setProducts(products.filter(product => product.id !== productToDelete));
-        setTotalProducts(prev => prev - 1);
         setDeleteModalOpen(false);
         setProductToDelete(null);
       } catch (err) {
@@ -158,7 +125,7 @@ const ProductsPageMobile: React.FC = () => {
   };
 
   // Расчет данных для пагинации
-  const totalPages = Math.ceil(totalProducts / queryParams.limit!);
+  const totalPages = Math.ceil(total / queryParams.limit!);
   const paginationItems = [];
   const currentPage = queryParams.page || 1;
   
@@ -176,7 +143,7 @@ const ProductsPageMobile: React.FC = () => {
         {/* Заголовок страницы */}
         <div className="mb-4">
           <h1 className="text-xl font-bold text-gray-900">Товары</h1>
-          <p className="text-sm text-gray-500">Всего: {totalProducts}</p>
+          <p className="text-sm text-gray-500">Всего: {total}</p>
         </div>
 
         {/* Панель действий */}
@@ -223,21 +190,7 @@ const ProductsPageMobile: React.FC = () => {
             <p className="text-gray-800 font-medium mb-2">{error}</p>
             <button 
               onClick={() => {
-                setError(null);
-                setIsLoading(true);
-                setTimeout(() => {
-                  productService.getProducts(queryParams)
-                    .then(response => {
-                      setProducts(response.products);
-                      setTotalProducts(response.total);
-                      setIsLoading(false);
-                    })
-                    .catch(err => {
-                      const errorMessage = err instanceof Error ? err.message : 'Произошла ошибка при загрузке товаров';
-                      setError(errorMessage);
-                      setIsLoading(false);
-                    });
-                }, 500);
+                refetch();
               }}
               className="flex items-center justify-center mx-auto px-3 py-1.5 bg-orange-50 text-orange-600 rounded-full text-sm"
             >

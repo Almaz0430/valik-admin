@@ -8,8 +8,8 @@ import type {
   ProductResponse,
   CreateProductDTO,
   UpdateProductDTO
-} from '../types/product';
-import { api } from '../utils/axiosConfig';
+} from '../../../types/product';
+import { api } from '../../../utils/axiosConfig';
 
 /**
  * Интерфейсы для категорий, брендов и единиц измерения
@@ -47,9 +47,13 @@ class ProductService {
         page: params.page || 1,
         limit: params.limit || 10
       };
-    } catch (error: any) {
+    } catch (error) {
       console.error('Ошибка при запросе списка товаров:', error);
-      throw new Error(error.response?.data?.message || 'Ошибка при получении списка товаров');
+      if (error && typeof error === 'object' && 'response' in error) {
+        const err = error as { response?: { data?: { message?: string } } };
+        throw new Error(err.response?.data?.message || 'Ошибка при получении списка товаров');
+      }
+      throw new Error('Ошибка при получении списка товаров');
     }
   }
   
@@ -60,9 +64,13 @@ class ProductService {
     try {
       const response = await api.get<Product>(`/suppliers/products/${id}`);
       return response.data;
-    } catch (error: any) {
+    } catch (error) {
       console.error(`Ошибка при получении товара ${id}:`, error);
-      throw new Error(error.response?.data?.message || `Товар с ID ${id} не найден`);
+      if (error && typeof error === 'object' && 'response' in error) {
+        const err = error as { response?: { data?: { message?: string } } };
+        throw new Error(err.response?.data?.message || `Товар с ID ${id} не найден`);
+      }
+      throw new Error(`Товар с ID ${id} не найден`);
     }
   }
   
@@ -73,9 +81,13 @@ class ProductService {
     try {
       const response = await api.post<ProductResponse>('/suppliers/products', productData);
       return response.data.product;
-    } catch (error: any) {
+    } catch (error) {
       console.error('Ошибка при создании товара:', error);
-      throw new Error(error.response?.data?.message || 'Ошибка при создании товара');
+      if (error && typeof error === 'object' && 'response' in error) {
+        const err = error as { response?: { data?: { message?: string } } };
+        throw new Error(err.response?.data?.message || 'Ошибка при создании товара');
+      }
+      throw new Error('Ошибка при создании товара');
     }
   }
   
@@ -86,9 +98,15 @@ class ProductService {
     try {
       const response = await api.patch<ProductResponse>(`/suppliers/products/${id}`, productData);
       return response.data.product;
-    } catch (error: any) {
+    } catch (error) {
       console.error(`Ошибка при обновлении товара ${id}:`, error);
-      throw new Error(error.response?.data?.message || `Ошибка при обновлении товара с ID ${id}`);
+      if (error && typeof error === 'object' && 'response' in error) {
+        const err = error as { response?: { data?: { message?: string } } };
+        throw new Error(
+          err.response?.data?.message || `Ошибка при обновлении товара с ID ${id}`,
+        );
+      }
+      throw new Error(`Ошибка при обновлении товара с ID ${id}`);
     }
   }
   
@@ -98,9 +116,15 @@ class ProductService {
   async deleteProduct(id: number): Promise<void> {
     try {
       await api.delete(`/suppliers/products/${id}`);
-    } catch (error: any) {
+    } catch (error) {
       console.error(`Ошибка при удалении товара ${id}:`, error);
-      throw new Error(error.response?.data?.message || `Ошибка при удалении товара с ID ${id}`);
+      if (error && typeof error === 'object' && 'response' in error) {
+        const err = error as { response?: { data?: { message?: string } } };
+        throw new Error(
+          err.response?.data?.message || `Ошибка при удалении товара с ID ${id}`,
+        );
+      }
+      throw new Error(`Ошибка при удалении товара с ID ${id}`);
     }
   }
 
@@ -111,9 +135,13 @@ class ProductService {
     try {
       const response = await api.get<Category[]>('/categories');
       return response.data;
-    } catch (error: any) {
+    } catch (error) {
       console.error('Ошибка при запросе списка категорий:', error);
-      throw new Error(error.response?.data?.message || 'Ошибка при получении списка категорий');
+      if (error && typeof error === 'object' && 'response' in error) {
+        const err = error as { response?: { data?: { message?: string } } };
+        throw new Error(err.response?.data?.message || 'Ошибка при получении списка категорий');
+      }
+      throw new Error('Ошибка при получении списка категорий');
     }
   }
 
@@ -124,9 +152,13 @@ class ProductService {
     try {
       const response = await api.get<Brand[]>('/brands');
       return response.data;
-    } catch (error: any) {
+    } catch (error) {
       console.error('Ошибка при запросе списка брендов:', error);
-      throw new Error(error.response?.data?.message || 'Ошибка при получении списка брендов');
+      if (error && typeof error === 'object' && 'response' in error) {
+        const err = error as { response?: { data?: { message?: string } } };
+        throw new Error(err.response?.data?.message || 'Ошибка при получении списка брендов');
+      }
+      throw new Error('Ошибка при получении списка брендов');
     }
   }
 
@@ -137,9 +169,15 @@ class ProductService {
     try {
       const response = await api.get<Unit[]>('units');
       return response.data;
-    } catch (error: any) {
+    } catch (error) {
       console.error('Ошибка при запросе списка единиц измерения:', error);
-      throw new Error(error.response?.data?.message || 'Ошибка при получении списка единиц измерения');
+      if (error && typeof error === 'object' && 'response' in error) {
+        const err = error as { response?: { data?: { message?: string } } };
+        throw new Error(
+          err.response?.data?.message || 'Ошибка при получении списка единиц измерения',
+        );
+      }
+      throw new Error('Ошибка при получении списка единиц измерения');
     }
   }
 
@@ -150,9 +188,15 @@ class ProductService {
     try {
       const response = await api.post<ProductResponse>('/suppliers/products', formData);
       return response.data.product;
-    } catch (error: any) {
+    } catch (error) {
       console.error('Ошибка при создании товара с изображениями:', error);
-      throw new Error(error.response?.data?.message || 'Ошибка при создании товара с изображениями');
+      if (error && typeof error === 'object' && 'response' in error) {
+        const err = error as { response?: { data?: { message?: string } } };
+        throw new Error(
+          err.response?.data?.message || 'Ошибка при создании товара с изображениями',
+        );
+      }
+      throw new Error('Ошибка при создании товара с изображениями');
     }
   }
 
@@ -163,9 +207,15 @@ class ProductService {
     try {
       const response = await api.patch<ProductResponse>(`/suppliers/products/${id}`, formData);
       return response.data.product;
-    } catch (error: any) {
+    } catch (error) {
       console.error(`Ошибка при обновлении товара с ID ${id} с изображениями:`, error);
-      throw new Error(error.response?.data?.message || `Ошибка при обновлении товара с ID ${id}`);
+      if (error && typeof error === 'object' && 'response' in error) {
+        const err = error as { response?: { data?: { message?: string } } };
+        throw new Error(
+          err.response?.data?.message || `Ошибка при обновлении товара с ID ${id}`,
+        );
+      }
+      throw new Error(`Ошибка при обновлении товара с ID ${id}`);
     }
   }
 
@@ -178,9 +228,16 @@ class ProductService {
     
     try {
       await api.post(`/suppliers/products/photos/add/${id}`, formData);
-    } catch (error: any) {
+    } catch (error) {
       console.error(`Ошибка при добавлении изображений к товару ${id}:`, error);
-      throw new Error(error.response?.data?.message || `Ошибка при добавлении изображений к товару с ID ${id}`);
+      if (error && typeof error === 'object' && 'response' in error) {
+        const err = error as { response?: { data?: { message?: string } } };
+        throw new Error(
+          err.response?.data?.message ||
+            `Ошибка при добавлении изображений к товару с ID ${id}`,
+        );
+      }
+      throw new Error(`Ошибка при добавлении изображений к товару с ID ${id}`);
     }
   }
 
@@ -190,11 +247,17 @@ class ProductService {
   async deleteProductImage(productId: number, imageUrl: string): Promise<void> {
     try {
       await api.post(`/suppliers/products/photos/delete/${productId}`, { link: imageUrl });
-    } catch (error: any) {
+    } catch (error) {
       console.error('Ошибка при удалении фотографии:', error);
-      throw new Error(error.response?.data?.message || 'Ошибка при удалении фотографии');
+      if (error && typeof error === 'object' && 'response' in error) {
+        const err = error as { response?: { data?: { message?: string } } };
+        throw new Error(err.response?.data?.message || 'Ошибка при удалении фотографии');
+      }
+      throw new Error('Ошибка при удалении фотографии');
     }
   }
 }
 
-export default new ProductService(); 
+const productService = new ProductService();
+
+export default productService;

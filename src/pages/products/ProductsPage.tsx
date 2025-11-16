@@ -4,22 +4,25 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Layout from '../../components/layout/Layout';
-import productService from '../../services/productService';
-import type { Product, ProductQueryParams } from '../../types/product';
+import { productService, useProducts } from '../../features/products';
+import type { Product } from '../../types/product';
 import useDeviceDetect from '../../hooks/useDeviceDetect';
 import ConfirmationModal from '../../components/ui/ConfirmationModal';
 
 const ProductsPage: React.FC = () => {
   const navigate = useNavigate();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [totalProducts, setTotalProducts] = useState<number>(0);
-  const [searchTerm, setSearchTerm] = useState<string>('');
-  const [queryParams, setQueryParams] = useState<ProductQueryParams>({
-    page: 1,
-    limit: 10
-  });
+  const {
+    products,
+    total,
+    isLoading,
+    error,
+    queryParams,
+    searchTerm,
+    setSearchTerm,
+    refetch,
+    handlePageChange,
+    resetToFirstPage,
+  } = useProducts({ initialParams: { page: 1, limit: 10 } });
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
@@ -35,45 +38,10 @@ const ProductsPage: React.FC = () => {
     }
   }, [isMobile, isReady, navigate]);
 
-  // Загрузка товаров при монтировании компонента и при изменении параметров
-  useEffect(() => {
-    // Если будет перенаправление, не загружаем данные
-    if (isReady && isMobile) return;
-    
-    const fetchProducts = async () => {
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        const response = await productService.getProducts({
-          ...queryParams,
-          search: searchTerm || undefined
-        });
-        
-        setProducts(response.products);
-        setTotalProducts(response.total);
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Произошла ошибка при загрузке товаров';
-        setError(errorMessage);
-        console.error(err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchProducts();
-  }, [queryParams, searchTerm, isMobile, isReady]);
-
-  // Обработчик изменения страницы
-  const handlePageChange = (page: number) => {
-    setQueryParams(prev => ({ ...prev, page }));
-  };
-  
   // Обработчик поиска по товарам
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // При поиске сбрасываем страницу на первую
-    setQueryParams(prev => ({ ...prev, page: 1 }));
+    resetToFirstPage();
   };
 
   // Обработчик удаления товара
@@ -87,9 +55,6 @@ const ProductsPage: React.FC = () => {
       try {
         await productService.deleteProduct(productToDelete);
         
-        // Обновляем список товаров после удаления
-        setProducts(products.filter(product => product.id !== productToDelete));
-        setTotalProducts(prev => prev - 1);
         setDeleteModalOpen(false);
         setProductToDelete(null);
       } catch (err) {
@@ -122,12 +87,12 @@ const ProductsPage: React.FC = () => {
   // Получаем диапазон отображаемых товаров для информации
   const getDisplayRange = () => {
     const start = (queryParams.page! - 1) * queryParams.limit! + 1;
-    const end = Math.min(start + products.length - 1, totalProducts);
+    const end = Math.min(start + products.length - 1, total);
     return `${start}-${end}`;
   };
   
   // Общее количество страниц
-  const totalPages = Math.ceil(totalProducts / queryParams.limit!);
+  const totalPages = Math.ceil(total / queryParams.limit!);
   
   // Функция для генерации массива страниц для пагинации
   const getPaginationRange = () => {
@@ -203,7 +168,7 @@ const ProductsPage: React.FC = () => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Управление товарами</h1>
-            <p className="mt-1 text-sm text-gray-500">Всего товаров: {totalProducts}</p>
+            <p className="mt-1 text-sm text-gray-500">Всего товаров: {total}</p>
           </div>
           <Link 
             to="/dashboard/products/create" 
@@ -285,21 +250,7 @@ const ProductsPage: React.FC = () => {
               <p className="text-gray-800 font-medium">{error}</p>
               <button 
                 onClick={() => {
-                  setError(null);
-                  setIsLoading(true);
-                  setTimeout(() => {
-                    productService.getProducts(queryParams)
-                      .then(response => {
-                        setProducts(response.products);
-                        setTotalProducts(response.total);
-                        setIsLoading(false);
-                      })
-                      .catch(err => {
-                        const errorMessage = err instanceof Error ? err.message : 'Произошла ошибка при загрузке товаров';
-                        setError(errorMessage);
-                        setIsLoading(false);
-                      });
-                  }, 500);
+                  refetch();
                 }}
                 className="mt-3 text-orange-600 hover:text-orange-800"
               >
@@ -400,7 +351,7 @@ const ProductsPage: React.FC = () => {
             <div className="bg-gray-50 px-4 sm:px-6 py-3 border-t border-gray-200">
               <div className="flex flex-col sm:flex-row items-center justify-between">
                 <div className="text-sm text-gray-700 mb-4 sm:mb-0">
-                  Показано <span className="font-medium">{getDisplayRange()}</span> из <span className="font-medium">{totalProducts}</span> товаров
+                  Показано <span className="font-medium">{getDisplayRange()}</span> из <span className="font-medium">{total}</span> товаров
                 </div>
                 {totalPages > 1 && (
                   <div className="flex space-x-1">

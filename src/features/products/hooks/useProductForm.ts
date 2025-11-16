@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import productService from '../services/productService';
-// import type { Product } from '../types/product'; // Убираем неиспользуемый импорт
+import productService from '../api/productService';
 
 // Определяем тип для опций react-select
 export interface SelectOption {
@@ -10,7 +9,7 @@ export interface SelectOption {
   label: string;
 }
 
-// Определяем тип для аргументов хука (пока не используется, но пригодится для редактирования)
+// Определяем тип для аргументов хука
 interface UseProductFormArgs {
   productId?: number;
   isEditMode?: boolean;
@@ -53,6 +52,27 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewImages, setPreviewImages] = useState<string[]>([]);
 
+  const appendImages = (files: File[]) => {
+    if (!files.length) return;
+
+    const newPreviews = files.map(file => URL.createObjectURL(file));
+
+    setFormData(prev => ({
+      ...prev,
+      images: [...prev.images, ...files]
+    }));
+
+    setPreviewImages(prev => [...prev, ...newPreviews]);
+
+    if (errors.images) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.images;
+        return newErrors;
+      });
+    }
+  };
+
   // Загрузка данных для селектов и данных товара для редактирования
   useEffect(() => {
     const fetchSelectData = async () => {
@@ -88,13 +108,13 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
             brand_id: productData.brand_id || null,
             unit_id: productData.unit_id || null,
             category_id: productData.category_id || null,
-            price: productData.price, // Отображаем полную цену как есть
+            price: productData.price,
             article: productData.article || 0,
             length: productData.length,
             width: productData.width,
             height: productData.height,
             weight: productData.weight,
-            images: [] // Изображения загружаются отдельно
+            images: []
           });
 
           // Устанавливаем выбранные значения для селектов
@@ -118,7 +138,7 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
     fetchSelectData();
   }, [productId, isEditMode]);
 
-  const handleChange = (field: string, value: any) => {
+  const handleChange = (field: string, value: string | number | null | File[] | undefined) => {
     setFormData(prev => ({ ...prev, [field]: value }));
 
     if (errors[field]) {
@@ -170,23 +190,12 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
     const files = e.target.files;
     if (files && files.length > 0) {
       const newFiles = Array.from(files);
-      const newPreviews = newFiles.map(file => URL.createObjectURL(file));
-
-      setFormData(prev => ({
-        ...prev,
-        images: [...prev.images, ...newFiles]
-      }));
-
-      setPreviewImages(prev => [...prev, ...newPreviews]);
-
-      if (errors.images) {
-        setErrors(prev => {
-          const newErrors = { ...prev };
-          delete newErrors.images;
-          return newErrors;
-        });
-      }
+      appendImages(newFiles);
     }
+  };
+
+  const handlePasteFiles = (files: File[]) => {
+    appendImages(files);
   };
 
   const removeImage = (index: number) => {
@@ -206,14 +215,12 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
   };
 
   const editImage = (index: number, editedFile: File) => {
-    // Заменяем файл в массиве изображений
     setFormData(prev => {
       const newImages = [...prev.images];
       newImages[index] = editedFile;
       return { ...prev, images: newImages };
     });
 
-    // Освобождаем старый URL и создаем новый для предпросмотра
     URL.revokeObjectURL(previewImages[index]);
     const newPreviewUrl = URL.createObjectURL(editedFile);
 
@@ -239,7 +246,6 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
     if (!formData.category_id) newErrors.category_id = 'Выберите категорию';
     if (!formData.unit_id) newErrors.unit_id = 'Выберите единицу измерения';
     if (!formData.price || formData.price <= 0) newErrors.price = 'Укажите цену';
-    // В режиме создания изображения обязательны, в режиме редактирования - нет
     if (!isEditMode && (!formData.images || formData.images.length === 0)) {
       newErrors.images = 'Загрузите хотя бы одно изображение товара';
     }
@@ -256,23 +262,20 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
     const toastId = toast.loading(isEditMode ? 'Обновление товара...' : 'Создание товара...');
 
     try {
-      // Обязательно проверяем на null, т.к. начальное состояние - null
       if (formData.brand_id === null || formData.unit_id === null || formData.category_id === null) {
-        throw new Error("Бренд, категория и ед. измерения должны быть выбраны");
+        throw new Error('Бренд, категория и ед. измерения должны быть выбраны');
       }
 
       if (isEditMode && productId) {
-        // Для редактирования используем JSON данные (без изображений)
-        const updateData: any = {
+        const updateData: Record<string, unknown> = {
           title: formData.title,
           description: formData.description,
-          price: formData.price, // Отправляем полную цену как есть
+          price: formData.price,
           brand_id: formData.brand_id,
           unit_id: formData.unit_id,
           category_id: formData.category_id,
         };
 
-        // Добавляем опциональные поля только если они заданы
         if (formData.article) updateData.article = formData.article;
         if (formData.length !== undefined && formData.length !== null) updateData.length = formData.length;
         if (formData.width !== undefined && formData.width !== null) updateData.width = formData.width;
@@ -281,7 +284,6 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
 
         await productService.updateProduct(productId, updateData);
 
-        // Если есть новые изображения, добавляем их отдельно
         if (formData.images.length > 0) {
           await productService.addProductImages(productId, formData.images);
         }
@@ -290,12 +292,11 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
         setTimeout(() => navigate('/dashboard/products'), 1500);
 
       } else {
-        // Для создания используем FormData с изображениями
         const formDataToSend = new FormData();
 
         formDataToSend.append('title', formData.title);
         formDataToSend.append('description', formData.description);
-        formDataToSend.append('price', formData.price.toString()); // Отправляем полную цену как есть
+        formDataToSend.append('price', formData.price.toString());
         formDataToSend.append('brand_id', formData.brand_id.toString());
         formDataToSend.append('unit_id', formData.unit_id.toString());
         formDataToSend.append('category_id', formData.category_id.toString());
@@ -318,7 +319,7 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Произошла неизвестная ошибка';
       toast.error(errorMessage, { id: toastId });
-      setErrors(prev => ({...prev, submit: errorMessage})); // можно оставить для отображения под формой
+      setErrors(prev => ({ ...prev, submit: errorMessage }));
     } finally {
       setIsLoading(false);
     }
@@ -330,7 +331,6 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
     isLoading,
     isDataLoading,
     errors,
-    // success больше не нужен
     brands,
     categories,
     units,
@@ -344,6 +344,7 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
     handleNumberChange,
     handlePriceChange,
     handleFileChange,
+    handlePasteFiles,
     removeImage,
     editImage,
     handleSubmit,

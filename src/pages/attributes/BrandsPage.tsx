@@ -3,8 +3,7 @@
  */
 import React, { useState, useEffect } from 'react';
 import Layout from '../../components/layout/Layout';
-import brandUnitService from '../../services/brandUnitService';
-import type { Brand } from '../../services/brandUnitService';
+import { brandUnitService, type Brand } from '../../features/attributes';
 import ConfirmationModal from '../../components/ui/ConfirmationModal';
 
 interface BrandsPageProps {

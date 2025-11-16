@@ -11,11 +11,11 @@ import {
 } from '@heroicons/react/24/outline';
 import Input from '../../components/ui/Input';
 import TextArea from '../../components/ui/TextArea';
-import Select from 'react-select';
-import { useProductForm } from '../../hooks/useProductForm';
+import Select, { type StylesConfig } from 'react-select';
+import { useProductForm } from '../../features/products';
 
-const selectStyles = {
-  control: (base: any) => ({
+const selectStyles: StylesConfig<unknown, false> = {
+  control: (base) => ({
     ...base,
     minHeight: '42px',
     border: 'none',
@@ -34,14 +34,14 @@ const selectStyles = {
       borderColor: 'transparent',
     }
   }),
-  placeholder: (base: any) => ({
+  placeholder: (base) => ({
     ...base,
     color: '#9ca3af',
     fontSize: '0.875rem',
   }),
-  option: (base: any, state: any) => ({
+  option: (base, state) => ({
     ...base,
-    backgroundColor: state.isSelected ? '#f97316' : state.isFocused ? '#ffedd5' : null,
+    backgroundColor: state.isSelected ? '#f97316' : state.isFocused ? '#ffedd5' : base.backgroundColor,
     color: state.isSelected ? 'white' : '#111827',
     ':active': {
       backgroundColor: state.isSelected ? '#f97316' : '#ffedd5',
@@ -49,32 +49,32 @@ const selectStyles = {
     fontSize: '0.875rem',
     cursor: 'pointer',
   }),
-  input: (base: any) => ({
+  input: (base) => ({
     ...base,
     fontSize: '0.875rem',
   }),
-  singleValue: (base: any) => ({
+  singleValue: (base) => ({
     ...base,
     fontSize: '0.875rem',
   }),
   indicatorSeparator: () => ({
     display: 'none',
   }),
-  dropdownIndicator: (base: any) => ({
+  dropdownIndicator: (base) => ({
     ...base,
     color: '#6b7280',
     ':hover': {
       color: '#4b5563',
     },
   }),
-  clearIndicator: (base: any) => ({
+  clearIndicator: (base) => ({
     ...base,
     color: '#6b7280',
     ':hover': {
       color: '#4b5563',
     },
   }),
-  menu: (base: any) => ({
+  menu: (base) => ({
     ...base,
     zIndex: 100,
     borderRadius: '0.375rem',
@@ -188,6 +188,7 @@ const CreateProductPageMobile: React.FC = () => {
               onFileChange={handleFileChange}
               onRemoveImage={removeImage}
               onEditImage={editImage}
+              onPasteFiles={handlePasteFiles}
               error={errors.images}
             />
           </div>
@@ -200,7 +201,7 @@ const CreateProductPageMobile: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Категория *</label>
                 <Select
                   value={selectedCategory}
-                  onChange={(option) => handleSelectChange('category_id', option)}
+                  onChange={(option) => handleSelectChange('category_id', option as any)}
                   options={categories}
                   styles={selectStyles}
                   placeholder="Выберите категорию"
@@ -213,7 +214,7 @@ const CreateProductPageMobile: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Бренд *</label>
                 <Select
                   value={selectedBrand}
-                  onChange={(option) => handleSelectChange('brand_id', option)}
+                  onChange={(option) => handleSelectChange('brand_id', option as any)}
                   options={brands}
                   styles={selectStyles}
                   placeholder="Выберите бренд"
@@ -226,7 +227,7 @@ const CreateProductPageMobile: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Ед. измерения *</label>
                 <Select
                   value={selectedUnit}
-                  onChange={(option) => handleSelectChange('unit_id', option)}
+                  onChange={(option) => handleSelectChange('unit_id', option as any)}
                   options={units}
                   styles={selectStyles}
                   placeholder="Выберите единицу"

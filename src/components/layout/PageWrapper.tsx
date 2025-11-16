@@ -1,17 +1,16 @@
 /**
  * Универсальный компонент-обертка для страниц продуктов
  */
-import React, { Suspense } from 'react';
-import type { ComponentType } from 'react';
+import React, { Suspense, type ComponentType } from 'react';
 import MobileDetector from '@components/common/MobileDetector';
 import Layout from '@components/layout/Layout';
 
 interface PageWrapperProps {
   // Компоненты для разных устройств
-  desktopComponent: ComponentType<any>;
-  mobileComponent: ComponentType<any>;
+  desktopComponent: ComponentType<Record<string, unknown>>;
+  mobileComponent: ComponentType<Record<string, unknown>>;
   // Дополнительные пропсы для передачи компонентам
-  componentProps?: Record<string, any>;
+  componentProps?: Record<string, unknown>;
 }
 
 /**

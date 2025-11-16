@@ -55,12 +55,19 @@ const DashboardPage = () => {
 
   return (
     <Layout>
-      {/* Заголовок страницы */}
-      <div className="mb-6">
-      </div>
+      <div className="space-y-6 pb-16 lg:pb-0">
+        {/* Заголовок страницы */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Панель управления</h1>
+            <p className="mt-1 text-sm text-gray-500">
+              Краткий обзор товаров, заказов и последних действий
+            </p>
+          </div>
+        </div>
 
-      {/* Основной блок с карточками */}
-      <div className="space-y-10">
+        {/* Основной блок с карточками */}
+        <div className="space-y-10">
         {/* Блок управления */}
         <section>
           <div className="flex items-center justify-between mb-6">
@@ -103,7 +110,7 @@ const DashboardPage = () => {
 
         {/* Подсказка для новых пользователей */}
         <HelpSection />
-      </div>
+        </div>
 
       {/* Отображение активной подсказки */}
       {activeTooltip && activeTooltip !== 'management' && (
@@ -114,6 +121,7 @@ const DashboardPage = () => {
           onClose={() => setActiveTooltip(null)}
         />
       )}
+      </div>
     </Layout>
   );
 };

@@ -1,15 +1,17 @@
 /**
  * Утилита для создания компонентов-оберток с общей функциональностью
  */
-import React, { lazy } from 'react';
+import React, { lazy, type ComponentType } from 'react';
 import PageWrapper from '../components/layout/PageWrapper';
 
-const desktopComponentsMap: Record<string, () => Promise<{ default: React.ComponentType<any> }>> = {
+type LazyComponent = () => Promise<{ default: ComponentType<Record<string, unknown>> }>;
+
+const desktopComponentsMap: Record<string, LazyComponent> = {
   ProductsPage: () => import('../pages/products/ProductsPage'),
   CreateProductPage: () => import('../pages/products/CreateProductPage'),
 };
 
-const mobileComponentsMap: Record<string, () => Promise<{ default: React.ComponentType<any> }>> = {
+const mobileComponentsMap: Record<string, LazyComponent> = {
   ProductsPageMobile: () => import('../pages/products/ProductsPageMobile'),
   CreateProductPageMobile: () => import('../pages/products/CreateProductPageMobile'),
 };
@@ -23,11 +25,11 @@ const mobileComponentsMap: Record<string, () => Promise<{ default: React.Compone
 export function createPageWrapper(
   desktopKey: keyof typeof desktopComponentsMap,
   mobileKey: keyof typeof mobileComponentsMap
-): React.FC<Record<string, any>> {
+): React.FC<Record<string, unknown>> {
   const DesktopComponent = lazy(desktopComponentsMap[desktopKey]);
   const MobileComponent = lazy(mobileComponentsMap[mobileKey]);
 
-  const WrappedComponent: React.FC<Record<string, any>> = (props) => {
+  const WrappedComponent: React.FC<Record<string, unknown>> = (props) => {
     return (
       <PageWrapper 
         desktopComponent={DesktopComponent} 

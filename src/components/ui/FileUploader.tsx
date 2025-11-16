@@ -11,6 +11,7 @@ interface FileUploaderProps {
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onRemoveImage: (index: number) => void;
   onEditImage?: (index: number, editedFile: File) => void;
+  onPasteFiles?: (files: File[]) => void;
   error?: string;
   multiple?: boolean;
 }
@@ -21,6 +22,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
   onFileChange,
   onRemoveImage,
   onEditImage,
+  onPasteFiles,
   error,
   multiple = true,
 }) => {
@@ -47,8 +49,32 @@ const FileUploader: React.FC<FileUploaderProps> = ({
     setEditingImage(null);
   };
 
+  const handlePaste = (event: React.ClipboardEvent<HTMLDivElement>) => {
+    if (!onPasteFiles) return;
+
+    const items = event.clipboardData?.items;
+    if (!items) return;
+
+    const files: File[] = [];
+
+    for (let i = 0; i < items.length; i += 1) {
+      const item = items[i];
+      if (item.type.startsWith('image/')) {
+        const file = item.getAsFile();
+        if (file) {
+          files.push(file);
+        }
+      }
+    }
+
+    if (files.length > 0) {
+      event.preventDefault();
+      onPasteFiles(files);
+    }
+  };
+
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" onPaste={handlePaste}>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
         {previewImages.map((preview, index) => (
           <div key={index} className="relative aspect-square group">

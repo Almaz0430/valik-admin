@@ -1,15 +1,8 @@
 /**
  * Сервис для работы с API аутентификации поставщиков
  */
-import type { AuthResponse, LoginCredentials, Supplier, TokenRefreshResponse } from '../types/auth';
-import { api } from '../utils/axiosConfig';
-
-/**
- * Интерфейс для структуры ошибок API
- */
-// interface ApiError {
-//   message: string;
-// }
+import type { AuthResponse, LoginCredentials, Supplier, TokenRefreshResponse } from '../../../types/auth';
+import { api } from '../../../utils/axiosConfig';
 
 /**
  * Класс для работы с API аутентификации
@@ -35,8 +28,12 @@ class AuthService {
       this.setToken(authResponse.accessToken);
       
       return authResponse;
-    } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'Произошла ошибка при входе');
+    } catch (error) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const err = error as { response?: { data?: { message?: string } } };
+        throw new Error(err.response?.data?.message || 'Произошла ошибка при входе');
+      }
+      throw new Error('Произошла ошибка при входе');
     }
   }
   
@@ -55,8 +52,12 @@ class AuthService {
       this.setToken(authResponse.accessToken);
       
       return authResponse;
-    } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'Произошла ошибка при регистрации');
+    } catch (error) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const err = error as { response?: { data?: { message?: string } } };
+        throw new Error(err.response?.data?.message || 'Произошла ошибка при регистрации');
+      }
+      throw new Error('Произошла ошибка при регистрации');
     }
   }
   
@@ -133,4 +134,6 @@ class AuthService {
   }
 }
 
-export default new AuthService(); 
+const authService = new AuthService();
+
+export default authService;

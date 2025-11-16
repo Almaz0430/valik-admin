@@ -36,7 +36,8 @@ export interface LoginCredentials {
 export interface Supplier {
   id: number;
   login: string;
-  [key: string]: any; // для других полей поставщика
+  // Дополнительные поля поставщика
+  [key: string]: string | number | boolean | null | undefined;
 }
 
 /**

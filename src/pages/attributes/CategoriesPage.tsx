@@ -3,10 +3,9 @@
  */
 import React, { useState, useEffect } from 'react';
 import Layout from '../../components/layout/Layout';
-import categoryService from '../../services/categoryService';
-import type { Category } from '../../services/categoryService';
+import { categoryService, type Category } from '../../features/attributes';
 import ConfirmationModal from '../../components/ui/ConfirmationModal';
-import Select, { type SingleValue } from 'react-select';
+import Select, { type SingleValue, type StylesConfig } from 'react-select';
 
 interface CategoriesPageProps {
   isStandalone?: boolean;
@@ -17,8 +16,8 @@ interface SelectOption {
   label: string;
 }
 
-const selectStyles = {
-  control: (base: any) => ({
+const selectStyles: StylesConfig<SelectOption, false> = {
+  control: (base) => ({
     ...base,
     minHeight: '42px',
     border: 'none',
@@ -37,14 +36,14 @@ const selectStyles = {
       borderColor: 'transparent',
     },
   }),
-  placeholder: (base: any) => ({
+  placeholder: (base) => ({
     ...base,
     color: '#9ca3af',
     fontSize: '0.875rem',
   }),
-  option: (base: any, state: any) => ({
+  option: (base, state) => ({
     ...base,
-    backgroundColor: state.isSelected ? '#f97316' : state.isFocused ? '#ffedd5' : null,
+    backgroundColor: state.isSelected ? '#f97316' : state.isFocused ? '#ffedd5' : base.backgroundColor,
     color: state.isSelected ? 'white' : '#111827',
     ':active': {
       backgroundColor: state.isSelected ? '#f97316' : '#ffedd5',
@@ -52,38 +51,38 @@ const selectStyles = {
     fontSize: '0.875rem',
     cursor: 'pointer',
   }),
-  input: (base: any) => ({
+  input: (base) => ({
     ...base,
     fontSize: '0.875rem',
   }),
-  singleValue: (base: any) => ({
+  singleValue: (base) => ({
     ...base,
     fontSize: '0.875rem',
   }),
   indicatorSeparator: () => ({
     display: 'none',
   }),
-  dropdownIndicator: (base: any) => ({
+  dropdownIndicator: (base) => ({
     ...base,
     color: '#6b7280',
     ':hover': {
       color: '#4b5563',
     },
   }),
-  clearIndicator: (base: any) => ({
+  clearIndicator: (base) => ({
     ...base,
     color: '#6b7280',
     ':hover': {
       color: '#4b5563',
     },
   }),
-  menu: (base: any) => ({
+  menu: (base) => ({
     ...base,
     zIndex: 99999,
     borderRadius: '0.375rem',
     boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
   }),
-  menuPortal: (base: any) => ({
+  menuPortal: (base) => ({
     ...base,
     zIndex: 99999,
   }),

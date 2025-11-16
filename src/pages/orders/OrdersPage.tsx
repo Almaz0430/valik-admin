@@ -1,8 +1,9 @@
 /**
  * Страница управления заказами
  */
-import React, { useState } from 'react';
+import React from 'react';
 import Layout from '../../components/layout/Layout';
+import { useOrders } from '../../features/orders';
 import { 
   MagnifyingGlassIcon, 
   AdjustmentsHorizontalIcon, 
@@ -13,8 +14,14 @@ import {
 } from '@heroicons/react/24/outline';
 
 const OrdersPage: React.FC = () => {
-  const [orders] = useState<any[]>([]);
-  const [isFilterExpanded, setIsFilterExpanded] = useState<boolean>(false);
+  const {
+    orders,
+    total,
+    isFilterExpanded,
+    setIsFilterExpanded,
+    searchTerm,
+    setSearchTerm,
+  } = useOrders();
 
   // Функция для отображения статуса заказа
   const getStatusLabel = (status: string) => {
@@ -40,7 +47,7 @@ const OrdersPage: React.FC = () => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Управление заказами</h1>
-            <p className="mt-1 text-sm text-gray-500">Всего заказов: {orders.length}</p>
+            <p className="mt-1 text-sm text-gray-500">Всего заказов: {total}</p>
           </div>
         </div>
         
@@ -55,6 +62,8 @@ const OrdersPage: React.FC = () => {
               <input
                 type="text"
                 placeholder="Поиск по номеру заказа или клиенту..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg bg-gray-50 focus:ring-2 focus:ring-orange-500 focus:border-transparent box-border"
               />
             </div>
