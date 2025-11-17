@@ -105,6 +105,7 @@ const CreateProductPageMobile: React.FC = () => {
     handleNumberChange,
     handlePriceChange,
     handleFileChange,
+    handlePasteFiles,
     removeImage,
     editImage,
     handleSubmit,

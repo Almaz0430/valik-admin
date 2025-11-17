@@ -30,8 +30,21 @@ class AuthService {
       return authResponse;
     } catch (error) {
       if (error && typeof error === 'object' && 'response' in error) {
-        const err = error as { response?: { data?: { message?: string } } };
-        throw new Error(err.response?.data?.message || 'Произошла ошибка при входе');
+        const err = error as {
+          response?: {
+            data?: {
+              message?: string;
+              errors?: Array<{ msg?: string }>;
+            };
+          };
+        };
+
+        const validationMessage = err.response?.data?.errors?.[0]?.msg;
+        const apiMessage = err.response?.data?.message;
+
+        throw new Error(
+          validationMessage || apiMessage || 'Произошла ошибка при входе',
+        );
       }
       throw new Error('Произошла ошибка при входе');
     }

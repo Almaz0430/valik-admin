@@ -19,10 +19,10 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   useEffect(() => {
     const verifyAuth = async () => {
       try {
-        if (isAuthenticated) {
-          // Если пользователь аутентифицирован, значит у него есть действительный токен
-          // Не нужно обновлять токен каждый раз при навигации в защищенный маршрут
-          // Система автоматически обновит токен при необходимости через fetchWithAuth
+        const hasToken =
+          typeof window !== 'undefined' && !!localStorage.getItem('accessToken');
+
+        if (isAuthenticated && hasToken) {
           setIsAllowed(true);
         } else {
           setIsAllowed(false);

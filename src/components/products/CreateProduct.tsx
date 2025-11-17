@@ -65,6 +65,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ isEditMode = false, produ
     handleNumberChange,
     handlePriceChange,
     handleFileChange,
+    handlePasteFiles,
     removeImage,
     editImage,
     handleSubmit,

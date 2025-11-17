@@ -41,18 +41,12 @@ const LoginPage = () => {
       navigate('/dashboard');
       
     } catch (err) {
-      // Обработка ошибок авторизации
       let errorMessage = 'Произошла ошибка при входе. Пожалуйста, попробуйте еще раз.';
-      
-      if (err instanceof Error) {
-        if (err.message.includes('Неверный логин или пароль') || 
-            err.message.includes('Пользователь не найден')) {
-          errorMessage = 'Неверный логин или пароль';
-        } else {
-          errorMessage = err.message;
-        }
+
+      if (err instanceof Error && err.message) {
+        errorMessage = err.message;
       }
-      
+
       setError(errorMessage);
       console.error(err);
     } finally {
