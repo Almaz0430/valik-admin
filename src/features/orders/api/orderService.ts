@@ -3,7 +3,8 @@ import { api } from '../../../utils/axiosConfig';
 
 class OrderService {
   async getOrders(): Promise<Order[]> {
-    const response = await api.get<Order[]>('/orders');
+    // Используем поставщицкий префикс, как и для товаров (`/suppliers/products`)
+    const response = await api.get<Order[]>('/suppliers/orders');
     return response.data;
   }
 }
@@ -11,4 +12,3 @@ class OrderService {
 const orderService = new OrderService();
 
 export default orderService;
-
