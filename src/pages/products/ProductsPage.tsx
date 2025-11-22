@@ -27,10 +27,10 @@ const ProductsPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
   const [productToDelete, setProductToDelete] = useState<number | null>(null);
-  
+
   // Определение типа устройства
   const { isMobile, isReady } = useDeviceDetect();
-  
+
   // Перенаправление на мобильную версию
   useEffect(() => {
     if (isReady && isMobile) {
@@ -54,7 +54,7 @@ const ProductsPage: React.FC = () => {
     if (productToDelete) {
       try {
         await productService.deleteProduct(productToDelete);
-        
+
         setDeleteModalOpen(false);
         setProductToDelete(null);
       } catch (err) {
@@ -90,51 +90,51 @@ const ProductsPage: React.FC = () => {
     const end = Math.min(start + products.length - 1, total);
     return `${start}-${end}`;
   };
-  
+
   // Общее количество страниц
   const totalPages = Math.ceil(total / queryParams.limit!);
-  
+
   // Функция для генерации массива страниц для пагинации
   const getPaginationRange = () => {
     const maxVisiblePages = 5;
     const currentPage = queryParams.page || 1;
-    
+
     if (totalPages <= maxVisiblePages) {
       return Array.from({ length: totalPages }, (_, i) => i + 1);
     }
-    
+
     const sidePages = Math.floor((maxVisiblePages - 3) / 2);
-    
+
     let startPage = Math.max(2, currentPage - sidePages);
     let endPage = Math.min(totalPages - 1, currentPage + sidePages);
-    
+
     if (currentPage - sidePages < 2) {
       endPage = Math.min(totalPages - 1, maxVisiblePages - 1);
     }
     if (currentPage + sidePages > totalPages - 1) {
       startPage = Math.max(2, totalPages - maxVisiblePages + 2);
     }
-    
+
     const pages = [];
-    
+
     pages.push(1);
-    
+
     if (startPage > 2) {
       pages.push('ellipsis-start');
     }
-    
+
     for (let i = startPage; i <= endPage; i++) {
       pages.push(i);
     }
-    
+
     if (endPage < totalPages - 1) {
       pages.push('ellipsis-end');
     }
-    
+
     if (totalPages > 1) {
       pages.push(totalPages);
     }
-    
+
     return pages;
   };
 
@@ -153,15 +153,15 @@ const ProductsPage: React.FC = () => {
   const formatDate = (dateString: string | undefined) => {
     if (!dateString) return 'Не указано';
     const date = new Date(parseInt(dateString));
-    return date.toLocaleDateString('ru-RU', { 
-      day: '2-digit', 
-      month: '2-digit', 
+    return date.toLocaleDateString('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
     });
   };
-  
+
   return (
     <Layout>
       <div className={`space-y-6 pb-16 lg:pb-0 ${isModalOpen || deleteModalOpen ? 'blur-sm' : ''}`}>
@@ -170,41 +170,52 @@ const ProductsPage: React.FC = () => {
             <h1 className="text-2xl font-bold text-gray-900">Управление товарами</h1>
             <p className="mt-1 text-sm text-gray-500">Всего товаров: {total}</p>
           </div>
-          <Link 
-            to="/dashboard/products/create" 
-            className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 inline-flex items-center justify-center w-full sm:w-auto"
-          >
-            <svg className="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            Добавить товар
-          </Link>
+          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 w-full sm:w-auto">
+            <Link
+              to="/dashboard/products/import"
+              className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 inline-flex items-center justify-center w-full sm:w-auto"
+            >
+              <svg className="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+              Импорт CSV
+            </Link>
+            <Link
+              to="/dashboard/products/create"
+              className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 inline-flex items-center justify-center w-full sm:w-auto"
+            >
+              <svg className="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Добавить товар
+            </Link>
+          </div>
         </div>
-        
+
         {/* Поле поиска */}
         <form onSubmit={handleSearch} className="relative w-full max-w-md">
-          <input 
-            type="text" 
-            placeholder="Поиск товаров..." 
+          <input
+            type="text"
+            placeholder="Поиск товаров..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10 pr-4 py-2.5 bg-white shadow-sm rounded-md w-full focus:outline-none"
           />
           <button type="submit" className="absolute left-3 top-3 h-5 w-5 text-gray-400">
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              viewBox="0 0 20 20" 
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
               fill="currentColor"
             >
-              <path 
-                fillRule="evenodd" 
-                d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" 
-                clipRule="evenodd" 
+              <path
+                fillRule="evenodd"
+                d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                clipRule="evenodd"
               />
             </svg>
           </button>
         </form>
-        
+
         {/* Блок товаров с состоянием загрузки и ошибками */}
         <div className="bg-white shadow-lg rounded-lg overflow-hidden">
           {/* Заголовок таблицы */}
@@ -230,7 +241,7 @@ const ProductsPage: React.FC = () => {
               </div>
             </div>
           </div>
-          
+
           {/* Состояние загрузки */}
           {isLoading && (
             <div className="p-8 text-center">
@@ -238,7 +249,7 @@ const ProductsPage: React.FC = () => {
               <p className="mt-2 text-gray-500">Загрузка товаров...</p>
             </div>
           )}
-          
+
           {/* Сообщение об ошибке */}
           {error && (
             <div className="p-8 text-center">
@@ -248,7 +259,7 @@ const ProductsPage: React.FC = () => {
                 </svg>
               </div>
               <p className="text-gray-800 font-medium">{error}</p>
-              <button 
+              <button
                 onClick={() => {
                   refetch();
                 }}
@@ -258,7 +269,7 @@ const ProductsPage: React.FC = () => {
               </button>
             </div>
           )}
-          
+
           {/* Список товаров */}
           {!isLoading && !error && (
             <div className="divide-y divide-gray-200">
@@ -273,7 +284,7 @@ const ProductsPage: React.FC = () => {
                   <p className="text-gray-500 text-base max-w-md mx-auto">Добавьте новый товар или измените параметры поиска</p>
                 </div>
               )}
-              
+
               {products.map((product) => (
                 <div key={product.id} className="px-4 sm:px-6 py-4 hover:bg-gray-50 transition-colors">
                   <div className="grid grid-cols-12 gap-4 items-center">
@@ -281,15 +292,15 @@ const ProductsPage: React.FC = () => {
                       <div className="flex items-center">
                         <div className="h-10 w-10 bg-gray-100 rounded-md flex-shrink-0 flex items-center justify-center">
                           {product.images && product.images.length > 0 ? (
-                            <img 
-                              src={product.images[0]} 
-                              alt={product.title} 
+                            <img
+                              src={product.images[0]}
+                              alt={product.title}
                               className="h-10 w-10 object-cover rounded-md"
                             />
                           ) : (
-                          <svg className="h-6 w-6 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                          </svg>
+                            <svg className="h-6 w-6 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                            </svg>
                           )}
                         </div>
                         <div className="ml-3">
@@ -311,7 +322,7 @@ const ProductsPage: React.FC = () => {
                       <div className="text-sm text-gray-900">{formatDate(product.created_at)}</div>
                     </div>
                     <div className="col-span-2 sm:col-span-1 text-right flex justify-end items-center space-x-2">
-                      <button 
+                      <button
                         className="text-blue-600 hover:text-blue-900"
                         onClick={() => openProductDetails(product)}
                         title="Детали"
@@ -321,7 +332,7 @@ const ProductsPage: React.FC = () => {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                         </svg>
                       </button>
-                      <button 
+                      <button
                         className="text-orange-600 hover:text-orange-900"
                         onClick={() => navigate(`/dashboard/products/edit/${product.id}`)}
                         title="Редактировать"
@@ -330,7 +341,7 @@ const ProductsPage: React.FC = () => {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                         </svg>
                       </button>
-                      <button 
+                      <button
                         className="text-red-600 hover:text-red-900"
                         onClick={() => handleDeleteClick(product.id)}
                         title="Удалить"
@@ -345,7 +356,7 @@ const ProductsPage: React.FC = () => {
               ))}
             </div>
           )}
-          
+
           {/* Пагинация и информация */}
           {!isLoading && !error && products.length > 0 && (
             <div className="bg-gray-50 px-4 sm:px-6 py-3 border-t border-gray-200">
@@ -358,24 +369,23 @@ const ProductsPage: React.FC = () => {
                     {getPaginationRange().map((page, index) => {
                       if (page === 'ellipsis-start' || page === 'ellipsis-end') {
                         return (
-                          <div 
-                            key={`ellipsis-${index}`} 
+                          <div
+                            key={`ellipsis-${index}`}
                             className="px-3 py-1 text-gray-500 flex items-center justify-center"
                           >
                             ...
                           </div>
                         );
                       }
-                      
+
                       return (
                         <button
                           key={`page-${page}`}
                           onClick={() => handlePageChange(Number(page))}
-                          className={`px-3 py-1 border border-gray-300 rounded-md text-sm font-medium ${
-                            page === queryParams.page
+                          className={`px-3 py-1 border border-gray-300 rounded-md text-sm font-medium ${page === queryParams.page
                               ? 'bg-orange-500 text-white hover:bg-orange-600'
                               : 'bg-white text-gray-700 hover:bg-gray-50'
-                          }`}
+                            }`}
                         >
                           {page}
                         </button>
@@ -400,7 +410,7 @@ const ProductsPage: React.FC = () => {
         onCancel={handleDeleteCancel}
         type="danger"
       />
-      
+
       {isModalOpen && selectedProduct && (
         <div className="fixed inset-0 overflow-y-auto z-[100]">
           <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
@@ -427,12 +437,12 @@ const ProductsPage: React.FC = () => {
                     </svg>
                   </button>
                 </div>
-                
+
                 <div className="bg-gray-50 p-4 rounded-md mb-4">
                   <h4 className="text-md font-medium text-gray-900 mb-2">{selectedProduct.title}</h4>
                   <p className="text-sm text-gray-600 mb-2">{selectedProduct.description || 'Описание отсутствует'}</p>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm font-medium text-gray-500">ID товара</p>
@@ -475,7 +485,7 @@ const ProductsPage: React.FC = () => {
                     <p className="text-sm text-gray-900">{formatDate(selectedProduct.updated_at)}</p>
                   </div>
                 </div>
-                
+
                 <div className="mt-4">
                   <h4 className="text-sm font-medium text-gray-900 mb-2">Габариты и вес</h4>
                   <div className="grid grid-cols-3 gap-4">
@@ -501,16 +511,16 @@ const ProductsPage: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="mt-4">
                   <h4 className="text-sm font-medium text-gray-900 mb-2">Изображения</h4>
                   {selectedProduct.images && selectedProduct.images.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
                       {selectedProduct.images.map((image: string, index: number) => (
                         <div key={index} className="w-20 h-20 border rounded-md overflow-hidden">
-                          <img 
-                            src={image} 
-                            alt={`${selectedProduct.title} - ${index + 1}`} 
+                          <img
+                            src={image}
+                            alt={`${selectedProduct.title} - ${index + 1}`}
                             className="w-full h-full object-cover"
                           />
                         </div>
@@ -521,7 +531,7 @@ const ProductsPage: React.FC = () => {
                   )}
                 </div>
               </div>
-              
+
               <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                 <button
                   type="button"

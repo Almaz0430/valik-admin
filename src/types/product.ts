@@ -176,4 +176,32 @@ export interface ProductFilterParams {
 export interface ProductSortParams {
   field: keyof Product;
   direction: 'asc' | 'desc';
-} 
+}
+
+/**
+ * Ошибка импорта строки
+ */
+export interface ImportProductError {
+  row: number;
+  article?: string;
+  title?: string;
+  errors?: string[];
+}
+
+/**
+ * Ответ API при импорте товаров
+ */
+export interface ImportProductsResponse {
+  message: string;
+  import_id?: number;
+  imported?: number;
+  skipped?: number;
+  status: 'success' | 'partial' | 'failed';
+  total_rows?: number;
+  processed_rows?: number;
+  failed_rows?: number;
+  created_products?: number;
+  errors?: ImportProductError[];
+  error?: string;
+}
+ 

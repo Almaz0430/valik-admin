@@ -1,13 +1,14 @@
 /**
  * Сервис для работы с товарами поставщика
  */
-import type { 
-  Product, 
-  ProductQueryParams, 
-  ProductListResponse, 
+import type {
+  Product,
+  ProductQueryParams,
+  ProductListResponse,
   ProductResponse,
   CreateProductDTO,
-  UpdateProductDTO
+  UpdateProductDTO,
+  ImportProductsResponse
 } from '../../../types/product';
 import { api } from '../../../utils/axiosConfig';
 
@@ -40,7 +41,7 @@ class ProductService {
     try {
       const response = await api.get<{ products: Product[]; total: number }>('/suppliers/products', { params });
       const { products, total } = response.data;
-      
+
       return {
         products,
         total,
@@ -56,7 +57,7 @@ class ProductService {
       throw new Error('Ошибка при получении списка товаров');
     }
   }
-  
+
   /**
    * Получение информации о конкретном товаре
    */
@@ -73,7 +74,7 @@ class ProductService {
       throw new Error(`Товар с ID ${id} не найден`);
     }
   }
-  
+
   /**
    * Создание нового товара
    */
@@ -90,7 +91,7 @@ class ProductService {
       throw new Error('Ошибка при создании товара');
     }
   }
-  
+
   /**
    * Обновление существующего товара
    */
@@ -109,7 +110,7 @@ class ProductService {
       throw new Error(`Ошибка при обновлении товара с ID ${id}`);
     }
   }
-  
+
   /**
    * Удаление товара
    */
@@ -225,7 +226,7 @@ class ProductService {
   async addProductImages(id: number, files: File[]): Promise<void> {
     const formData = new FormData();
     files.forEach(file => formData.append('files', file));
-    
+
     try {
       await api.post(`/suppliers/products/photos/add/${id}`, formData);
     } catch (error) {
@@ -234,7 +235,7 @@ class ProductService {
         const err = error as { response?: { data?: { message?: string } } };
         throw new Error(
           err.response?.data?.message ||
-            `Ошибка при добавлении изображений к товару с ID ${id}`,
+          `Ошибка при добавлении изображений к товару с ID ${id}`,
         );
       }
       throw new Error(`Ошибка при добавлении изображений к товару с ID ${id}`);
@@ -255,6 +256,71 @@ class ProductService {
       }
       throw new Error('Ошибка при удалении фотографии');
     }
+  }
+  /**
+   * Импорт товаров из CSV файла
+   */
+  async importProducts(file: File): Promise<ImportProductsResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await api.post<ImportProductsResponse>('/suppliers/products/import', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return this.normalizeImportResponse(response.data);
+    } catch (error) {
+      console.error('Ошибка при импорте товаров:', error);
+      if (error && typeof error === 'object' && 'response' in error) {
+        const err = error as { response?: { data?: ImportProductsResponse } };
+        if (err.response?.data) {
+          return this.normalizeImportResponse(err.response.data);
+        }
+      }
+      throw new Error('Ошибка при отправке файла импорта');
+    }
+  }
+
+  /**
+   * Нормализуем разные варианты ответа бэкенда к единому формату
+   */
+  private normalizeImportResponse(raw: unknown): ImportProductsResponse {
+    const data = (raw && typeof raw === 'object') ? raw as Record<string, unknown> : {};
+
+    if ('status' in data) {
+      return data as ImportProductsResponse;
+    }
+
+    const imported = typeof data.imported === 'number' ? data.imported : 0;
+    const skipped = typeof data.skipped === 'number' ? data.skipped : 0;
+    const errorsArray = Array.isArray(data.errors) ? data.errors : [];
+    const failedRows = errorsArray.length;
+    const status: ImportProductsResponse['status'] = failedRows === 0 ? 'success' : imported > 0 ? 'partial' : 'failed';
+
+    const message =
+      typeof data.message === 'string'
+        ? data.message
+        : status === 'success'
+          ? 'Импорт успешно завершен'
+          : status === 'partial'
+            ? 'Импорт завершен с ошибками'
+            : 'Импорт не выполнен';
+
+    return {
+      message,
+      status,
+      total_rows: typeof data.total_rows === 'number' ? data.total_rows : imported + skipped + failedRows,
+      processed_rows: typeof data.processed_rows === 'number' ? data.processed_rows : imported + skipped,
+      created_products: typeof data.created_products === 'number' ? data.created_products : imported,
+      failed_rows: typeof data.failed_rows === 'number' ? data.failed_rows : failedRows,
+      errors: errorsArray as ImportProductsResponse['errors'],
+      error: typeof data.error === 'string' ? data.error : undefined,
+      import_id: typeof data.import_id === 'number' ? data.import_id : typeof data.importId === 'string' || typeof data.importId === 'number' ? Number(data.importId) : undefined,
+      imported,
+      skipped,
+    };
   }
 }
 
