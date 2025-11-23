@@ -116,22 +116,14 @@ const ImportProductsPage: React.FC = () => {
                     <div className="space-y-2">
                         <h1 className="text-2xl font-bold text-gray-900">Импорт товаров</h1>
                         <p className="text-sm text-gray-600">
-                            Загрузите CSV, чтобы массово обновить каталог. Поддерживаем файлы до 5MB, кодировка UTF-8.
+                            Загрузите CSV, чтобы массово обновить каталог. Поддерживаем файлы до 5MB.
                         </p>
-                        <div className="flex flex-wrap gap-2">
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200">
-                                CSV с разделителем ; или ,
-                            </span>
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200">
-                                Обязательные поля: Название, Артикул, Бренд, Категория, Цена
-                            </span>
-                        </div>
                     </div>
 
                     <div className="flex items-center gap-3 w-full sm:w-auto">
                         <Button
                             variant="custom"
-                            className="bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
+                            className="bg-white text-gray-700 border border-gray-200 hover:bg-gray-100 hover:border-gray-300 hover:text-gray-900 transition-colors"
                             leftIcon={<ArrowLeftIcon className="h-5 w-5" />}
                             onClick={() => navigate('/dashboard/products')}
                         >
@@ -323,7 +315,7 @@ const ImportProductsPage: React.FC = () => {
                     {/* Правая колонка - Инструкция */}
                     <div className="space-y-6">
                         <Card title="Требования к файлу" className="shadow-sm" headerClassName="bg-gray-50">
-                            <div className="prose prose-sm text-gray-500">
+                            <div className="text-sm text-gray-700 space-y-3">
                                 <p>Файл должен быть в формате <strong>CSV</strong> (разделитель - запятая или точка с запятой).</p>
 
                                 <h4 className="text-gray-900 font-medium mt-4 mb-2">Обязательные поля:</h4>
@@ -345,8 +337,8 @@ const ImportProductsPage: React.FC = () => {
                                 </ul>
 
                                 <div className="mt-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
-                                    <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">Пример структуры:</h4>
-                                    <pre className="text-xs overflow-x-auto">
+                                    <h4 className="text-xs font-semibold text-gray-600 uppercase mb-2">Пример структуры:</h4>
+                                    <pre className="text-xs text-gray-800 overflow-x-auto">
                                         №,Наименование,Артикул,Вес_кг,Ширина,Высота,Бренд,Категория,Описание,Цена
                                         1,Товар 1,12345,1.5,10,20,Бренд,Категория,Описание товара,1000
                                     </pre>
