@@ -13,8 +13,9 @@ import Input from '../../components/ui/Input';
 import TextArea from '../../components/ui/TextArea';
 import Select, { type StylesConfig } from 'react-select';
 import { useProductForm } from '../../features/products';
+import type { SelectOption } from '../../features/products/hooks/useProductForm';
 
-const selectStyles: StylesConfig<unknown, false> = {
+const selectStyles: StylesConfig<SelectOption, false> = {
   control: (base) => ({
     ...base,
     minHeight: '42px',
@@ -200,9 +201,9 @@ const CreateProductPageMobile: React.FC = () => {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Категория *</label>
-                <Select
+                <Select<SelectOption, false>
                   value={selectedCategory}
-                  onChange={(option) => handleSelectChange('category_id', option as any)}
+                  onChange={(option) => handleSelectChange('category_id', option)}
                   options={categories}
                   styles={selectStyles}
                   placeholder="Выберите категорию"
@@ -213,9 +214,9 @@ const CreateProductPageMobile: React.FC = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Бренд *</label>
-                <Select
+                <Select<SelectOption, false>
                   value={selectedBrand}
-                  onChange={(option) => handleSelectChange('brand_id', option as any)}
+                  onChange={(option) => handleSelectChange('brand_id', option)}
                   options={brands}
                   styles={selectStyles}
                   placeholder="Выберите бренд"
@@ -226,9 +227,9 @@ const CreateProductPageMobile: React.FC = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Ед. измерения *</label>
-                <Select
+                <Select<SelectOption, false>
                   value={selectedUnit}
-                  onChange={(option) => handleSelectChange('unit_id', option as any)}
+                  onChange={(option) => handleSelectChange('unit_id', option)}
                   options={units}
                   styles={selectStyles}
                   placeholder="Выберите единицу"

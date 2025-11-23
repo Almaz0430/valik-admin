@@ -287,17 +287,22 @@ class ProductService {
    * Нормализуем разные варианты ответа бэкенда к единому формату
    */
   private normalizeImportResponse(raw: unknown): ImportProductsResponse {
-    const data = (raw && typeof raw === 'object') ? raw as Record<string, unknown> : {};
-
-    if ('status' in data) {
-      return data as ImportProductsResponse;
-    }
+    const data = (raw && typeof raw === 'object') ? (raw as Record<string, unknown>) : {};
 
     const imported = typeof data.imported === 'number' ? data.imported : 0;
     const skipped = typeof data.skipped === 'number' ? data.skipped : 0;
     const errorsArray = Array.isArray(data.errors) ? data.errors : [];
     const failedRows = errorsArray.length;
-    const status: ImportProductsResponse['status'] = failedRows === 0 ? 'success' : imported > 0 ? 'partial' : 'failed';
+
+    const rawStatus = (data as { status?: unknown }).status;
+    const status: ImportProductsResponse['status'] =
+      typeof rawStatus === 'string'
+        ? (rawStatus as ImportProductsResponse['status'])
+        : failedRows === 0
+          ? 'success'
+          : imported > 0
+            ? 'partial'
+            : 'failed';
 
     const message =
       typeof data.message === 'string'

@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 import { authService } from '../../features/auth';
 import Layout from '../../components/layout/Layout';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContextBase';
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
