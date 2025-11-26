@@ -247,7 +247,7 @@ class ProductService {
    */
   async deleteProductImage(productId: number, imageUrl: string): Promise<void> {
     try {
-      await api.post(`/suppliers/products/photos/delete/${productId}`, { link: imageUrl });
+      await api.post(`/supplier/products/photos/delete/${productId}`, { link: imageUrl });
     } catch (error) {
       console.error('Ошибка при удалении фотографии:', error);
       if (error && typeof error === 'object' && 'response' in error) {

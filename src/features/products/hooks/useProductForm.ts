@@ -51,11 +51,21 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewImages, setPreviewImages] = useState<string[]>([]);
+  const [existingImages, setExistingImages] = useState<string[]>([]);
+  const createdObjectUrlsRef = useRef<string[]>([]);
+
+  const revokeIfObjectUrl = (url: string) => {
+    if (url.startsWith('blob:')) {
+      URL.revokeObjectURL(url);
+      createdObjectUrlsRef.current = createdObjectUrlsRef.current.filter((item) => item !== url);
+    }
+  };
 
   const appendImages = (files: File[]) => {
     if (!files.length) return;
 
     const newPreviews = files.map(file => URL.createObjectURL(file));
+    createdObjectUrlsRef.current.push(...newPreviews);
 
     setFormData(prev => ({
       ...prev,
@@ -123,6 +133,7 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
           setSelectedUnit(unitsOptions.find(u => u.value == productData.unit_id) || null);
 
           if (productData.images) {
+            setExistingImages(productData.images.map((img: string) => img));
             setPreviewImages(productData.images.map((img: string) => img));
           }
         }
@@ -198,31 +209,55 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
     appendImages(files);
   };
 
-  const removeImage = (index: number) => {
-    setFormData(prev => {
-      const newImages = [...prev.images];
-      newImages.splice(index, 1);
-      return { ...prev, images: newImages };
-    });
+  const removeImage = async (index: number) => {
+    try {
+      if (isEditMode && productId && index < existingImages.length) {
+        const imageUrl = existingImages[index];
+        await productService.deleteProductImage(productId, imageUrl);
 
-    URL.revokeObjectURL(previewImages[index]);
+        setExistingImages((prev) => prev.filter((_, i) => i !== index));
+        setPreviewImages((prev) => prev.filter((_, i) => i !== index));
+        toast.success('Фото удалено');
+        return;
+      }
 
-    setPreviewImages(prev => {
-      const newPreviews = [...prev];
-      newPreviews.splice(index, 1);
-      return newPreviews;
-    });
+      const newImageIndex = index - existingImages.length;
+      setFormData(prev => {
+        const newImages = [...prev.images];
+        if (newImageIndex >= 0 && newImageIndex < newImages.length) {
+          newImages.splice(newImageIndex, 1);
+        }
+        return { ...prev, images: newImages };
+      });
+
+      const previewToRemove = previewImages[index];
+      if (previewToRemove) {
+        revokeIfObjectUrl(previewToRemove);
+      }
+
+      setPreviewImages(prev => prev.filter((_, i) => i !== index));
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Не удалось удалить изображение';
+      toast.error(errorMessage);
+    }
   };
 
   const editImage = (index: number, editedFile: File) => {
+    const newImageIndex = index - existingImages.length;
+    if (newImageIndex < 0) {
+      toast.error('Старые фото можно только удалить и загрузить заново');
+      return;
+    }
+
     setFormData(prev => {
       const newImages = [...prev.images];
-      newImages[index] = editedFile;
+      newImages[newImageIndex] = editedFile;
       return { ...prev, images: newImages };
     });
 
-    URL.revokeObjectURL(previewImages[index]);
+    revokeIfObjectUrl(previewImages[index]);
     const newPreviewUrl = URL.createObjectURL(editedFile);
+    createdObjectUrlsRef.current.push(newPreviewUrl);
 
     setPreviewImages(prev => {
       const newPreviews = [...prev];
@@ -233,9 +268,9 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
 
   useEffect(() => {
     return () => {
-      previewImages.forEach(url => URL.revokeObjectURL(url));
+      createdObjectUrlsRef.current.forEach(url => URL.revokeObjectURL(url));
     };
-  }, [previewImages]);
+  }, []);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
