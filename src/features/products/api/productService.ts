@@ -168,7 +168,7 @@ class ProductService {
    */
   async getUnits(): Promise<Unit[]> {
     try {
-      const response = await api.get<Unit[]>('units');
+      const response = await api.get<Unit[]>('/units');
       return response.data;
     } catch (error) {
       console.error('Ошибка при запросе списка единиц измерения:', error);
