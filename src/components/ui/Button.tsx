@@ -28,18 +28,18 @@ export const Button: React.FC<ButtonProps> = ({
   disabled,
   ...props
 }) => {
-  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2';
-  
+  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-[0.98] shadow-sm disabled:active:scale-100 disabled:shadow-none';
+
   const variantStyles: Record<ButtonVariant, string> = {
-    primary: 'bg-orange-600 hover:bg-orange-700 text-white focus:ring-orange-500',
-    secondary: 'bg-gray-200 hover:bg-gray-300 text-gray-800 focus:ring-gray-400',
-    success: 'bg-green-600 hover:bg-green-700 text-white focus:ring-green-500',
-    danger: 'bg-red-600 hover:bg-red-700 text-white focus:ring-red-500',
-    warning: 'bg-yellow-500 hover:bg-yellow-600 text-white focus:ring-yellow-500',
-    info: 'bg-cyan-500 hover:bg-cyan-600 text-white focus:ring-cyan-500',
-    light: 'bg-gray-100 hover:bg-gray-200 text-gray-800 focus:ring-gray-300',
-    dark: 'bg-gray-800 hover:bg-gray-900 text-white focus:ring-gray-700',
-    link: 'bg-transparent text-orange-600 hover:text-orange-800 hover:underline focus:ring-orange-500 p-0',
+    primary: 'bg-orange-600 hover:bg-orange-700 hover:shadow-orange-500/20 hover:shadow-md text-white focus:ring-orange-500',
+    secondary: 'bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 focus:ring-slate-400',
+    success: 'bg-emerald-600 hover:bg-emerald-700 hover:shadow-emerald-500/20 hover:shadow-md text-white focus:ring-emerald-500',
+    danger: 'bg-red-600 hover:bg-red-700 hover:shadow-red-500/20 hover:shadow-md text-white focus:ring-red-500',
+    warning: 'bg-amber-500 hover:bg-amber-600 hover:shadow-amber-500/20 hover:shadow-md text-white focus:ring-amber-500',
+    info: 'bg-sky-500 hover:bg-sky-600 hover:shadow-sky-500/20 hover:shadow-md text-white focus:ring-sky-500',
+    light: 'bg-slate-100 hover:bg-slate-200 text-slate-800 focus:ring-slate-300',
+    dark: 'bg-slate-800 hover:bg-slate-900 text-white focus:ring-slate-700',
+    link: 'bg-transparent text-orange-600 hover:text-orange-800 hover:underline focus:ring-orange-500 p-0 shadow-none active:scale-100',
     custom: '',
   };
 
@@ -71,7 +71,7 @@ export const Button: React.FC<ButtonProps> = ({
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
       )}
-      
+
       {!isLoading && leftIcon && <span className="mr-2">{leftIcon}</span>}
       {children}
       {!isLoading && rightIcon && <span className="ml-2">{rightIcon}</span>}

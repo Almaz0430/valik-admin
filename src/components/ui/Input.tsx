@@ -13,52 +13,52 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ 
-    label, 
-    error, 
-    helperText, 
-    leftIcon, 
-    rightIcon, 
-    fullWidth = false, 
+  ({
+    label,
+    error,
+    helperText,
+    leftIcon,
+    rightIcon,
+    fullWidth = false,
     className = '',
-    ...props 
+    ...props
   }, ref) => {
     const inputClasses = `
-      block px-4 py-2 w-full rounded-md border-gray-300 shadow-sm 
-      focus:border-transparent focus:ring-0 focus:outline-none
-      ${error ? 'border-red-500 focus:border-transparent' : ''}
-      ${leftIcon ? 'pl-10' : ''}
-      ${rightIcon ? 'pr-10' : ''}
+      block px-4 py-2.5 w-full rounded-xl border-slate-300 shadow-sm transition-all duration-200
+      focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none bg-white hover:border-slate-400
+      ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''}
+      ${leftIcon ? 'pl-11' : ''}
+      ${rightIcon ? 'pr-11' : ''}
     `;
 
     return (
       <div className={`${fullWidth ? 'w-full' : ''} ${className}`}>
         {label && (
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-slate-700 mb-1.5">
             {label}
           </label>
         )}
-        
+
         <div className="relative">
           {leftIcon && (
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               {leftIcon}
             </div>
           )}
-          
+
           <input
             ref={ref}
             className={inputClasses}
             {...props}
           />
-          
+
           {rightIcon && (
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
               {rightIcon}
             </div>
           )}
         </div>
-        
+
         {(error || helperText) && (
           <p className={`mt-1 text-sm ${error ? 'text-red-600' : 'text-gray-500'}`}>
             {error || helperText}

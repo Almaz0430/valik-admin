@@ -61,46 +61,45 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   const colors = getColors();
 
   return (
-    <div className="fixed inset-0 overflow-y-auto z-[100]">
-      <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div className="fixed inset-0 transition-opacity z-[90]" aria-hidden="true">
-          <div className="absolute inset-0 bg-gray-500 opacity-75 backdrop-blur-sm" onClick={onCancel}></div>
-        </div>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 custom-scrollbar">
+      <div
+        className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity z-[90]"
+        onClick={onCancel}
+        aria-hidden="true"
+      ></div>
 
-        <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-
-        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full z-[110] relative">
-          <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-            <div className="sm:flex sm:items-start">
-              <div className={`mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full ${colors.bg} sm:mx-0 sm:h-10 sm:w-10`}>
-                <ExclamationTriangleIcon className={`h-6 w-6 ${colors.icon}`} />
-              </div>
-              <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                <h3 className="text-lg leading-6 font-medium text-gray-900">{title}</h3>
-                <div className="mt-2">
-                  <p className="text-sm text-gray-500">{message}</p>
-                </div>
+      <div className="relative w-full max-w-md bg-white/95 backdrop-blur-xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] ring-1 ring-slate-200/50 rounded-3xl overflow-hidden flex flex-col transform transition-all z-[110]">
+        <div className="p-6 sm:p-8">
+          <div className="sm:flex sm:items-start">
+            <div className={`mx-auto flex-shrink-0 flex items-center justify-center h-14 w-14 rounded-full ${colors.bg} sm:mx-0 sm:h-12 sm:w-12 ring-4 ring-white shadow-sm`}>
+              <ExclamationTriangleIcon className={`h-6 w-6 ${colors.icon}`} />
+            </div>
+            <div className="mt-4 text-center sm:mt-0 sm:ml-5 sm:text-left">
+              <h3 className="text-xl leading-6 font-bold text-slate-900 tracking-tight">{title}</h3>
+              <div className="mt-3">
+                <p className="text-sm text-slate-500 font-medium leading-relaxed">{message}</p>
               </div>
             </div>
           </div>
-          <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-            <Button
-              type="button"
-              variant="custom"
-              className={`w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium text-white ${colors.button} focus:outline-none sm:ml-3 sm:w-auto sm:text-sm`}
-              onClick={onConfirm}
-            >
-              {confirmText}
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              className="mt-3 w-full inline-flex justify-center sm:mt-0 sm:w-auto sm:text-sm"
-              onClick={onCancel}
-            >
-              {cancelText}
-            </Button>
-          </div>
+        </div>
+
+        <div className="bg-slate-50/50 border-t border-slate-100/80 p-5 sm:px-6 flex flex-col sm:flex-row-reverse sm:justify-start gap-3 rounded-b-3xl">
+          <Button
+            type="button"
+            variant="custom"
+            className={`w-full sm:w-auto inline-flex justify-center rounded-xl border border-transparent shadow-[0_2px_8px_-2px_rgba(0,0,0,0.1)] px-5 py-2.5 text-sm font-semibold text-white ${colors.button} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-${type === 'danger' ? 'red' : type === 'warning' ? 'yellow' : 'blue'}-500 active:scale-[0.98] transition-all`}
+            onClick={onConfirm}
+          >
+            {confirmText}
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            className="w-full sm:w-auto inline-flex justify-center rounded-xl bg-white border border-slate-200 shadow-sm px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 focus:outline-none active:scale-[0.98] transition-all"
+            onClick={onCancel}
+          >
+            {cancelText}
+          </Button>
         </div>
       </div>
     </div>

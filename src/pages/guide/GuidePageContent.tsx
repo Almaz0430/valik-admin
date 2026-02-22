@@ -2,9 +2,9 @@
  * Компонент с содержимым страницы руководства по сайту
  */
 import React, { useState } from 'react';
-import { 
-  ShoppingCartIcon, 
-  CubeIcon, 
+import {
+  ShoppingCartIcon,
+  CubeIcon,
   ChevronRightIcon,
   ChevronDownIcon,
   QuestionMarkCircleIcon
@@ -127,13 +127,13 @@ const GuidePageContent: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto">
       {/* Заголовок страницы */}
-      <div className="mb-8 text-center">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-orange-100 mb-4">
-          <QuestionMarkCircleIcon className="h-10 w-10 text-orange-600" />
+      <div className="mb-8 text-center bg-white p-8 rounded-2xl shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] ring-1 ring-slate-200/50 box-border">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-orange-100/80 mb-5 shadow-sm ring-1 ring-orange-200/50">
+          <QuestionMarkCircleIcon className="h-8 w-8 text-orange-600" />
         </div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Руководство по товарам и заказам</h1>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          В этом руководстве вы найдете подробную информацию о том, как создавать и управлять товарами, 
+        <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-3">Руководство по товарам и заказам</h1>
+        <p className="text-base text-slate-600 font-medium max-w-2xl mx-auto">
+          В этом руководстве вы найдете подробную информацию о том, как создавать и управлять товарами,
           а также отслеживать и обрабатывать заказы в административной панели.
         </p>
       </div>
@@ -143,66 +143,64 @@ const GuidePageContent: React.FC = () => {
         {guideSections.map((section) => {
           const isExpanded = expandedSection === section.id;
           const Icon = section.icon;
-          
+
           return (
-            <div key={section.id} className="border border-gray-200 rounded-lg overflow-hidden">
+            <div key={section.id} className="border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm bg-white transition-all duration-200 box-border">
               {/* Заголовок раздела */}
-              <button 
-                className={`w-full flex items-center justify-between p-4 text-left focus:outline-none ${
-                  isExpanded ? 'bg-orange-50' : 'bg-white hover:bg-gray-50'
-                }`}
+              <button
+                className={`w-full flex items-center justify-between p-5 text-left focus:outline-none transition-colors ${isExpanded ? 'bg-orange-50/50 border-b border-orange-100/80' : 'bg-white hover:bg-slate-50'
+                  }`}
                 onClick={() => toggleSection(section.id)}
               >
                 <div className="flex items-center">
-                  <div className={`p-2 rounded-full ${isExpanded ? 'bg-orange-100' : 'bg-gray-100'}`}>
-                    <Icon className={`h-6 w-6 ${isExpanded ? 'text-orange-600' : 'text-gray-600'}`} />
+                  <div className={`p-2.5 rounded-xl transition-colors ${isExpanded ? 'bg-orange-100/80 shadow-sm ring-1 ring-orange-200/50' : 'bg-slate-100'}`}>
+                    <Icon className={`h-6 w-6 ${isExpanded ? 'text-orange-600' : 'text-slate-500'}`} />
                   </div>
-                  <h2 className="ml-3 text-xl font-medium text-gray-900">{section.title}</h2>
+                  <h2 className="ml-4 text-xl font-semibold text-slate-900 tracking-tight">{section.title}</h2>
                 </div>
                 {isExpanded ? (
-                  <ChevronDownIcon className="h-5 w-5 text-gray-500" />
+                  <ChevronDownIcon className="h-5 w-5 text-slate-400" />
                 ) : (
-                  <ChevronRightIcon className="h-5 w-5 text-gray-500" />
+                  <ChevronRightIcon className="h-5 w-5 text-slate-400" />
                 )}
               </button>
-              
+
               {/* Содержимое раздела */}
               {isExpanded && (
-                <div className="px-4 pb-4">
-                  <div className="p-4 bg-gray-50 rounded-lg mb-4">
+                <div className="p-6">
+                  <div className="p-5 bg-slate-50/80 rounded-xl mb-6 border border-slate-100/50">
                     {section.content.map((paragraph, idx) => (
-                      <p key={idx} className="text-gray-700 mb-2 last:mb-0">
+                      <p key={idx} className="text-slate-700 font-medium mb-2.5 last:mb-0 leading-relaxed">
                         {paragraph}
                       </p>
                     ))}
                   </div>
-                  
+
                   {/* Подразделы */}
                   {section.subsections && section.subsections.length > 0 && (
-                    <div className="space-y-3 mt-4">
+                    <div className="space-y-4">
                       {section.subsections.map((subsection) => {
                         const isSubExpanded = expandedSubsection === subsection.id;
-                        
+
                         return (
-                          <div key={subsection.id} className="border border-gray-200 rounded-lg overflow-hidden">
-                            <button 
-                              className={`w-full flex items-center justify-between p-3 text-left focus:outline-none ${
-                                isSubExpanded ? 'bg-orange-50' : 'bg-white hover:bg-gray-50'
-                              }`}
+                          <div key={subsection.id} className="border border-slate-200/80 rounded-xl overflow-hidden box-border transition-all">
+                            <button
+                              className={`w-full flex items-center justify-between p-4 text-left focus:outline-none transition-colors ${isSubExpanded ? 'bg-orange-50/30' : 'bg-white hover:bg-slate-50'
+                                }`}
                               onClick={() => toggleSubsection(subsection.id)}
                             >
-                              <h3 className="text-lg font-medium text-gray-900">{subsection.title}</h3>
+                              <h3 className="text-base font-semibold text-slate-800 tracking-tight">{subsection.title}</h3>
                               {isSubExpanded ? (
-                                <ChevronDownIcon className="h-4 w-4 text-gray-500" />
+                                <ChevronDownIcon className="h-4 w-4 text-slate-400" />
                               ) : (
-                                <ChevronRightIcon className="h-4 w-4 text-gray-500" />
+                                <ChevronRightIcon className="h-4 w-4 text-slate-400" />
                               )}
                             </button>
-                            
+
                             {isSubExpanded && (
-                              <div className="p-3 bg-white">
+                              <div className="p-4 bg-white border-t border-slate-100/50">
                                 {subsection.content.map((paragraph, idx) => (
-                                  <p key={idx} className="text-gray-700 mb-2 last:mb-0">
+                                  <p key={idx} className="text-slate-600 mb-2 last:mb-0 leading-relaxed text-sm font-medium">
                                     {paragraph}
                                   </p>
                                 ))}

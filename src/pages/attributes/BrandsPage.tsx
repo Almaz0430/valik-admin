@@ -26,10 +26,10 @@ const BrandsPage: React.FC<BrandsPageProps> = ({ isStandalone = false }) => {
     const fetchBrands = async () => {
       setIsLoading(true);
       setError(null);
-      
+
       try {
         const response = await brandUnitService.getBrands({});
-        
+
         setBrands(response.brands);
         setTotalBrands(response.total);
       } catch (err) {
@@ -41,10 +41,10 @@ const BrandsPage: React.FC<BrandsPageProps> = ({ isStandalone = false }) => {
         setIsLoading(false);
       }
     };
-    
+
     fetchBrands();
   }, []);
-  
+
   // Обработчик удаления бренда
   const handleDeleteClick = (id: number) => {
     setBrandToDelete(id);
@@ -55,7 +55,7 @@ const BrandsPage: React.FC<BrandsPageProps> = ({ isStandalone = false }) => {
     if (brandToDelete) {
       try {
         await brandUnitService.deleteBrand(brandToDelete);
-        
+
         // Обновляем список брендов после удаления
         setBrands(brands.filter(brand => brand.id !== brandToDelete));
         setTotalBrands(prev => prev - 1);
@@ -94,14 +94,14 @@ const BrandsPage: React.FC<BrandsPageProps> = ({ isStandalone = false }) => {
     }
 
     setIsSubmitting(true);
-    
+
     try {
       const newBrand = await brandUnitService.createBrand({ title: newBrandTitle.trim() });
-      
+
       // Добавляем новый бренд в список и обновляем общее количество
       setBrands(prev => [newBrand, ...prev]);
       setTotalBrands(prev => prev + 1);
-      
+
       closeCreateModal();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Произошла ошибка при создании бренда';
@@ -120,7 +120,7 @@ const BrandsPage: React.FC<BrandsPageProps> = ({ isStandalone = false }) => {
 
     if (/^\d+$/.test(dateString)) {
       const timestamp = Number(dateString);
-      
+
       if (dateString.length === 10) {
         date = new Date(timestamp * 1000);
       } else {
@@ -129,44 +129,44 @@ const BrandsPage: React.FC<BrandsPageProps> = ({ isStandalone = false }) => {
     } else {
       date = new Date(dateString);
     }
-    
+
     if (isNaN(date.getTime())) {
       return 'Некорректная дата';
     }
 
-    return date.toLocaleDateString('ru-RU', { 
-      day: '2-digit', 
-      month: '2-digit', 
+    return date.toLocaleDateString('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
     });
   };
-  
+
   const content = (
     <div className="space-y-6 pb-16 lg:pb-0">
       {isStandalone && (
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Управление брендами</h1>
-            <p className="mt-1 text-sm text-gray-500">Всего брендов: {totalBrands}</p>
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Управление брендами</h1>
+            <p className="mt-2 text-sm text-slate-500 font-medium">Всего брендов: {totalBrands}</p>
           </div>
         </div>
       )}
-      
+
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
         {!isStandalone && (
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Бренды</h2>
-            <p className="mt-1 text-sm text-gray-500">Всего брендов: {totalBrands}</p>
+            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Бренды</h2>
+            <p className="mt-1 text-sm text-slate-500 font-medium">Всего брендов: {totalBrands}</p>
           </div>
         )}
-        
+
         <div className="flex flex-wrap gap-4">
           {/* Кнопка создания */}
           <button
             onClick={openCreateModal}
-            className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 inline-flex items-center justify-center w-full sm:w-auto"
+            className="px-5 py-2.5 bg-orange-600 text-white rounded-xl shadow-[0_2px_8px_-2px_rgba(249,115,22,0.4)] hover:bg-orange-700 transition-all font-medium active:scale-[0.98] inline-flex items-center justify-center w-full sm:w-auto"
           >
             <svg className="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -175,27 +175,27 @@ const BrandsPage: React.FC<BrandsPageProps> = ({ isStandalone = false }) => {
           </button>
         </div>
       </div>
-      
+
       {/* Блок брендов с состоянием загрузки и ошибками */}
-      <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+      <div className="bg-white shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] ring-1 ring-slate-200/50 rounded-2xl overflow-hidden box-border">
         {/* Заголовок таблицы */}
-        <div className="bg-gray-50 px-4 sm:px-6 py-3 border-b border-gray-200">
+        <div className="bg-slate-50/50 px-4 sm:px-6 py-4 border-b border-slate-100/80">
           <div className="grid grid-cols-12 gap-4">
-            <div className="col-span-1 text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <div className="col-span-1 text-xs font-semibold text-slate-500 uppercase tracking-wider">
               ID
             </div>
-            <div className="col-span-5 text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <div className="col-span-5 text-xs font-semibold text-slate-500 uppercase tracking-wider">
               Название
             </div>
-            <div className="col-span-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <div className="col-span-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">
               Дата создания
             </div>
-            <div className="col-span-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <div className="col-span-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">
               Действия
             </div>
           </div>
         </div>
-        
+
         {/* Состояние загрузки */}
         {isLoading && (
           <div className="p-8 text-center">
@@ -203,7 +203,7 @@ const BrandsPage: React.FC<BrandsPageProps> = ({ isStandalone = false }) => {
             <p className="mt-2 text-gray-500">Загрузка брендов...</p>
           </div>
         )}
-        
+
         {/* Сообщение об ошибке */}
         {error && (
           <div className="p-8 text-center">
@@ -213,7 +213,7 @@ const BrandsPage: React.FC<BrandsPageProps> = ({ isStandalone = false }) => {
               </svg>
             </div>
             <p className="text-gray-800 font-medium">{error}</p>
-            <button 
+            <button
               onClick={() => {
                 setError(null);
                 setIsLoading(true);
@@ -237,7 +237,7 @@ const BrandsPage: React.FC<BrandsPageProps> = ({ isStandalone = false }) => {
             </button>
           </div>
         )}
-        
+
         {/* Список брендов */}
         {!isLoading && !error && (
           <div className="divide-y divide-gray-200">
@@ -252,21 +252,21 @@ const BrandsPage: React.FC<BrandsPageProps> = ({ isStandalone = false }) => {
                 <p className="text-gray-500 text-base max-w-md mx-auto">Добавьте новый бренд, чтобы увидеть его здесь</p>
               </div>
             )}
-            
+
             {brands.map((brand) => (
-              <div key={brand.id} className="px-4 sm:px-6 py-4 hover:bg-gray-50 transition-colors">
+              <div key={brand.id} className="px-4 sm:px-6 py-4 hover:bg-slate-50 transition-colors">
                 <div className="grid grid-cols-12 gap-4 items-center">
                   <div className="col-span-1">
-                    <div className="text-sm text-gray-900">{brand.id}</div>
+                    <div className="text-sm text-slate-900">{brand.id}</div>
                   </div>
                   <div className="col-span-5">
-                    <div className="text-sm font-medium text-gray-900">{brand.title}</div>
+                    <div className="text-sm font-medium text-slate-900">{brand.title}</div>
                   </div>
                   <div className="col-span-3">
-                    <div className="text-sm text-gray-900">{formatDate(brand.created_at)}</div>
+                    <div className="text-sm text-slate-900">{formatDate(brand.created_at)}</div>
                   </div>
                   <div className="col-span-3 text-right flex justify-end items-center space-x-2">
-                    <button 
+                    <button
                       className="text-red-600 hover:text-red-900"
                       onClick={() => handleDeleteClick(brand.id)}
                       title="Удалить"
@@ -282,7 +282,7 @@ const BrandsPage: React.FC<BrandsPageProps> = ({ isStandalone = false }) => {
           </div>
         )}
       </div>
-      
+
       {/* Модальное окно подтверждения удаления */}
       <ConfirmationModal
         isOpen={deleteModalOpen}
@@ -294,62 +294,79 @@ const BrandsPage: React.FC<BrandsPageProps> = ({ isStandalone = false }) => {
         onCancel={handleDeleteCancel}
         type="danger"
       />
-      
+
       {/* Модальное окно создания бренда */}
       {isCreateModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 custom-scrollbar">
+          <div
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity z-[90]"
+            aria-hidden="true"
+            onClick={closeCreateModal}
+          ></div>
+
+          <div className="relative w-full max-w-md bg-white/95 backdrop-blur-xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] ring-1 ring-slate-200/50 rounded-3xl overflow-visible flex flex-col transform transition-all z-[110]">
+
+            <div className="flex justify-between items-start p-6 border-b border-slate-100/80 bg-white/50 rounded-t-3xl">
+              <div>
+                <h3 className="text-xl font-bold text-slate-900 tracking-tight">Создание нового бренда</h3>
+                <p className="mt-1 text-sm text-slate-500 font-medium">Заполните данные ниже</p>
+              </div>
+              <button
+                type="button"
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors focus:outline-none"
+                onClick={closeCreateModal}
+              >
+                <span className="sr-only">Закрыть</span>
+                <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
-            
-            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            
-            <div className="relative z-10 inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">Создание нового бренда</h3>
-                <div className="mt-2">
+
+            <div className="p-6">
+              <div className="space-y-5">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">Название бренда *</label>
                   <input
                     type="text"
                     value={newBrandTitle}
                     onChange={(e) => setNewBrandTitle(e.target.value)}
-                    placeholder="Название бренда"
-                    className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    placeholder="Например: Samsung"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-900 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all font-medium"
                   />
                 </div>
               </div>
-              <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button
-                  type="button"
-                  onClick={handleCreateBrand}
-                  disabled={isSubmitting}
-                  className={`w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-orange-500 text-base font-medium text-white hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 sm:ml-3 sm:w-auto sm:text-sm ${
-                    isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
-                  }`}
-                >
-                  {isSubmitting ? 'Создание...' : 'Создать'}
-                </button>
-                <button
-                  type="button"
-                  onClick={closeCreateModal}
-                  disabled={isSubmitting}
-                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-                >
-                  Отмена
-                </button>
-              </div>
+            </div>
+
+            <div className="p-5 sm:px-6 border-t border-slate-100/80 bg-slate-50/50 flex flex-col sm:flex-row-reverse sm:justify-start gap-3 rounded-b-3xl">
+              <button
+                type="button"
+                onClick={handleCreateBrand}
+                disabled={isSubmitting}
+                className={`w-full sm:w-auto inline-flex justify-center rounded-xl border border-transparent shadow-[0_2px_8px_-2px_rgba(249,115,22,0.4)] px-5 py-2.5 text-sm font-semibold text-white bg-orange-600 hover:bg-orange-700 focus:outline-none active:scale-[0.98] transition-all ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
+              >
+                {isSubmitting ? 'Создание...' : 'Создать'}
+              </button>
+              <button
+                type="button"
+                onClick={closeCreateModal}
+                disabled={isSubmitting}
+                className="w-full sm:w-auto inline-flex justify-center rounded-xl bg-white border border-slate-200 shadow-sm px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 focus:outline-none active:scale-[0.98] transition-all"
+              >
+                Отмена
+              </button>
             </div>
           </div>
         </div>
       )}
-      
+
     </div>
   );
-  
+
   if (isStandalone) {
     return <Layout>{content}</Layout>;
   }
-  
+
   return content;
 };
 

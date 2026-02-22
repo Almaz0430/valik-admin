@@ -25,28 +25,28 @@ export const Card: React.FC<CardProps> = ({
   footerClassName = '',
 }) => {
   return (
-    <div className={`bg-white rounded-lg shadow-md overflow-hidden ${className}`}>
+    <div className={`bg-white rounded-2xl shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] ring-1 ring-slate-200/50 overflow-hidden ${className}`}>
       {(title || subtitle) && (
-        <div className={`px-6 py-4 border-b border-gray-200 ${headerClassName}`}>
+        <div className={`px-6 py-5 border-b border-slate-100 ${headerClassName}`}>
           {title && (
-            typeof title === 'string' 
-              ? <h3 className="text-lg font-medium text-gray-900">{title}</h3>
+            typeof title === 'string'
+              ? <h3 className="text-lg font-semibold text-slate-900 tracking-tight">{title}</h3>
               : title
           )}
           {subtitle && (
             typeof subtitle === 'string'
-              ? <p className="mt-1 text-sm text-gray-500">{subtitle}</p>
+              ? <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
               : subtitle
           )}
         </div>
       )}
-      
-      <div className={`px-6 py-4 ${bodyClassName}`}>
+
+      <div className={`px-6 py-5 ${bodyClassName}`}>
         {children}
       </div>
-      
+
       {footer && (
-        <div className={`px-6 py-3 bg-gray-50 border-t border-gray-200 ${footerClassName}`}>
+        <div className={`px-6 py-4 bg-slate-50/50 border-t border-slate-100 ${footerClassName}`}>
           {footer}
         </div>
       )}

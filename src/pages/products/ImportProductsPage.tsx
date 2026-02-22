@@ -114,25 +114,25 @@ const ImportProductsPage: React.FC = () => {
             <div className="space-y-6 pb-16 lg:pb-0">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
                     <div className="space-y-2">
-                        <h1 className="text-2xl font-bold text-gray-900">Импорт товаров</h1>
-                        <p className="text-sm text-gray-600">
+                        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Импорт товаров</h1>
+                        <p className="text-sm text-slate-500 font-medium">
                             Загрузите CSV, чтобы массово обновить каталог. Поддерживаем файлы до 5MB.
                         </p>
                     </div>
 
-                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
                         <Button
                             variant="custom"
-                            className="bg-white text-gray-700 border border-gray-200 hover:bg-gray-100 hover:border-gray-300 hover:text-gray-900 transition-colors"
+                            className="bg-white text-slate-700 border border-slate-200 shadow-sm hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900 transition-all active:scale-[0.98] rounded-xl font-medium"
                             leftIcon={<ArrowLeftIcon className="h-5 w-5" />}
                             onClick={() => navigate('/dashboard/products')}
                         >
-                            К списку товаров
+                            К списку
                         </Button>
                         {importResult && (
                             <Button
                                 variant="custom"
-                                className="bg-gray-900 text-white hover:bg-gray-800"
+                                className="bg-slate-900 text-white hover:bg-slate-800 shadow-md hover:shadow-lg transition-all active:scale-[0.98] rounded-xl font-medium"
                                 onClick={resetForm}
                             >
                                 Новый импорт
@@ -151,15 +151,15 @@ const ImportProductsPage: React.FC = () => {
                                     ? 'Проверьте итог загрузки и исправьте ошибки, если они есть.'
                                     : 'Перетащите файл или выберите его вручную. Поддерживаются CSV до 5MB.'
                             }
-                            className="shadow-sm"
-                            headerClassName="bg-gray-50"
+                            className="shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] ring-1 ring-slate-200/50"
+                            headerClassName="bg-slate-50/50"
                         >
                             {!importResult ? (
                                 <div className="space-y-6">
                                     <div
-                                        className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center transition-colors cursor-pointer
-                    ${isDragging ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-orange-400'}
-                    ${file ? 'bg-gray-50' : 'bg-white'}
+                                        className={`border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center text-center transition-all duration-200 cursor-pointer
+                    ${isDragging ? 'border-orange-500 bg-orange-50/50 scale-[1.02]' : 'border-slate-200 hover:border-orange-400 hover:bg-slate-50/50'}
+                    ${file ? 'bg-slate-50/50' : 'bg-white'}
                   `}
                                         onDragOver={handleDragOver}
                                         onDragLeave={handleDragLeave}
@@ -314,7 +314,7 @@ const ImportProductsPage: React.FC = () => {
 
                     {/* Правая колонка - Инструкция */}
                     <div className="space-y-6">
-                        <Card title="Требования к файлу" className="shadow-sm" headerClassName="bg-gray-50">
+                        <Card title="Требования к файлу" className="shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] ring-1 ring-slate-200/50" headerClassName="bg-slate-50/50">
                             <div className="text-sm text-gray-700 space-y-3">
                                 <p>Файл должен быть в формате <strong>CSV</strong> (разделитель - запятая или точка с запятой).</p>
 

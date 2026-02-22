@@ -121,15 +121,15 @@ const CreateProductPageMobile: React.FC = () => {
   return (
     <Layout>
       {/* Шапка страницы с кнопкой возврата */}
-      <div className="sticky top-0 z-10 -mx-4 px-4 py-3 bg-white shadow-sm flex items-center mb-4">
+      <div className="sticky top-0 z-30 -mx-4 -mt-8 px-4 py-3.5 bg-white/80 backdrop-blur-xl shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] border-b border-slate-200/50 flex items-center mb-6">
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="mr-3 text-gray-500"
+          className="mr-3 p-1.5 rounded-full text-slate-500 hover:bg-slate-100 active:bg-slate-200 transition-colors"
         >
           <ArrowLeftIcon className="h-5 w-5" />
         </button>
-        <h1 className="text-lg font-medium text-gray-900">Создание товара</h1>
+        <h1 className="text-lg font-bold text-slate-900 tracking-tight">Создание товара</h1>
       </div>
 
       {/* Основная форма */}
@@ -307,11 +307,11 @@ const CreateProductPageMobile: React.FC = () => {
       </div>
 
       {/* Фиксированное нижнее меню с кнопками */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 flex z-20">
+      <div className="fixed bottom-16 sm:bottom-20 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-slate-200/50 p-4 flex z-[80] shadow-[0_-4px_24px_-8px_rgba(0,0,0,0.08)] pb-safe">
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="flex-1 mr-2 py-2.5 px-4 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium"
+          className="flex-1 mr-3 py-3 px-4 border border-slate-200/60 bg-slate-50 text-slate-700 rounded-xl text-sm font-medium hover:bg-slate-100 active:bg-slate-200 transition-colors"
         >
           Отмена
         </button>
@@ -319,7 +319,7 @@ const CreateProductPageMobile: React.FC = () => {
           type="button"
           onClick={handleSubmit}
           disabled={isLoading}
-          className="flex-1 py-2.5 px-4 bg-orange-600 text-white rounded-lg text-sm font-medium flex items-center justify-center disabled:opacity-50"
+          className="flex-[2] py-3 px-4 bg-orange-600 text-white rounded-xl shadow-[0_2px_12px_-4px_rgba(249,115,22,0.6)] text-sm font-medium flex items-center justify-center hover:bg-orange-700 active:scale-[0.98] transition-all disabled:opacity-50 disabled:active:scale-100"
         >
           {isLoading && <span className="inline-block h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>}
           {isLoading ? 'Создание...' : 'Создать товар'}

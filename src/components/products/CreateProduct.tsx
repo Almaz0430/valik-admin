@@ -81,9 +81,9 @@ const CreateProduct: React.FC<CreateProductProps> = ({ isEditMode = false, produ
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
-      {/* Шапка */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+    <form onSubmit={handleSubmit} className="space-y-8 pb-24 md:pb-0">
+      {/* Десктопная шапка */}
+      <div className="hidden md:flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{isEditMode ? 'Редактирование товара' : 'Создание нового товара'}</h1>
           <p className="mt-1 text-sm text-gray-500">
@@ -99,6 +99,19 @@ const CreateProduct: React.FC<CreateProductProps> = ({ isEditMode = false, produ
         </Link>
       </div>
 
+      {/* Мобильная шапка (glassmorphism) */}
+      <div className="md:hidden sticky top-0 z-30 -mx-4 -mt-8 px-4 py-3.5 bg-white/80 backdrop-blur-xl shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] border-b border-slate-200/50 flex items-center mb-6">
+        <Link
+          to="/dashboard/products"
+          className="mr-3 p-1.5 rounded-full text-slate-500 hover:bg-slate-100 active:bg-slate-200 transition-colors"
+        >
+          <ArrowLeftIcon className="h-5 w-5" />
+        </Link>
+        <h1 className="text-lg font-bold text-slate-900 tracking-tight">
+          {isEditMode ? 'Редактирование' : 'Создание товара'}
+        </h1>
+      </div>
+
       {/* Уведомления */}
       {errors.submit && (
         <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
@@ -112,7 +125,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ isEditMode = false, produ
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Левая колонка - Основная информация */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white p-6 rounded-lg shadow-sm">
+          <div className="bg-white p-6 rounded-2xl shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] ring-1 ring-slate-200/50">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Основная информация</h3>
             <div className="space-y-4">
               <Input
@@ -138,7 +151,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ isEditMode = false, produ
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm">
+          <div className="bg-white p-6 rounded-2xl shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] ring-1 ring-slate-200/50">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Изображения</h3>
             <FileUploader
               fileInputRef={fileInputRef as React.RefObject<HTMLInputElement>}
@@ -151,7 +164,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ isEditMode = false, produ
             />
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm">
+          <div className="bg-white p-6 rounded-2xl shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] ring-1 ring-slate-200/50">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Габариты (необязательно)</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <Input
@@ -192,7 +205,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ isEditMode = false, produ
 
         {/* Правая колонка - Организация */}
         <div className="lg:col-span-1 space-y-6">
-          <div className="bg-white p-6 rounded-lg shadow-sm">
+          <div className="bg-white p-6 rounded-2xl shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] ring-1 ring-slate-200/50">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Организация</h3>
             <div className="space-y-4">
               <div>
@@ -240,7 +253,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ isEditMode = false, produ
               />
             </div>
           </div>
-          <div className="bg-white p-6 rounded-lg shadow-sm">
+          <div className="bg-white p-6 rounded-2xl shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] ring-1 ring-slate-200/50">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Цена</h3>
             <Input
               id="price"
@@ -256,21 +269,39 @@ const CreateProduct: React.FC<CreateProductProps> = ({ isEditMode = false, produ
         </div>
       </div>
 
-      {/* Кнопки действий */}
-      <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+      {/* Кнопки действий (Десктоп) */}
+      <div className="hidden md:flex justify-end gap-3 pt-5 border-t border-slate-200/60 mt-8">
         <Link
           to="/dashboard/products"
-          className="py-2 px-4 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+          className="py-2 px-5 border border-slate-200/60 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
         >
           Отмена
         </Link>
         <button
           type="submit"
           disabled={isLoading}
-          className="py-2 px-4 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700 disabled:opacity-50 flex items-center"
+          className="py-2 px-5 bg-orange-600 text-white rounded-xl shadow-[0_2px_8px_-2px_rgba(249,115,22,0.6)] text-sm font-medium hover:bg-orange-700 active:scale-[0.98] transition-all disabled:opacity-50 disabled:active:scale-100 flex items-center"
         >
           {isLoading && <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></span>}
           {isEditMode ? 'Сохранить изменения' : 'Создать товар'}
+        </button>
+      </div>
+
+      {/* Фиксированное нижнее меню с кнопками (Мобилка) */}
+      <div className="md:hidden fixed bottom-16 sm:bottom-20 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-slate-200/50 p-4 flex z-[80] shadow-[0_-4px_24px_-8px_rgba(0,0,0,0.08)] pb-safe">
+        <Link
+          to="/dashboard/products"
+          className="flex-1 mr-3 py-3 px-4 border border-slate-200/60 bg-slate-50 text-slate-700 rounded-xl text-center text-sm font-medium hover:bg-slate-100 active:bg-slate-200 transition-colors"
+        >
+          Отмена
+        </Link>
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="flex-[2] py-3 px-4 bg-orange-600 text-white rounded-xl shadow-[0_2px_12px_-4px_rgba(249,115,22,0.6)] text-sm font-medium flex items-center justify-center hover:bg-orange-700 active:scale-[0.98] transition-all disabled:opacity-50 disabled:active:scale-100"
+        >
+          {isLoading && <span className="inline-block h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>}
+          {isEditMode ? 'Сохранить' : 'Создать товар'}
         </button>
       </div>
     </form>
