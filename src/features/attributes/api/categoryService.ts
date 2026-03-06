@@ -20,7 +20,7 @@ class CategoryService {
   ): Promise<CategoryListResponse> {
     try {
       const response = await api.get<Category[] | { categories: Category[]; total: number }>(
-        '/categories',
+        '/product/category/',
         { params },
       );
       const data = response.data;
@@ -49,7 +49,7 @@ class CategoryService {
    */
   async getCategory(id: number): Promise<Category> {
     try {
-      const response = await api.get<Category>(`/categories/${id}`);
+      const response = await api.get<Category>(`/product/category/${id}/`);
       return response.data;
     } catch (error) {
       console.error(`Ошибка при получении категорий ${id}:`, error);
@@ -69,7 +69,7 @@ class CategoryService {
     parent_id: number | null;
   }): Promise<Category> {
     try {
-      const response = await api.post<Category>('/categories', categoryData);
+      const response = await api.post<Category>('/product/category/', categoryData);
       return response.data;
     } catch (error) {
       console.error('Ошибка при создании категории:', error);
@@ -86,7 +86,7 @@ class CategoryService {
    */
   async updateCategory(id: number, categoryData: { title: string }): Promise<Category> {
     try {
-      const response = await api.patch<Category>(`/categories/${id}`, categoryData);
+      const response = await api.patch<Category>(`/product/category/${id}/`, categoryData);
       return response.data;
     } catch (error) {
       console.error(`Ошибка при обновлении категории ${id}:`, error);
@@ -105,7 +105,7 @@ class CategoryService {
    */
   async deleteCategory(id: number): Promise<void> {
     try {
-      await api.delete(`/categories/${id}`);
+      await api.delete(`/product/category/${id}/`);
     } catch (error) {
       console.error(`Ошибка при удалении категории ${id}:`, error);
       if (error && typeof error === 'object' && 'response' in error) {

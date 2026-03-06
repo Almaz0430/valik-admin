@@ -5,7 +5,6 @@ import type {
   Product,
   ProductQueryParams,
   ProductListResponse,
-  ProductResponse,
   CreateProductDTO,
   UpdateProductDTO,
   ImportProductsResponse
@@ -39,8 +38,8 @@ class ProductService {
    */
   async getProducts(params: ProductQueryParams = { page: 1, limit: 10 }): Promise<ProductListResponse> {
     try {
-      const response = await api.get<{ products: Product[]; total: number }>('/suppliers/products', { params });
-      const { products, total } = response.data;
+      const response = await api.get<{ count: number; results: Product[] }>('/product/vendor-products/', { params });
+      const { results: products, count: total } = response.data;
 
       return {
         products,
@@ -63,7 +62,7 @@ class ProductService {
    */
   async getProduct(id: number): Promise<Product> {
     try {
-      const response = await api.get<Product>(`/suppliers/products/${id}`);
+      const response = await api.get<Product>(`/product/optproduct/${id}/`);
       return response.data;
     } catch (error) {
       console.error(`Ошибка при получении товара ${id}:`, error);
@@ -80,8 +79,8 @@ class ProductService {
    */
   async createProduct(productData: CreateProductDTO): Promise<Product> {
     try {
-      const response = await api.post<ProductResponse>('/suppliers/products', productData);
-      return response.data.product;
+      const response = await api.post<Product>('/product/opt-products/', productData);
+      return response.data;
     } catch (error) {
       console.error('Ошибка при создании товара:', error);
       if (error && typeof error === 'object' && 'response' in error) {
@@ -97,8 +96,8 @@ class ProductService {
    */
   async updateProduct(id: number, productData: UpdateProductDTO): Promise<Product> {
     try {
-      const response = await api.patch<ProductResponse>(`/suppliers/products/${id}`, productData);
-      return response.data.product;
+      const response = await api.patch<Product>(`/product/optproduct/${id}/`, productData);
+      return response.data;
     } catch (error) {
       console.error(`Ошибка при обновлении товара ${id}:`, error);
       if (error && typeof error === 'object' && 'response' in error) {
@@ -116,7 +115,7 @@ class ProductService {
    */
   async deleteProduct(id: number): Promise<void> {
     try {
-      await api.delete(`/suppliers/products/${id}`);
+      await api.delete(`/product/optproduct/${id}/`);
     } catch (error) {
       console.error(`Ошибка при удалении товара ${id}:`, error);
       if (error && typeof error === 'object' && 'response' in error) {
@@ -134,8 +133,8 @@ class ProductService {
    */
   async getCategories(): Promise<Category[]> {
     try {
-      const response = await api.get<Category[]>('/categories');
-      return response.data;
+      const response = await api.get<Category[] | { results: Category[] }>('/product/category/');
+      return Array.isArray(response.data) ? response.data : (response.data.results || []);
     } catch (error) {
       console.error('Ошибка при запросе списка категорий:', error);
       if (error && typeof error === 'object' && 'response' in error) {
@@ -151,8 +150,8 @@ class ProductService {
    */
   async getBrands(): Promise<Brand[]> {
     try {
-      const response = await api.get<Brand[]>('/brands');
-      return response.data;
+      const response = await api.get<Brand[] | { results: Brand[] }>('/product/brand/');
+      return Array.isArray(response.data) ? response.data : (response.data.results || []);
     } catch (error) {
       console.error('Ошибка при запросе списка брендов:', error);
       if (error && typeof error === 'object' && 'response' in error) {
@@ -168,7 +167,7 @@ class ProductService {
    */
   async getUnits(): Promise<Unit[]> {
     try {
-      const response = await api.get<Unit[]>('/units');
+      const response = await api.get<Unit[]>('/product/units/');
       return response.data;
     } catch (error) {
       console.error('Ошибка при запросе списка единиц измерения:', error);
@@ -187,8 +186,8 @@ class ProductService {
    */
   async createProductWithImages(formData: FormData): Promise<Product> {
     try {
-      const response = await api.post<ProductResponse>('/suppliers/products', formData);
-      return response.data.product;
+      const response = await api.post<Product>('/product/opt-products/', formData);
+      return response.data;
     } catch (error) {
       console.error('Ошибка при создании товара с изображениями:', error);
       if (error && typeof error === 'object' && 'response' in error) {
@@ -206,8 +205,8 @@ class ProductService {
    */
   async updateProductWithImages(id: number, formData: FormData): Promise<Product> {
     try {
-      const response = await api.patch<ProductResponse>(`/suppliers/products/${id}`, formData);
-      return response.data.product;
+      const response = await api.patch<Product>(`/product/optproduct/${id}/`, formData);
+      return response.data;
     } catch (error) {
       console.error(`Ошибка при обновлении товара с ID ${id} с изображениями:`, error);
       if (error && typeof error === 'object' && 'response' in error) {

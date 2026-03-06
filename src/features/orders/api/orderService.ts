@@ -3,8 +3,12 @@ import { api } from '../../../utils/axiosConfig';
 
 class OrderService {
   async getOrders(): Promise<Order[]> {
-    // Используем поставщицкий префикс, как и для товаров (`/suppliers/products`)
-    const response = await api.get<Order[]>('/suppliers/orders');
+    const vendorId = localStorage.getItem('vendorId');
+    if (!vendorId) {
+      console.warn('Vendor ID not found for orders fetching');
+      return [];
+    }
+    const response = await api.get<Order[]>(`/sell/orders/vendor/${vendorId}/`);
     return response.data;
   }
 }

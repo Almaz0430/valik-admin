@@ -17,6 +17,9 @@ export default defineConfig({
       '@styles': '/src/styles',
       '@types': '/src/types',
     }
+  },
+  server: {
+    port: 3010,
   }
 })
 //   build: {

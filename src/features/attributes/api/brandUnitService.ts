@@ -19,7 +19,7 @@ class BrandUnitService {
    */
   async getBrands(params: AttributeQueryParams = { page: 1, limit: 10 }): Promise<BrandListResponse> {
     try {
-      const response = await api.get<Brand[] | { brands: Brand[]; total: number }>('/brands', {
+      const response = await api.get<Brand[] | { brands: Brand[]; total: number }>('/product/brand/', {
         params,
       });
       const data = response.data;
@@ -48,7 +48,7 @@ class BrandUnitService {
    */
   async getBrand(id: number): Promise<Brand> {
     try {
-      const response = await api.get<Brand | { brand: Brand }>(`/brands/${id}`);
+      const response = await api.get<Brand | { brand: Brand }>(`/product/brand/${id}/`);
       const data = response.data;
       return 'brand' in data && data.brand ? data.brand : (data as Brand);
     } catch (error) {
@@ -66,7 +66,7 @@ class BrandUnitService {
    */
   async createBrand(brandData: { title: string }): Promise<Brand> {
     try {
-      const response = await api.post<Brand | { brand: Brand }>('/brands', brandData);
+      const response = await api.post<Brand | { brand: Brand }>('/product/brand/', brandData);
       const data = response.data;
       return 'brand' in data && data.brand ? data.brand : (data as Brand);
     } catch (error) {
@@ -84,7 +84,7 @@ class BrandUnitService {
    */
   async updateBrand(id: number, brandData: { title: string }): Promise<Brand> {
     try {
-      const response = await api.patch<Brand | { brand: Brand }>(`/brands/${id}`, brandData);
+      const response = await api.patch<Brand | { brand: Brand }>(`/product/brand/${id}/`, brandData);
       const data = response.data;
       return 'brand' in data && data.brand ? data.brand : (data as Brand);
     } catch (error) {
@@ -104,7 +104,7 @@ class BrandUnitService {
    */
   async deleteBrand(id: number): Promise<void> {
     try {
-      await api.delete(`/brands/${id}`);
+      await api.delete(`/product/brand/${id}/`);
     } catch (error) {
       console.error(`Ошибка при удалении бренда ${id}:`, error);
       if (error && typeof error === 'object' && 'response' in error) {
@@ -122,7 +122,7 @@ class BrandUnitService {
    */
   async getUnits(params: AttributeQueryParams = { page: 1, limit: 10 }): Promise<UnitListResponse> {
     try {
-      const response = await api.get<Unit[] | { units: Unit[]; total: number }>('/units', {
+      const response = await api.get<Unit[] | { units: Unit[]; total: number }>('/product/units/', {
         params,
       });
       const data = response.data;
@@ -153,7 +153,7 @@ class BrandUnitService {
    */
   async getUnit(id: number): Promise<Unit> {
     try {
-      const response = await api.get<Unit | { unit: Unit }>(`/units/${id}`);
+      const response = await api.get<Unit | { unit: Unit }>(`/product/units/${id}/`);
       const data = response.data;
       return 'unit' in data && data.unit ? data.unit : (data as Unit);
     } catch (error) {
@@ -162,7 +162,7 @@ class BrandUnitService {
         const err = error as { response?: { data?: { message?: string } } };
         throw new Error(
           err.response?.data?.message ||
-            `Единица измерения с ID ${id} не найдена`,
+          `Единица измерения с ID ${id} не найдена`,
         );
       }
       throw new Error(`Единица измерения с ID ${id} не найдена`);
@@ -174,7 +174,7 @@ class BrandUnitService {
    */
   async createUnit(unitData: { title: string }): Promise<Unit> {
     try {
-      const response = await api.post<Unit | { unit: Unit }>('/units', unitData);
+      const response = await api.post<Unit | { unit: Unit }>('/product/units/', unitData);
       const data = response.data;
       return 'unit' in data && data.unit ? data.unit : (data as Unit);
     } catch (error) {
@@ -194,7 +194,7 @@ class BrandUnitService {
    */
   async updateUnit(id: number, unitData: { title: string }): Promise<Unit> {
     try {
-      const response = await api.patch<Unit | { unit: Unit }>(`/units/${id}`, unitData);
+      const response = await api.patch<Unit | { unit: Unit }>(`/product/units/${id}/`, unitData);
       const data = response.data;
       return 'unit' in data && data.unit ? data.unit : (data as Unit);
     } catch (error) {
@@ -203,7 +203,7 @@ class BrandUnitService {
         const err = error as { response?: { data?: { message?: string } } };
         throw new Error(
           err.response?.data?.message ||
-            `Ошибка при обновлении единицы измерения с ID ${id}`,
+          `Ошибка при обновлении единицы измерения с ID ${id}`,
         );
       }
       throw new Error(`Ошибка при обновлении единицы измерения с ID ${id}`);
@@ -215,14 +215,14 @@ class BrandUnitService {
    */
   async deleteUnit(id: number): Promise<void> {
     try {
-      await api.delete(`/units/${id}`);
+      await api.delete(`/product/units/${id}/`);
     } catch (error) {
       console.error(`Ошибка при удалении единицы измерения ${id}:`, error);
       if (error && typeof error === 'object' && 'response' in error) {
         const err = error as { response?: { data?: { message?: string } } };
         throw new Error(
           err.response?.data?.message ||
-            `Ошибка при удалении единицы измерения с ID ${id}`,
+          `Ошибка при удалении единицы измерения с ID ${id}`,
         );
       }
       throw new Error(`Ошибка при удалении единицы измерения с ID ${id}`);

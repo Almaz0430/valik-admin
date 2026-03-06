@@ -44,12 +44,12 @@ const ProfilePage: React.FC = () => {
           <div className="px-6 py-5 space-y-5">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-4 border-b border-slate-100/80">
               <div>
-                <p className="text-sm font-semibold text-slate-700">Логин</p>
+                <p className="text-sm font-semibold text-slate-700">Email (Логин)</p>
                 <p className="text-xs text-slate-500 mt-0.5">Используется для входа в панель</p>
               </div>
               <div className="mt-2 sm:mt-0 flex items-center">
                 <p className="text-base font-medium text-slate-900">
-                  {supplier?.login || 'Загрузка...'}
+                  {supplier?.email || 'Загрузка...'}
                 </p>
               </div>
             </div>

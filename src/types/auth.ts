@@ -26,7 +26,7 @@ export enum UserRole {
  * Данные для входа
  */
 export interface LoginCredentials {
-  login: string;
+  email: string;
   password: string;
 }
 
@@ -34,8 +34,14 @@ export interface LoginCredentials {
  * Данные поставщика
  */
 export interface Supplier {
-  id: number;
-  login: string;
+  id: string; // Django returns string ID in token
+  email: string;
+  name: string;
+  iin?: string;
+  phone?: string;
+  city?: string;
+  address?: string;
+  logo?: string;
   // Дополнительные поля поставщика
   [key: string]: string | number | boolean | null | undefined;
 }
@@ -44,15 +50,16 @@ export interface Supplier {
  * Ответ при успешной аутентификации
  */
 export interface AuthResponse {
-  message: string;
-  supplier: Supplier;
-  accessToken: string;
+  id: string;
+  email: string;
+  name: string;
+  access: string;
+  refresh: string;
 }
 
 /**
  * Ответ при обновлении токена
  */
 export interface TokenRefreshResponse {
-  message: string;
-  accessToken: string;
+  access: string;
 } 

@@ -14,7 +14,7 @@ const LoginPage = () => {
   /**
    * Состояния для полей формы
    */
-  const [login, setLogin] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -30,12 +30,18 @@ const LoginPage = () => {
       setError('');
 
       const response = await authService.login({
-        login,
+        email,
         password
       });
 
+      const supplierData = {
+        id: response.id,
+        email: response.email,
+        name: response.name,
+      };
+
       // Сохраняем данные авторизации в контексте
-      setAuthData(response.supplier, response.accessToken);
+      setAuthData(supplierData, response.access);
 
       // Перенаправляем на панель управления
       navigate('/dashboard');
@@ -82,20 +88,19 @@ const LoginPage = () => {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Поле Логин */}
+              {/* Поле Email */}
               <div className="space-y-2">
-                <label htmlFor="login" className="block text-sm font-semibold text-slate-700">
-                  Логин
+                <label htmlFor="email" className="block text-sm font-semibold text-slate-700">
+                  Email
                 </label>
                 <input
-                  id="login"
-                  type="text"
-                  value={login}
-                  onChange={(e) => setLogin(e.target.value)}
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="block w-full rounded-xl border border-slate-200 px-4 py-3.5 bg-white shadow-sm focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 focus:outline-none transition-all text-slate-900 font-medium placeholder:text-slate-400 placeholder:font-normal"
-                  placeholder="Введите логин"
+                  placeholder="Введите email"
                   required
-                  minLength={4}
                 />
               </div>
 

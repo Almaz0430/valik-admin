@@ -1,10 +1,16 @@
 /**
  * Страница регистрации поставщика
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authService } from '../../features/auth';
 import { useAuth } from '../../contexts/AuthContextBase';
+import api from '../../utils/axiosConfig';
+
+interface City {
+  id: number;
+  name: string;
+}
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -13,11 +19,29 @@ const RegisterPage = () => {
   /**
    * Состояния для полей формы
    */
-  const [login, setLogin] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [iin, setIin] = useState('');
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [city, setCity] = useState<number | ''>('');
+  const [address, setAddress] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [cities, setCities] = useState<City[]>([]);
+
+  useEffect(() => {
+    const fetchCities = async () => {
+      try {
+        const response = await api.get('/product/cities/');
+        setCities(response.data);
+      } catch (err) {
+        console.error('Ошибка при загрузке городов:', err);
+      }
+    };
+    fetchCities();
+  }, []);
 
   /**
    * Обработчик отправки формы
@@ -35,12 +59,26 @@ const RegisterPage = () => {
       setError('');
 
       const response = await authService.register({
-        login,
-        password
-      });
+        email,
+        password,
+        iin,
+        name,
+        phone,
+        city,
+        address
+      } as any);
 
-      // Сохраняем данные авторизации в контексте
-      setAuthData(response.supplier, response.accessToken);
+      // Создаем объект поставщика из ответа (Django API возвращает данные в корне)
+      const supplierData = {
+        id: response.id,
+        email: response.email,
+        name: response.name,
+      };
+
+      // Сохраняем данные авторизации в контексте (если вернулись токены)
+      if (response.access) {
+        setAuthData(supplierData, response.access);
+      }
 
       // Перенаправляем на панель управления
       navigate('/dashboard');
@@ -68,7 +106,7 @@ const RegisterPage = () => {
       <div className="absolute top-1/2 -left-24 w-72 h-72 bg-blue-100/30 rounded-full blur-3xl -z-10"></div>
 
       <div className="flex-1 flex flex-col items-center justify-center w-full p-4 sm:p-8 relative z-10 py-10">
-        <div className="w-full max-w-[440px]">
+        <div className="w-full max-w-2xl">
           {/* Логотип и заголовок */}
           <div className="text-center mb-10">
             <img src="/logo.svg" alt="Логотип Valik.kz" className="h-[4.5rem] w-auto mx-auto mb-6" />
@@ -88,55 +126,142 @@ const RegisterPage = () => {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Поле Логин */}
-              <div className="space-y-2">
-                <label htmlFor="login" className="block text-sm font-semibold text-slate-700">
-                  Логин
-                </label>
-                <input
-                  id="login"
-                  type="text"
-                  value={login}
-                  onChange={(e) => setLogin(e.target.value)}
-                  className="block w-full rounded-xl border border-slate-200 px-4 py-3 bg-white shadow-sm focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 focus:outline-none transition-all text-slate-900 font-medium placeholder:text-slate-400 placeholder:font-normal"
-                  placeholder="Придумайте логин"
-                  required
-                  minLength={4}
-                />
-              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                {/* Поле Email */}
+                <div className="space-y-2">
+                  <label htmlFor="email" className="block text-sm font-semibold text-slate-700">
+                    Email
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="block w-full rounded-xl border border-slate-200 px-4 py-3 bg-white shadow-sm focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 focus:outline-none transition-all text-slate-900 font-medium placeholder:text-slate-400 placeholder:font-normal"
+                    placeholder="Ваш Email"
+                    required
+                  />
+                </div>
 
-              {/* Поле Пароль */}
-              <div className="space-y-2">
-                <label htmlFor="password" className="block text-sm font-semibold text-slate-700">
-                  Пароль
-                </label>
-                <input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full rounded-xl border border-slate-200 px-4 py-3 bg-white shadow-sm focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 focus:outline-none transition-all text-slate-900 font-medium placeholder:text-slate-400 placeholder:font-normal"
-                  placeholder="Придумайте пароль"
-                  required
-                  minLength={8}
-                />
-              </div>
+                {/* Телефон */}
+                <div className="space-y-2">
+                  <label htmlFor="phone" className="block text-sm font-semibold text-slate-700">
+                    Телефон
+                  </label>
+                  <input
+                    id="phone"
+                    type="text"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="block w-full rounded-xl border border-slate-200 px-4 py-3 bg-white shadow-sm focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 focus:outline-none transition-all text-slate-900 font-medium placeholder:text-slate-400 placeholder:font-normal"
+                    placeholder="77000000000"
+                    required
+                  />
+                </div>
 
-              {/* Поле подтверждения пароля */}
-              <div className="space-y-2">
-                <label htmlFor="confirmPassword" className="block text-sm font-semibold text-slate-700">
-                  Подтверждение пароля
-                </label>
-                <input
-                  id="confirmPassword"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="block w-full rounded-xl border border-slate-200 px-4 py-3 bg-white shadow-sm focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 focus:outline-none transition-all text-slate-900 font-medium placeholder:text-slate-400 placeholder:font-normal"
-                  placeholder="Повторите пароль"
-                  required
-                  minLength={8}
-                />
+                {/* ИИН / БИН */}
+                <div className="space-y-2">
+                  <label htmlFor="iin" className="block text-sm font-semibold text-slate-700">
+                    ИИН / БИН
+                  </label>
+                  <input
+                    id="iin"
+                    type="text"
+                    value={iin}
+                    onChange={(e) => setIin(e.target.value)}
+                    className="block w-full rounded-xl border border-slate-200 px-4 py-3 bg-white shadow-sm focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 focus:outline-none transition-all text-slate-900 font-medium placeholder:text-slate-400 placeholder:font-normal"
+                    placeholder="12 цифр"
+                    required
+                    maxLength={12}
+                    minLength={12}
+                  />
+                </div>
+
+                {/* Название компании / ИП */}
+                <div className="space-y-2">
+                  <label htmlFor="name" className="block text-sm font-semibold text-slate-700">
+                    Название / ИП
+                  </label>
+                  <input
+                    id="name"
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="block w-full rounded-xl border border-slate-200 px-4 py-3 bg-white shadow-sm focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 focus:outline-none transition-all text-slate-900 font-medium placeholder:text-slate-400 placeholder:font-normal"
+                    placeholder="Например: ТОО Ромашка"
+                    required
+                  />
+                </div>
+
+                {/* Город */}
+                <div className="space-y-2">
+                  <label htmlFor="city" className="block text-sm font-semibold text-slate-700">
+                    Город
+                  </label>
+                  <select
+                    id="city"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value ? Number(e.target.value) : '')}
+                    className="block w-full rounded-xl border border-slate-200 px-4 py-3 bg-white shadow-sm focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 focus:outline-none transition-all text-slate-900 font-medium"
+                  >
+                    <option value="">Выберите город</option>
+                    {cities.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Адрес */}
+                <div className="space-y-2">
+                  <label htmlFor="address" className="block text-sm font-semibold text-slate-700">
+                    Улица, дом
+                  </label>
+                  <input
+                    id="address"
+                    type="text"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    className="block w-full rounded-xl border border-slate-200 px-4 py-3 bg-white shadow-sm focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 focus:outline-none transition-all text-slate-900 font-medium placeholder:text-slate-400 placeholder:font-normal"
+                    placeholder="Абая 1"
+                    required
+                  />
+                </div>
+
+                {/* Поле Пароль */}
+                <div className="space-y-2">
+                  <label htmlFor="password" className="block text-sm font-semibold text-slate-700">
+                    Пароль
+                  </label>
+                  <input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="block w-full rounded-xl border border-slate-200 px-4 py-3 bg-white shadow-sm focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 focus:outline-none transition-all text-slate-900 font-medium placeholder:text-slate-400 placeholder:font-normal"
+                    placeholder="Придумайте пароль"
+                    required
+                    minLength={8}
+                  />
+                </div>
+
+                {/* Поле подтверждения пароля */}
+                <div className="space-y-2">
+                  <label htmlFor="confirmPassword" className="block text-sm font-semibold text-slate-700">
+                    Подтверждение пароля
+                  </label>
+                  <input
+                    id="confirmPassword"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="block w-full rounded-xl border border-slate-200 px-4 py-3 bg-white shadow-sm focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 focus:outline-none transition-all text-slate-900 font-medium placeholder:text-slate-400 placeholder:font-normal"
+                    placeholder="Повторите пароль"
+                    required
+                    minLength={8}
+                  />
+                </div>
               </div>
 
               {/* Кнопка регистрации */}
