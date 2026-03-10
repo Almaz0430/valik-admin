@@ -4,21 +4,30 @@
 
 export interface Brand {
   id: number;
-  title: string;
+  name: string;
   created_at?: string;
   updated_at?: string;
 }
 
 export interface Unit {
   id: number;
-  title: string;
+  name: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface SubCategory {
+  id: number;
+  name: string;
+  category: number;
   created_at?: string;
   updated_at?: string;
 }
 
 export interface Category {
   id: number;
-  title: string;
+  name: string;
+  sub_categories?: SubCategory[]; // Подкатегории
   created_at?: string;
   updated_at?: string;
 }

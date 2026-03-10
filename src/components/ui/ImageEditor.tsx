@@ -70,20 +70,36 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
     const image = imgRef.current;
     const canvas = canvasRef.current;
     
-    if (!image || !canvas || !completedCrop) {
+    if (!image || !canvas) {
+      console.error('Image or canvas ref is null');
       return null;
     }
 
     const ctx = canvas.getContext('2d');
     if (!ctx) {
+      console.error('Could not get canvas context');
       return null;
     }
+
+    // Если нет completedCrop, используем всё изображение
+    const cropToUse = completedCrop && completedCrop.width > 0 && completedCrop.height > 0
+      ? completedCrop
+      : {
+          x: 0,
+          y: 0,
+          width: image.width,
+          height: image.height
+        };
 
     const scaleX = image.naturalWidth / image.width;
     const scaleY = image.naturalHeight / image.height;
 
-    canvas.width = completedCrop.width;
-    canvas.height = completedCrop.height;
+    // Устанавливаем размеры canvas
+    const outputWidth = Math.floor(cropToUse.width * scaleX);
+    const outputHeight = Math.floor(cropToUse.height * scaleY);
+    
+    canvas.width = outputWidth;
+    canvas.height = outputHeight;
 
     ctx.imageSmoothingQuality = 'high';
 
@@ -95,38 +111,50 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
       ctx.translate(-canvas.width / 2, -canvas.height / 2);
     }
 
-    ctx.drawImage(
-      image,
-      completedCrop.x * scaleX,
-      completedCrop.y * scaleY,
-      completedCrop.width * scaleX,
-      completedCrop.height * scaleY,
-      0,
-      0,
-      completedCrop.width,
-      completedCrop.height
-    );
+    try {
+      ctx.drawImage(
+        image,
+        Math.floor(cropToUse.x * scaleX),
+        Math.floor(cropToUse.y * scaleY),
+        outputWidth,
+        outputHeight,
+        0,
+        0,
+        outputWidth,
+        outputHeight
+      );
 
-    if (rotation !== 0) {
-      ctx.restore();
+      if (rotation !== 0) {
+        ctx.restore();
+      }
+
+      return new Promise((resolve) => {
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const file = new File([blob], fileName, { type: 'image/jpeg' });
+            resolve(file);
+          } else {
+            console.error('Canvas toBlob returned null');
+            resolve(null);
+          }
+        }, 'image/jpeg', 0.9);
+      });
+    } catch (error) {
+      console.error('Error drawing image to canvas:', error);
+      if (rotation !== 0) {
+        ctx.restore();
+      }
+      return null;
     }
-
-    return new Promise((resolve) => {
-      canvas.toBlob((blob) => {
-        if (blob) {
-          const file = new File([blob], fileName, { type: 'image/jpeg' });
-          resolve(file);
-        } else {
-          resolve(null);
-        }
-      }, 'image/jpeg', 0.9);
-    });
   }, [completedCrop, rotation, fileName]);
 
   const handleSave = async () => {
     const croppedFile = await getCroppedImg();
     if (croppedFile) {
       onSave(croppedFile);
+    } else {
+      // Если не удалось создать файл, показываем ошибку
+      alert('Ошибка при сохранении изображения. Попробуйте снова.');
     }
   };
 
@@ -229,18 +257,18 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
         />
 
         {/* Кнопки действий */}
-        <div className="flex justify-end space-x-3">
+        <div className="flex justify-end space-x-3 pt-4 border-t border-slate-100">
           <button
             onClick={onCancel}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+            className="px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 bg-white border border-slate-200 shadow-sm hover:bg-slate-50 hover:text-slate-900 transition-all active:scale-[0.98]"
           >
             Отмена
           </button>
           <button
             onClick={handleSave}
-            className="flex items-center px-4 py-2 text-sm font-medium text-white bg-orange-600 border border-transparent rounded-md hover:bg-orange-700"
+            className="flex items-center px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-orange-600 shadow-[0_2px_8px_-2px_rgba(249,115,22,0.4)] hover:bg-orange-700 transition-all active:scale-[0.98]"
           >
-            <CheckIcon className="h-4 w-4 mr-1" />
+            <CheckIcon className="h-4 w-4 mr-1.5" />
             Сохранить
           </button>
         </div>

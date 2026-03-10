@@ -1,52 +1,31 @@
 /**
  * Сервис для работы с товарами поставщика
+ * Эндпоинты соответствуют реальному Django бэкенду
  */
 import type {
   Product,
-  ProductQueryParams,
-  ProductListResponse,
   CreateProductDTO,
-  UpdateProductDTO,
-  ImportProductsResponse
+  ImportProductsResponse,
+  Category,
+  SubCategory,
 } from '../../../types/product';
+import type { Brand, Unit } from '../../../types/attribute';
 import { api } from '../../../utils/axiosConfig';
 
-/**
- * Интерфейсы для категорий, брендов и единиц измерения
- */
-export interface Category {
-  id: number;
-  title: string;
-}
-
-export interface Brand {
-  id: number;
-  title: string;
-}
-
-export interface Unit {
-  id: number;
-  title: string;
-}
+export type { Category, SubCategory };
 
 /**
  * Класс для работы с API товаров поставщика
  */
 class ProductService {
   /**
-   * Получение списка товаров поставщика с пагинацией и фильтрацией
+   * Получение списка товаров конкретного вендора
+   * GET /product/vendor/<vendor_id>/products/
    */
-  async getProducts(params: ProductQueryParams = { page: 1, limit: 10 }): Promise<ProductListResponse> {
+  async getVendorProducts(vendorId: number): Promise<Product[]> {
     try {
-      const response = await api.get<{ count: number; results: Product[] }>('/product/vendor-products/', { params });
-      const { results: products, count: total } = response.data;
-
-      return {
-        products,
-        total,
-        page: params.page || 1,
-        limit: params.limit || 10
-      };
+      const response = await api.get<Product[]>(`/product/vendor/${vendorId}/products/`);
+      return response.data;
     } catch (error) {
       console.error('Ошибка при запросе списка товаров:', error);
       if (error && typeof error === 'object' && 'response' in error) {
@@ -59,10 +38,11 @@ class ProductService {
 
   /**
    * Получение информации о конкретном товаре
+   * GET /product/optinfo/<id>/
    */
   async getProduct(id: number): Promise<Product> {
     try {
-      const response = await api.get<Product>(`/product/optproduct/${id}/`);
+      const response = await api.get<Product>(`/product/optinfo/${id}/`);
       return response.data;
     } catch (error) {
       console.error(`Ошибка при получении товара ${id}:`, error);
@@ -75,187 +55,81 @@ class ProductService {
   }
 
   /**
-   * Создание нового товара
+   * Создание нового товара с изображением
+   * POST /product/opt-products/
+   * Content-Type: multipart/form-data
+   * Поля: name, vendor, sub_category, brand, unit, description, image
    */
-  async createProduct(productData: CreateProductDTO): Promise<Product> {
+  async createProduct(data: CreateProductDTO): Promise<Product> {
     try {
-      const response = await api.post<Product>('/product/opt-products/', productData);
+      const formData = new FormData();
+      formData.append('name', data.name);
+      formData.append('vendor', String(data.vendor));
+      if (data.sub_category !== null && data.sub_category !== undefined) {
+        formData.append('sub_category', String(data.sub_category));
+      }
+      if (data.brand !== null && data.brand !== undefined) {
+        formData.append('brand', String(data.brand));
+      }
+      if (data.unit !== null && data.unit !== undefined) {
+        formData.append('unit', String(data.unit));
+      }
+      if (data.description) {
+        formData.append('description', data.description);
+      }
+      if (data.image) {
+        formData.append('image', data.image);
+      }
+
+      const response = await api.post<Product>('/product/opt-products/', formData);
       return response.data;
     } catch (error) {
       console.error('Ошибка при создании товара:', error);
       if (error && typeof error === 'object' && 'response' in error) {
-        const err = error as { response?: { data?: { message?: string } } };
-        throw new Error(err.response?.data?.message || 'Ошибка при создании товара');
+        const err = error as { response?: { data?: unknown } };
+        const data = err.response?.data;
+        // Обрабатываем детальные ошибки Django
+        if (data && typeof data === 'object') {
+          const messages = Object.entries(data as Record<string, string[]>)
+            .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs.join(', ') : msgs}`)
+            .join('; ');
+          throw new Error(messages || 'Ошибка при создании товара');
+        }
       }
       throw new Error('Ошибка при создании товара');
     }
   }
 
   /**
-   * Обновление существующего товара
-   */
-  async updateProduct(id: number, productData: UpdateProductDTO): Promise<Product> {
-    try {
-      const response = await api.patch<Product>(`/product/optproduct/${id}/`, productData);
-      return response.data;
-    } catch (error) {
-      console.error(`Ошибка при обновлении товара ${id}:`, error);
-      if (error && typeof error === 'object' && 'response' in error) {
-        const err = error as { response?: { data?: { message?: string } } };
-        throw new Error(
-          err.response?.data?.message || `Ошибка при обновлении товара с ID ${id}`,
-        );
-      }
-      throw new Error(`Ошибка при обновлении товара с ID ${id}`);
-    }
-  }
-
-  /**
-   * Удаление товара
-   */
-  async deleteProduct(id: number): Promise<void> {
-    try {
-      await api.delete(`/product/optproduct/${id}/`);
-    } catch (error) {
-      console.error(`Ошибка при удалении товара ${id}:`, error);
-      if (error && typeof error === 'object' && 'response' in error) {
-        const err = error as { response?: { data?: { message?: string } } };
-        throw new Error(
-          err.response?.data?.message || `Ошибка при удалении товара с ID ${id}`,
-        );
-      }
-      throw new Error(`Ошибка при удалении товара с ID ${id}`);
-    }
-  }
-
-  /**
-   * Получение списка категорий
+   * Получение списка всех категорий (с вложенными подкатегориями)
+   * GET /product/category/
+   * Ответ: [{id, name, sub_categories: [{id, name, category}]}]
    */
   async getCategories(): Promise<Category[]> {
     try {
-      const response = await api.get<Category[] | { results: Category[] }>('/product/category/');
-      return Array.isArray(response.data) ? response.data : (response.data.results || []);
+      const response = await api.get<Category[]>('/product/category/');
+      return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
       console.error('Ошибка при запросе списка категорий:', error);
-      if (error && typeof error === 'object' && 'response' in error) {
-        const err = error as { response?: { data?: { message?: string } } };
-        throw new Error(err.response?.data?.message || 'Ошибка при получении списка категорий');
-      }
       throw new Error('Ошибка при получении списка категорий');
     }
   }
 
   /**
-   * Получение списка брендов
+   * Получение плоского списка всех подкатегорий
+   * GET /product/subcategory/
+   * Ответ: [{id, name, category}]
    */
-  async getBrands(): Promise<Brand[]> {
+  async getSubCategories(): Promise<SubCategory[]> {
     try {
-      const response = await api.get<Brand[] | { results: Brand[] }>('/product/brand/');
-      return Array.isArray(response.data) ? response.data : (response.data.results || []);
+      const response = await api.get<SubCategory[]>('/product/subcategory/');
+      return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
-      console.error('Ошибка при запросе списка брендов:', error);
-      if (error && typeof error === 'object' && 'response' in error) {
-        const err = error as { response?: { data?: { message?: string } } };
-        throw new Error(err.response?.data?.message || 'Ошибка при получении списка брендов');
-      }
-      throw new Error('Ошибка при получении списка брендов');
+      console.error('Ошибка при запросе подкатегорий:', error);
+      throw new Error('Ошибка при получении подкатегорий');
     }
   }
 
-  /**
-   * Получение списка единиц измерения
-   */
-  async getUnits(): Promise<Unit[]> {
-    try {
-      const response = await api.get<Unit[]>('/product/units/');
-      return response.data;
-    } catch (error) {
-      console.error('Ошибка при запросе списка единиц измерения:', error);
-      if (error && typeof error === 'object' && 'response' in error) {
-        const err = error as { response?: { data?: { message?: string } } };
-        throw new Error(
-          err.response?.data?.message || 'Ошибка при получении списка единиц измерения',
-        );
-      }
-      throw new Error('Ошибка при получении списка единиц измерения');
-    }
-  }
-
-  /**
-   * Создание нового товара с изображениями
-   */
-  async createProductWithImages(formData: FormData): Promise<Product> {
-    try {
-      const response = await api.post<Product>('/product/opt-products/', formData);
-      return response.data;
-    } catch (error) {
-      console.error('Ошибка при создании товара с изображениями:', error);
-      if (error && typeof error === 'object' && 'response' in error) {
-        const err = error as { response?: { data?: { message?: string } } };
-        throw new Error(
-          err.response?.data?.message || 'Ошибка при создании товара с изображениями',
-        );
-      }
-      throw new Error('Ошибка при создании товара с изображениями');
-    }
-  }
-
-  /**
-   * Обновление товара с изображениями
-   */
-  async updateProductWithImages(id: number, formData: FormData): Promise<Product> {
-    try {
-      const response = await api.patch<Product>(`/product/optproduct/${id}/`, formData);
-      return response.data;
-    } catch (error) {
-      console.error(`Ошибка при обновлении товара с ID ${id} с изображениями:`, error);
-      if (error && typeof error === 'object' && 'response' in error) {
-        const err = error as { response?: { data?: { message?: string } } };
-        throw new Error(
-          err.response?.data?.message || `Ошибка при обновлении товара с ID ${id}`,
-        );
-      }
-      throw new Error(`Ошибка при обновлении товара с ID ${id}`);
-    }
-  }
-
-  /**
-   * Добавление новых изображений к существующему товару
-   */
-  async addProductImages(id: number, files: File[]): Promise<void> {
-    const formData = new FormData();
-    files.forEach(file => formData.append('files', file));
-
-    try {
-      await api.post(`/suppliers/products/photos/add/${id}`, formData);
-    } catch (error) {
-      console.error(`Ошибка при добавлении изображений к товару ${id}:`, error);
-      if (error && typeof error === 'object' && 'response' in error) {
-        const err = error as { response?: { data?: { message?: string } } };
-        throw new Error(
-          err.response?.data?.message ||
-          `Ошибка при добавлении изображений к товару с ID ${id}`,
-        );
-      }
-      throw new Error(`Ошибка при добавлении изображений к товару с ID ${id}`);
-    }
-  }
-
-  /**
-   * Удаление фотографии товара
-   */
-  async deleteProductImage(productId: number, imageUrl: string): Promise<void> {
-    try {
-      await api.post(`/supplier/products/photos/delete/${productId}`, { link: imageUrl });
-    } catch (error) {
-      console.error('Ошибка при удалении фотографии:', error);
-      if (error && typeof error === 'object' && 'response' in error) {
-        const err = error as { response?: { data?: { message?: string } } };
-        throw new Error(err.response?.data?.message || 'Ошибка при удалении фотографии');
-      }
-      throw new Error('Ошибка при удалении фотографии');
-    }
-  }
   /**
    * Импорт товаров из CSV файла
    */
@@ -321,10 +195,99 @@ class ProductService {
       failed_rows: typeof data.failed_rows === 'number' ? data.failed_rows : failedRows,
       errors: errorsArray as ImportProductsResponse['errors'],
       error: typeof data.error === 'string' ? data.error : undefined,
-      import_id: typeof data.import_id === 'number' ? data.import_id : typeof data.importId === 'string' || typeof data.importId === 'number' ? Number(data.importId) : undefined,
+      import_id: typeof data.import_id === 'number' ? data.import_id : undefined,
       imported,
       skipped,
     };
+  }
+
+  /**
+   * Получение списка брендов
+   * GET /product/brands/
+   */
+  async getBrands(): Promise<Brand[]> {
+    try {
+      const response = await api.get<Brand[]>('/product/brands/');
+      return Array.isArray(response.data) ? response.data : [];
+    } catch (error) {
+      console.error('Ошибка при запросе брендов:', error);
+      throw new Error('Ошибка при получении брендов');
+    }
+  }
+
+  /**
+   * Получение списка единиц измерения
+   * GET /product/units/
+   */
+  async getUnits(): Promise<Unit[]> {
+    try {
+      const response = await api.get<Unit[]>('/product/units/');
+      return Array.isArray(response.data) ? response.data : [];
+    } catch (error) {
+      console.error('Ошибка при запросе единиц измерения:', error);
+      throw new Error('Ошибка при получении единиц измерения');
+    }
+  }
+
+  /**
+   * Обновление существующего товара
+   * PUT /product/opt-products/<id>/
+   * Content-Type: multipart/form-data
+   */
+  async updateProduct(id: number, data: CreateProductDTO): Promise<Product> {
+    try {
+      const formData = new FormData();
+      formData.append('name', data.name);
+      formData.append('vendor', String(data.vendor));
+      if (data.sub_category !== null && data.sub_category !== undefined) {
+        formData.append('sub_category', String(data.sub_category));
+      }
+      if (data.brand !== null && data.brand !== undefined) {
+        formData.append('brand', String(data.brand));
+      }
+      if (data.unit !== null && data.unit !== undefined) {
+        formData.append('unit', String(data.unit));
+      }
+      if (data.description) {
+        formData.append('description', data.description);
+      }
+      if (data.image) {
+        formData.append('image', data.image);
+      }
+
+      const response = await api.put<Product>(`/product/opt-products/${id}/`, formData);
+      return response.data;
+    } catch (error) {
+      console.error(`Ошибка при обновлении товара ${id}:`, error);
+      if (error && typeof error === 'object' && 'response' in error) {
+        const err = error as { response?: { data?: unknown } };
+        const data = err.response?.data;
+        if (data && typeof data === 'object') {
+          const messages = Object.entries(data as Record<string, string[]>)
+            .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs.join(', ') : msgs}`)
+            .join('; ');
+          throw new Error(messages || 'Ошибка при обновлении товара');
+        }
+      }
+      throw new Error('Ошибка при обновлении товара');
+    }
+  }
+
+  /**
+   * Удаление товара
+   * DELETE /product/opt-products/<id>/delete/
+   */
+  async deleteProduct(id: number): Promise<void> {
+    try {
+      await api.delete(`/product/opt-products/${id}/delete/`);
+    } catch (error) {
+      console.error(`Ошибка при удалении товара ${id}:`, error);
+      if (error && typeof error === 'object' && 'response' in error) {
+        const err = error as { response?: { data?: { message?: string } } };
+        throw new Error(err.response?.data?.message || `Не удалось удалить товар с ID ${id}`);
+      }
+      throw new Error(`Не удалось удалить товар с ID ${id}`);
+    }
   }
 }
 

@@ -28,7 +28,7 @@ const UnitsPage: React.FC<UnitsPageProps> = ({ isStandalone = false }) => {
       setError(null);
 
       try {
-        const response = await brandUnitService.getUnits({});
+        const response = await brandUnitService.getUnits({ limit: 1000 }); // Получаем все единицы
 
         setUnits(response.units);
         setTotalUnits(response.total);
@@ -95,7 +95,7 @@ const UnitsPage: React.FC<UnitsPageProps> = ({ isStandalone = false }) => {
     setIsSubmitting(true);
 
     try {
-      const newUnit = await brandUnitService.createUnit({ title: newUnitTitle.trim() });
+      const newUnit = await brandUnitService.createUnit({ name: newUnitTitle.trim() });
 
       // Добавляем новую единицу измерения в список и обновляем общее количество
       setUnits(prev => [newUnit, ...prev]);
@@ -217,7 +217,7 @@ const UnitsPage: React.FC<UnitsPageProps> = ({ isStandalone = false }) => {
                 setError(null);
                 setIsLoading(true);
                 setTimeout(() => {
-                  brandUnitService.getUnits({})
+                  brandUnitService.getUnits({ limit: 1000 })
                     .then(response => {
                       setUnits(response.units);
                       setTotalUnits(response.total);
@@ -259,7 +259,7 @@ const UnitsPage: React.FC<UnitsPageProps> = ({ isStandalone = false }) => {
                     <div className="text-sm text-slate-900">{unit.id}</div>
                   </div>
                   <div className="col-span-5">
-                    <div className="text-sm font-medium text-slate-900">{unit.title}</div>
+                    <div className="text-sm font-medium text-slate-900">{unit.name}</div>
                   </div>
                   <div className="col-span-3">
                     <div className="text-sm text-slate-900">{formatDate(unit.created_at)}</div>

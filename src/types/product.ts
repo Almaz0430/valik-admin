@@ -1,116 +1,75 @@
 /**
- * Типы для товаров строительной сферы
+ * Типы для товаров — соответствуют реальному Django бэкенду
  */
 
 /**
- * Категория товара
+ * Город
  */
-export enum ProductCategory {
-  BUILDING_MATERIALS = 'building_materials',
-  TOOLS = 'tools',
-  PLUMBING = 'plumbing',
-  ELECTRICAL = 'electrical',
-  HARDWARE = 'hardware',
-  PAINT = 'paint',
-  FLOORING = 'flooring',
-  ROOFING = 'roofing',
-  LUMBER = 'lumber',
-  OTHER = 'other'
+export interface City {
+  id: number;
+  name: string;
 }
 
 /**
- * Единица измерения товара
+ * Категория (содержит список подкатегорий)
  */
-export enum ProductUnit {
-  PIECE = 'piece',
-  KILOGRAM = 'kg',
-  METER = 'm',
-  SQUARE_METER = 'm2',
-  CUBIC_METER = 'm3',
-  LITER = 'l',
-  SET = 'set',
-  ROLL = 'roll',
-  PACK = 'pack'
+export interface Category {
+  id: number;
+  name: string;
+  sub_categories: SubCategory[];
 }
 
 /**
- * Статус товара
+ * Подкатегория
  */
-export enum ProductStatus {
-  ACTIVE = 'active',
-  OUT_OF_STOCK = 'out_of_stock',
-  DISCONTINUED = 'discontinued',
-  COMING_SOON = 'coming_soon'
+export interface SubCategory {
+  id: number;
+  name: string;
+  category: number;
 }
 
 /**
- * Типы для работы с товарами
+ * Региональные настройки товара
  */
+export interface ProductRegionSettings {
+  id: number;
+  city: number;
+  price: string;
+  price_shop: string;
+  commission: string;
+  measurement_type: string | null;
+  quantity: number;
+  is_active: boolean;
+}
 
 /**
- * Тип данных товара
+ * Товар (OPTProduct) — реальные поля бэкенда
  */
 export interface Product {
   id: number;
-  title: string;
-  description?: string;
-  price: number;
-  brand_id?: number;
-  brand_name?: string;
-  unit_id?: number;
-  unit_name?: string;
-  category_id?: number;
-  category_name?: string;
-  article?: number;
-  length?: number;
-  width?: number;
-  height?: number;
-  weight?: number;
-  depth?: number;
-  status?: string;
-  stock?: number;
-  created_at?: string;
-  updated_at?: string;
-  supplier_id?: number;
-  images?: string[];
-  rating?: number;
+  vendor: number;
+  sub_category: SubCategory | number | null;
+  brand?: { id: number; name: string } | null;
+  unit?: { id: number; name: string } | null;
+  name: string;
+  description?: string | null;
+  image?: string | null;
+  active: boolean;
+  created_at?: string | null;
+  region_settings?: ProductRegionSettings[];
 }
 
 /**
  * Интерфейс для создания нового товара
  */
 export interface CreateProductDTO {
-  title: string;
-  description: string;
-  brand_id?: number | null;
-  unit_id?: number | null;
-  category_id?: number | null;
-  article?: number | null;
-  price: number;
-  length?: number | null;
-  width?: number | null;
-  height?: number | null;
-  weight?: number | null;
-  depth?: number | null;
-}
-
-/**
- * Интерфейс для обновления товара
- */
-export interface UpdateProductDTO {
-  title?: string;
+  vendor: number;
+  sub_category: number | null;
+  brand?: number | null;
+  unit?: number | null;
+  name: string;
   description?: string;
-  brand_id?: number;
-  unit_id?: number;
-  category_id?: number;
-  article?: number;
-  price?: number;
-  length?: number;
-  width?: number;
-  height?: number;
-  weight?: number;
-  depth?: number;
-  status?: string;
+  image?: File;
 }
 
 /**
@@ -119,13 +78,7 @@ export interface UpdateProductDTO {
 export interface ProductQueryParams {
   page?: number;
   limit?: number;
-  sort?: string;
-  order?: 'asc' | 'desc';
   search?: string;
-  category_id?: number;
-  min_price?: number;
-  max_price?: number;
-  status?: string;
 }
 
 /**
@@ -136,46 +89,6 @@ export interface ProductListResponse {
   page: number;
   limit: number;
   products: Product[];
-}
-
-/**
- * Интерфейс для ответа с конкретным товаром
- */
-export interface ProductResponse {
-  product: Product;
-}
-
-/**
- * Данные для создания товара
- */
-export type CreateProductData = Omit<Product, 'id' | 'createdAt' | 'updatedAt'>;
-
-/**
- * Данные для обновления товара
- */
-export type UpdateProductData = Partial<Omit<Product, 'id' | 'createdAt' | 'updatedAt'>>;
-
-/**
- * Параметры для фильтрации товаров
- */
-export interface ProductFilterParams {
-  search?: string;
-  category?: ProductCategory;
-  subcategory?: string;
-  brand?: string;
-  status?: ProductStatus;
-  minPrice?: number;
-  maxPrice?: number;
-  inStock?: boolean;
-  supplierId?: string;
-}
-
-/**
- * Параметры для сортировки товаров
- */
-export interface ProductSortParams {
-  field: keyof Product;
-  direction: 'asc' | 'desc';
 }
 
 /**
@@ -204,4 +117,3 @@ export interface ImportProductsResponse {
   errors?: ImportProductError[];
   error?: string;
 }
- 

@@ -1,10 +1,12 @@
 /**
  * Страница управления товарами
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import Layout from '../../components/layout/Layout';
-import { productService, useProducts } from '../../features/products';
+import { useProducts } from '../../features/products';
+import productService from '../../features/products/api/productService';
 import type { Product } from '../../types/product';
 import useDeviceDetect from '../../hooks/useDeviceDetect';
 import ConfirmationModal from '../../components/ui/ConfirmationModal';
@@ -24,8 +26,8 @@ const ProductsPage: React.FC = () => {
     resetToFirstPage,
   } = useProducts({ initialParams: { page: 1, limit: 10 } });
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<number | null>(null);
 
   // Определение типа устройства
@@ -39,63 +41,62 @@ const ProductsPage: React.FC = () => {
   }, [isMobile, isReady, navigate]);
 
   // Обработчик поиска по товарам
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = useCallback((e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     resetToFirstPage();
-  };
+  }, [resetToFirstPage]);
 
   // Обработчик удаления товара
-  const handleDeleteClick = (id: number) => {
+  const handleDeleteClick = useCallback((id: number) => {
     setProductToDelete(id);
     setDeleteModalOpen(true);
-  };
+  }, []);
 
-  const handleDeleteConfirm = async () => {
-    if (productToDelete) {
-      try {
-        await productService.deleteProduct(productToDelete);
-
-        setDeleteModalOpen(false);
-        setProductToDelete(null);
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Произошла ошибка при удалении товара';
-        alert(errorMessage);
-        console.error(err);
-        setDeleteModalOpen(false);
-        setProductToDelete(null);
-      }
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!productToDelete) return;
+    
+    try {
+      await productService.deleteProduct(productToDelete);
+      setDeleteModalOpen(false);
+      setProductToDelete(null);
+      // Обновляем список товаров после удаления
+      refetch();
+      toast.success('Товар успешно удален');
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Ошибка при удалении товара';
+      toast.error(msg);
     }
-  };
+  }, [productToDelete, refetch]);
 
-  const handleDeleteCancel = () => {
+  const handleDeleteCancel = useCallback(() => {
     setDeleteModalOpen(false);
     setProductToDelete(null);
-  };
+  }, []);
 
   // Открытие модального окна с детальной информацией о товаре
-  const openProductDetails = (product: Product) => {
+  const openProductDetails = useCallback((product: Product) => {
     setSelectedProduct(product);
     setIsModalOpen(true);
-  };
+  }, []);
 
   // Закрытие модального окна
-  const closeModal = () => {
+  const closeModal = useCallback(() => {
     setIsModalOpen(false);
     setSelectedProduct(null);
-  };
+  }, []);
 
   // Получаем диапазон отображаемых товаров для информации
-  const getDisplayRange = () => {
+  const displayRange = useMemo(() => {
     const start = (queryParams.page! - 1) * queryParams.limit! + 1;
     const end = Math.min(start + products.length - 1, total);
     return `${start}-${end}`;
-  };
+  }, [queryParams.page, queryParams.limit, products.length, total]);
 
   // Общее количество страниц
-  const totalPages = Math.ceil(total / queryParams.limit!);
+  const totalPages = useMemo(() => Math.ceil(total / queryParams.limit!), [total, queryParams.limit]);
 
   // Функция для генерации массива страниц для пагинации
-  const getPaginationRange = () => {
+  const paginationRange = useMemo(() => {
     const maxVisiblePages = 5;
     const currentPage = queryParams.page || 1;
 
@@ -136,7 +137,7 @@ const ProductsPage: React.FC = () => {
     }
 
     return pages;
-  };
+  }, [totalPages, queryParams.page]);
 
   // Если идет перенаправление, показываем загрузку
   if (isReady && isMobile) {
@@ -150,9 +151,10 @@ const ProductsPage: React.FC = () => {
   }
 
   // Форматирование даты
-  const formatDate = (dateString: string | undefined) => {
+  const formatDate = useCallback((dateString: string | null | undefined) => {
     if (!dateString) return 'Не указано';
-    const date = new Date(parseInt(dateString));
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Не указано';
     return date.toLocaleDateString('ru-RU', {
       day: '2-digit',
       month: '2-digit',
@@ -160,7 +162,7 @@ const ProductsPage: React.FC = () => {
       hour: '2-digit',
       minute: '2-digit'
     });
-  };
+  }, []);
 
   return (
     <Layout>
@@ -225,18 +227,15 @@ const ProductsPage: React.FC = () => {
                 Название
               </div>
               <div className="hidden sm:block col-span-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Артикул
+                ID
               </div>
-              <div className="col-span-3 sm:col-span-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Цена
-              </div>
-              <div className="hidden sm:block col-span-1 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Рейт.
+              <div className="hidden sm:block col-span-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Подкат.
               </div>
               <div className="col-span-3 sm:col-span-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
                 Добавлен
               </div>
-              <div className="col-span-2 sm:col-span-1 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              <div className="col-span-5 sm:col-span-2 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">
                 Действия
               </div>
             </div>
@@ -295,10 +294,10 @@ const ProductsPage: React.FC = () => {
                     <div className="col-span-4">
                       <div className="flex items-center">
                         <div className="h-12 w-12 bg-slate-100 rounded-xl flex-shrink-0 flex items-center justify-center ring-1 ring-slate-200/50 overflow-hidden">
-                          {product.images && product.images.length > 0 ? (
+                          {product.image ? (
                             <img
-                              src={product.images[0]}
-                              alt={product.title}
+                              src={product.image}
+                              alt={product.name}
                               className="h-full w-full object-cover"
                             />
                           ) : (
@@ -308,26 +307,22 @@ const ProductsPage: React.FC = () => {
                           )}
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-semibold text-slate-900 line-clamp-1">{product.title}</div>
-                          <div className="text-xs font-medium text-orange-600 sm:hidden mt-0.5">{product.price.toLocaleString()} ₸</div>
+                          <div className="text-sm font-semibold text-slate-900 line-clamp-1">{product.name}</div>
                         </div>
                       </div>
                     </div>
                     <div className="hidden sm:block col-span-2">
-                      <div className="text-sm text-slate-600 font-medium">{product.article || 'Не указан'}</div>
+                      <div className="text-sm text-slate-600 font-medium">ID: {product.id}</div>
                     </div>
-                    <div className="col-span-3 sm:col-span-2">
-                      <div className="text-sm font-semibold text-slate-900">{product.price.toLocaleString()} ₸</div>
-                    </div>
-                    <div className="hidden sm:block col-span-1">
-                      <div className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20">
-                        {product.rating || 0}
+                    <div className="hidden sm:block col-span-2">
+                      <div className="text-xs text-slate-500">
+                        {typeof product.sub_category === 'object' && product.sub_category ? product.sub_category.name : product.sub_category ?? '—'}
                       </div>
                     </div>
                     <div className="col-span-3 sm:col-span-2">
                       <div className="text-sm text-slate-500">{formatDate(product.created_at)}</div>
                     </div>
-                    <div className="col-span-2 sm:col-span-1 text-right flex justify-end items-center space-x-2">
+                    <div className="col-span-5 sm:col-span-2 text-right flex justify-end items-center space-x-2">
                       <button
                         className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
                         onClick={(e) => {
@@ -377,11 +372,11 @@ const ProductsPage: React.FC = () => {
             <div className="bg-slate-50/50 px-4 sm:px-6 py-4 border-t border-slate-100">
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="text-sm text-slate-600">
-                  Показано <span className="font-semibold text-slate-900">{getDisplayRange()}</span> из <span className="font-semibold text-slate-900">{total}</span> товаров
+                  Показано <span className="font-semibold text-slate-900">{displayRange}</span> из <span className="font-semibold text-slate-900">{total}</span> товаров
                 </div>
                 {totalPages > 1 && (
                   <div className="flex space-x-1.5 bg-white p-1 rounded-lg border border-slate-200/60 shadow-sm">
-                    {getPaginationRange().map((page, index) => {
+                    {paginationRange.map((page, index) => {
                       if (page === 'ellipsis-start' || page === 'ellipsis-end') {
                         return (
                           <div
@@ -462,113 +457,55 @@ const ProductsPage: React.FC = () => {
               {/* Product Main Info Card */}
               <div className="bg-slate-50/80 rounded-2xl p-5 mb-6 ring-1 ring-slate-100 border border-slate-100/50 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 rounded-bl-full -z-10"></div>
-                <h4 className="text-lg font-bold text-slate-900 mb-2 pr-12">{selectedProduct.title}</h4>
+                <h4 className="text-lg font-bold text-slate-900 mb-2 pr-12">{selectedProduct.name}</h4>
                 <p className="text-sm font-medium text-slate-600 leading-relaxed">{selectedProduct.description || 'Описание отсутствует'}</p>
 
-                <div className="mt-4 inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-bold bg-orange-100/50 text-orange-700 ring-1 ring-inset ring-orange-600/20">
-                  {selectedProduct.price.toLocaleString()} ₸
+                <div className={`mt-4 inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-bold ${selectedProduct.active ? 'bg-green-100/50 text-green-700 ring-1 ring-inset ring-green-600/20' : 'bg-slate-100 text-slate-500'
+                  }`}>
+                  {selectedProduct.active ? 'Активен' : 'Скрыт'}
                 </div>
               </div>
 
               {/* Attributes Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
                 <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center">
                   <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">ID товара</p>
                   <p className="text-sm font-bold text-slate-900">{selectedProduct.id}</p>
                 </div>
                 <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center">
-                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Артикул</p>
-                  <p className="text-sm font-bold text-slate-900">{selectedProduct.article || '—'}</p>
+                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Вендор</p>
+                  <p className="text-sm font-bold text-slate-900">{selectedProduct.vendor}</p>
                 </div>
                 <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center">
-                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Рейтинг</p>
-                  <div className="inline-flex items-center space-x-1">
-                    <span className="text-sm font-bold text-slate-900">{selectedProduct.rating || 0}</span>
-                    <svg className="w-4 h-4 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  </div>
+                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Подкатегория</p>
+                  <p className="text-sm font-bold text-slate-900">
+                    {typeof selectedProduct.sub_category === 'object' && selectedProduct.sub_category 
+                      ? selectedProduct.sub_category.name 
+                      : selectedProduct.sub_category ?? '—'}
+                  </p>
                 </div>
-                <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center">
+                <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center col-span-2 sm:col-span-3">
                   <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Дата создания</p>
                   <p className="text-sm font-bold text-slate-900">{formatDate(selectedProduct.created_at)}</p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {/* Dimensions */}
-                <div>
-                  <h5 className="text-sm font-bold text-slate-900 mb-3">Габариты и вес</h5>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100/50">
-                      <span className="text-xs font-semibold text-slate-500">Длина:</span>
-                      <span className="text-sm font-bold text-slate-900">{selectedProduct.length ? `${selectedProduct.length} см` : '—'}</span>
-                    </div>
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100/50">
-                      <span className="text-xs font-semibold text-slate-500">Ширина:</span>
-                      <span className="text-sm font-bold text-slate-900">{selectedProduct.width ? `${selectedProduct.width} см` : '—'}</span>
-                    </div>
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100/50">
-                      <span className="text-xs font-semibold text-slate-500">Высота:</span>
-                      <span className="text-sm font-bold text-slate-900">{selectedProduct.height ? `${selectedProduct.height} см` : '—'}</span>
-                    </div>
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100/50">
-                      <span className="text-xs font-semibold text-slate-500">Глубина:</span>
-                      <span className="text-sm font-bold text-slate-900">{selectedProduct.depth ? `${selectedProduct.depth} см` : '—'}</span>
-                    </div>
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100/50 col-span-2">
-                      <span className="text-xs font-semibold text-slate-500">Вес товара:</span>
-                      <span className="text-sm font-bold text-slate-900">{selectedProduct.weight ? `${selectedProduct.weight} кг` : '—'}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Additional IDs */}
-                <div>
-                  <h5 className="text-sm font-bold text-slate-900 mb-3">Связи справочников</h5>
-                  <div className="grid grid-cols-1 gap-3">
-                    <div className="flex justify-between items-center p-3 rounded-xl bg-slate-50 border border-slate-100/50">
-                      <span className="text-xs font-semibold text-slate-500">Бренд:</span>
-                      <span className="text-sm font-bold text-slate-900">{selectedProduct.brand_id || '—'}</span>
-                    </div>
-                    <div className="flex justify-between items-center p-3 rounded-xl bg-slate-50 border border-slate-100/50">
-                      <span className="text-xs font-semibold text-slate-500">Категория:</span>
-                      <span className="text-sm font-bold text-slate-900">{selectedProduct.category_id || '—'}</span>
-                    </div>
-                    <div className="flex justify-between items-center p-3 rounded-xl bg-slate-50 border border-slate-100/50">
-                      <span className="text-xs font-semibold text-slate-500">Ед. изм.:</span>
-                      <span className="text-sm font-bold text-slate-900">{selectedProduct.unit_id || '—'}</span>
-                    </div>
-                    <div className="flex justify-between items-center p-3 rounded-xl bg-slate-50 border border-slate-100/50">
-                      <span className="text-xs font-semibold text-slate-500">Поставщик:</span>
-                      <span className="text-sm font-bold text-slate-900">{selectedProduct.supplier_id || '—'}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Images */}
+              {/* Image */}
               <div className="mt-6 pt-6 border-t border-slate-100/80">
-                <h4 className="text-sm font-bold text-slate-900 mb-3">Изображения</h4>
-                {selectedProduct.images && selectedProduct.images.length > 0 ? (
-                  <div className="flex flex-wrap gap-3">
-                    {selectedProduct.images.map((image: string, index: number) => (
-                      <div key={index} className="w-24 h-24 rounded-2xl overflow-hidden ring-1 ring-slate-100 border border-slate-100 shadow-sm relative group cursor-pointer hover:shadow-md transition-all">
-                        <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/10 transition-colors z-10"></div>
-                        <img
-                          src={image}
-                          alt={`${selectedProduct.title} - ${index + 1}`}
-                          className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
-                        />
-                      </div>
-                    ))}
+                <h4 className="text-sm font-bold text-slate-900 mb-3">Изображение</h4>
+                {selectedProduct.image ? (
+                  <div className="w-40 h-40 rounded-2xl overflow-hidden ring-1 ring-slate-100 border border-slate-100 shadow-sm">
+                    <img
+                      src={selectedProduct.image}
+                      alt={selectedProduct.name}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                 ) : (
                   <div className="p-4 rounded-2xl bg-slate-50 text-center border border-slate-100 border-dashed">
-                    <p className="text-sm font-medium text-slate-500">Изображения отсутствуют</p>
+                    <p className="text-sm font-medium text-slate-500">Изображение отсутствует</p>
                   </div>
-                )}
-              </div>
+                )}</div>
             </div>
 
             {/* Footer */}

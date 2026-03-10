@@ -25,8 +25,8 @@ class CategoryService {
       );
       const data = response.data;
 
-      const categories = Array.isArray(data) ? data : [];
-      const total = Array.isArray(data) ? data.length : data.total;
+      const categories = Array.isArray(data) ? data : data.categories || [];
+      const total = Array.isArray(data) ? data.length : data.total || 0;
 
       return {
         categories: categories || [],
@@ -65,7 +65,7 @@ class CategoryService {
    * Создание новой категории
    */
   async createCategory(categoryData: {
-    title: string;
+    name: string;
     parent_id: number | null;
   }): Promise<Category> {
     try {
@@ -84,7 +84,7 @@ class CategoryService {
   /**
    * Обновление существующей категории
    */
-  async updateCategory(id: number, categoryData: { title: string }): Promise<Category> {
+  async updateCategory(id: number, categoryData: { name: string }): Promise<Category> {
     try {
       const response = await api.patch<Category>(`/product/category/${id}/`, categoryData);
       return response.data;

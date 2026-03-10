@@ -28,7 +28,7 @@ const BrandsPage: React.FC<BrandsPageProps> = ({ isStandalone = false }) => {
       setError(null);
 
       try {
-        const response = await brandUnitService.getBrands({});
+        const response = await brandUnitService.getBrands({ limit: 1000 }); // Получаем все бренды
 
         setBrands(response.brands);
         setTotalBrands(response.total);
@@ -96,7 +96,7 @@ const BrandsPage: React.FC<BrandsPageProps> = ({ isStandalone = false }) => {
     setIsSubmitting(true);
 
     try {
-      const newBrand = await brandUnitService.createBrand({ title: newBrandTitle.trim() });
+      const newBrand = await brandUnitService.createBrand({ name: newBrandTitle.trim() });
 
       // Добавляем новый бренд в список и обновляем общее количество
       setBrands(prev => [newBrand, ...prev]);
@@ -218,7 +218,7 @@ const BrandsPage: React.FC<BrandsPageProps> = ({ isStandalone = false }) => {
                 setError(null);
                 setIsLoading(true);
                 setTimeout(() => {
-                  brandUnitService.getBrands({})
+                  brandUnitService.getBrands({ limit: 1000 })
                     .then(response => {
                       setBrands(response.brands);
                       setTotalBrands(response.total);
@@ -260,7 +260,7 @@ const BrandsPage: React.FC<BrandsPageProps> = ({ isStandalone = false }) => {
                     <div className="text-sm text-slate-900">{brand.id}</div>
                   </div>
                   <div className="col-span-5">
-                    <div className="text-sm font-medium text-slate-900">{brand.title}</div>
+                    <div className="text-sm font-medium text-slate-900">{brand.name}</div>
                   </div>
                   <div className="col-span-3">
                     <div className="text-sm text-slate-900">{formatDate(brand.created_at)}</div>

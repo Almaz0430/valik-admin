@@ -1,7 +1,7 @@
 /**
  * Сервис для работы с API аутентификации поставщиков
  */
-import type { AuthResponse, LoginCredentials, Supplier, TokenRefreshResponse } from '../../../types/auth';
+import type { AuthResponse, LoginCredentials, RegisterData, Supplier, TokenRefreshResponse } from '../../../types/auth';
 import { api } from '../../../utils/axiosConfig';
 
 /**
@@ -33,19 +33,25 @@ class AuthService {
       if (error && typeof error === 'object' && 'response' in error) {
         const err = error as {
           response?: {
-            data?: {
-              message?: string;
-              errors?: Array<{ msg?: string }>;
-            };
-          };
+            data?: Record<string, any>
+          }
         };
 
-        const validationMessage = err.response?.data?.errors?.[0]?.msg;
-        const apiMessage = err.response?.data?.message;
+        const data = err.response?.data;
 
-        throw new Error(
-          validationMessage || apiMessage || 'Произошла ошибка при входе',
-        );
+        if (data && typeof data === 'object' && !Array.isArray(data)) {
+          if (data.message) return Promise.reject(new Error(this.translateError(data.message)));
+          if (data.detail) return Promise.reject(new Error(this.translateError(data.detail)));
+
+          for (const key in data) {
+            const fieldError = data[key];
+            if (Array.isArray(fieldError) && fieldError.length > 0) {
+              return Promise.reject(new Error(this.translateError(fieldError[0])));
+            } else if (typeof fieldError === 'string') {
+              return Promise.reject(new Error(this.translateError(fieldError)));
+            }
+          }
+        }
       }
       throw new Error('Произошла ошибка при входе');
     }
@@ -54,23 +60,49 @@ class AuthService {
   /**
    * Регистрация поставщика
    */
-  async register(credentials: LoginCredentials): Promise<AuthResponse> {
+  async register(data: RegisterData): Promise<AuthResponse> {
     try {
-      const response = await api.post<AuthResponse>('/vendor/register/', credentials);
+      const response = await api.post<any>('/vendor/register/', data);
       const authResponse = response.data;
 
-      if (!authResponse.access) {
-        throw new Error('Сервер не вернул токен доступа');
+      // Если бэкенд вернул токены сразу — сохраняем их
+      if (authResponse.access) {
+        this.setTokens(authResponse.access, authResponse.refresh);
       }
 
-      this.setTokens(authResponse.access, authResponse.refresh);
-      if (authResponse.id) localStorage.setItem('vendorId', authResponse.id);
+      // Сохраняем ID вендора, если он есть в ответе
+      if (authResponse.id) {
+        localStorage.setItem('vendorId', authResponse.id.toString());
+      }
 
       return authResponse;
     } catch (error) {
       if (error && typeof error === 'object' && 'response' in error) {
-        const err = error as { response?: { data?: { message?: string } } };
-        throw new Error(err.response?.data?.message || 'Произошла ошибка при регистрации');
+        const err = error as {
+          response?: {
+            data?: Record<string, any>
+          }
+        };
+
+        const data = err.response?.data;
+
+        // Если это объект с полями (типично для Django Rest Framework)
+        if (data && typeof data === 'object' && !Array.isArray(data)) {
+          if (data.message) return Promise.reject(new Error(this.translateError(data.message)));
+          if (data.detail) return Promise.reject(new Error(this.translateError(data.detail)));
+
+          // Извлекаем первую ошибку из любого поля
+          for (const key in data) {
+            const fieldError = data[key];
+            if (Array.isArray(fieldError) && fieldError.length > 0) {
+              return Promise.reject(new Error(this.translateError(fieldError[0])));
+            } else if (typeof fieldError === 'string') {
+              return Promise.reject(new Error(this.translateError(fieldError)));
+            }
+          }
+        }
+
+        throw new Error('Произошла ошибка при регистрации');
       }
       throw new Error('Произошла ошибка при регистрации');
     }
@@ -153,6 +185,28 @@ class AuthService {
    */
   isAuthenticated(): boolean {
     return !!this.getToken();
+  }
+
+  /**
+   * Локализация ошибок бэкенда на русский язык
+   */
+  private translateError(msg: string): string {
+    if (!msg) return 'Произошла неизвестная ошибка';
+
+    const translations: Record<string, string> = {
+      'This field is required.': 'Это поле обязательно для заполнения.',
+      'Enter a valid email address.': 'Введите корректный адрес электронной почты.',
+      'Ensure this field has at least 8 characters.': 'Пароль должен содержать не менее 8 символов.',
+      'No refresh token available': 'Сессия истекла, войдите снова.',
+      'Authentication credentials were not provided.': 'Требуется авторизация.',
+    };
+
+    let translated = translations[msg] || msg;
+
+    // Специфично для Valik: если бэк пишет "vendor с таким email...", меняем на "поставщик"
+    translated = translated.replace(/vendor/gi, 'Поставщик');
+
+    return translated;
   }
 
   /**

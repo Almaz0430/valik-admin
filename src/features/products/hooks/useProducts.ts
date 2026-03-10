@@ -1,17 +1,21 @@
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { Product, ProductQueryParams } from '../../../types/product';
 import productService from '../api/productService';
+import { AuthContext } from '../../../contexts/AuthContextBase';
 
 interface UseProductsOptions {
   initialParams?: ProductQueryParams;
 }
 
 export const useProducts = ({ initialParams }: UseProductsOptions = {}) => {
-  const [queryParams, setQueryParams] = useState<ProductQueryParams>(
+  const auth = useContext(AuthContext);
+  const [queryParams] = useState<ProductQueryParams>(
     initialParams || { page: 1, limit: 10 }
   );
   const [searchTerm, setSearchTerm] = useState<string>('');
+
+  const vendorId = auth?.supplier?.id ? Number(auth.supplier.id) : null;
 
   const {
     data,
@@ -19,24 +23,29 @@ export const useProducts = ({ initialParams }: UseProductsOptions = {}) => {
     error,
     refetch,
   } = useQuery({
-    queryKey: ['products', queryParams, searchTerm],
-    queryFn: async () =>
-      productService.getProducts({
-        ...queryParams,
-        search: searchTerm || undefined,
-      }),
+    queryKey: ['products', vendorId, searchTerm],
+    queryFn: async () => {
+      if (!vendorId) throw new Error('Не авторизован');
+      const products = await productService.getVendorProducts(vendorId);
+      // Фильтрация по поисковому запросу на клиенте
+      const filtered = searchTerm
+        ? products.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()))
+        : products;
+      return { products: filtered, total: filtered.length };
+    },
+    enabled: !!vendorId,
   });
 
   const products: Product[] = data?.products ?? [];
   const total: number = data?.total ?? 0;
-  const errorMessage: string | null = error ? error.message : null;
+  const errorMessage: string | null = error ? (error as Error).message : null;
 
-  const handlePageChange = (page: number) => {
-    setQueryParams((prev) => ({ ...prev, page }));
+  const handlePageChange = (_page: number) => {
+    // Пагинация на клиенте если понадобится
   };
 
   const resetToFirstPage = () => {
-    setQueryParams((prev) => ({ ...prev, page: 1 }));
+    // no-op, поиск происходит на клиенте
   };
 
   return {
@@ -47,7 +56,6 @@ export const useProducts = ({ initialParams }: UseProductsOptions = {}) => {
     queryParams,
     searchTerm,
     setSearchTerm,
-    setQueryParams,
     handlePageChange,
     resetToFirstPage,
     refetch,

@@ -1,16 +1,11 @@
 /**
  * Страница регистрации поставщика
  */
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authService } from '../../features/auth';
 import { useAuth } from '../../contexts/AuthContextBase';
-import api from '../../utils/axiosConfig';
 
-interface City {
-  id: number;
-  name: string;
-}
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -25,23 +20,9 @@ const RegisterPage = () => {
   const [iin, setIin] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const [city, setCity] = useState<number | ''>('');
-  const [address, setAddress] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [cities, setCities] = useState<City[]>([]);
 
-  useEffect(() => {
-    const fetchCities = async () => {
-      try {
-        const response = await api.get('/product/cities/');
-        setCities(response.data);
-      } catch (err) {
-        console.error('Ошибка при загрузке городов:', err);
-      }
-    };
-    fetchCities();
-  }, []);
 
   /**
    * Обработчик отправки формы
@@ -58,29 +39,33 @@ const RegisterPage = () => {
       setIsLoading(true);
       setError('');
 
-      const response = await authService.register({
+      // 1. Регистрация
+      await authService.register({
         email,
         password,
         iin,
         name,
-        phone,
-        city,
-        address
-      } as any);
+        phone
+      });
 
-      // Создаем объект поставщика из ответа (Django API возвращает данные в корне)
+      // 2. Автоматический вход сразу после регистрации
+      const loginResponse = await authService.login({
+        email,
+        password
+      });
+
+      // 3. Сохраняем данные авторизации в контексте
       const supplierData = {
-        id: response.id,
-        email: response.email,
-        name: response.name,
+        id: loginResponse.id,
+        email: loginResponse.email,
+        name: loginResponse.name,
       };
 
-      // Сохраняем данные авторизации в контексте (если вернулись токены)
-      if (response.access) {
-        setAuthData(supplierData, response.access);
+      if (loginResponse.access) {
+        setAuthData(supplierData, loginResponse.access);
       }
 
-      // Перенаправляем на панель управления
+      // 4. Перенаправляем на панель управления
       navigate('/dashboard');
 
     } catch (err) {
@@ -193,41 +178,6 @@ const RegisterPage = () => {
                   />
                 </div>
 
-                {/* Город */}
-                <div className="space-y-2">
-                  <label htmlFor="city" className="block text-sm font-semibold text-slate-700">
-                    Город
-                  </label>
-                  <select
-                    id="city"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value ? Number(e.target.value) : '')}
-                    className="block w-full rounded-xl border border-slate-200 px-4 py-3 bg-white shadow-sm focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 focus:outline-none transition-all text-slate-900 font-medium"
-                  >
-                    <option value="">Выберите город</option>
-                    {cities.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Адрес */}
-                <div className="space-y-2">
-                  <label htmlFor="address" className="block text-sm font-semibold text-slate-700">
-                    Улица, дом
-                  </label>
-                  <input
-                    id="address"
-                    type="text"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    className="block w-full rounded-xl border border-slate-200 px-4 py-3 bg-white shadow-sm focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 focus:outline-none transition-all text-slate-900 font-medium placeholder:text-slate-400 placeholder:font-normal"
-                    placeholder="Абая 1"
-                    required
-                  />
-                </div>
 
                 {/* Поле Пароль */}
                 <div className="space-y-2">

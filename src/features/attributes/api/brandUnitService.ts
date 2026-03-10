@@ -19,7 +19,7 @@ class BrandUnitService {
    */
   async getBrands(params: AttributeQueryParams = { page: 1, limit: 10 }): Promise<BrandListResponse> {
     try {
-      const response = await api.get<Brand[] | { brands: Brand[]; total: number }>('/product/brand/', {
+      const response = await api.get<Brand[] | { brands: Brand[]; total: number }>('/product/brands/', {
         params,
       });
       const data = response.data;
@@ -48,7 +48,7 @@ class BrandUnitService {
    */
   async getBrand(id: number): Promise<Brand> {
     try {
-      const response = await api.get<Brand | { brand: Brand }>(`/product/brand/${id}/`);
+      const response = await api.get<Brand | { brand: Brand }>(`/product/brands/${id}/`);
       const data = response.data;
       return 'brand' in data && data.brand ? data.brand : (data as Brand);
     } catch (error) {
@@ -64,9 +64,9 @@ class BrandUnitService {
   /**
    * Создание нового бренда
    */
-  async createBrand(brandData: { title: string }): Promise<Brand> {
+  async createBrand(brandData: { name: string }): Promise<Brand> {
     try {
-      const response = await api.post<Brand | { brand: Brand }>('/product/brand/', brandData);
+      const response = await api.post<Brand | { brand: Brand }>('/product/brands/', brandData);
       const data = response.data;
       return 'brand' in data && data.brand ? data.brand : (data as Brand);
     } catch (error) {
@@ -82,9 +82,9 @@ class BrandUnitService {
   /**
    * Обновление существующего бренда
    */
-  async updateBrand(id: number, brandData: { title: string }): Promise<Brand> {
+  async updateBrand(id: number, brandData: { name: string }): Promise<Brand> {
     try {
-      const response = await api.patch<Brand | { brand: Brand }>(`/product/brand/${id}/`, brandData);
+      const response = await api.patch<Brand | { brand: Brand }>(`/product/brands/${id}/`, brandData);
       const data = response.data;
       return 'brand' in data && data.brand ? data.brand : (data as Brand);
     } catch (error) {
@@ -104,7 +104,7 @@ class BrandUnitService {
    */
   async deleteBrand(id: number): Promise<void> {
     try {
-      await api.delete(`/product/brand/${id}/`);
+      await api.delete(`/product/brands/${id}/`);
     } catch (error) {
       console.error(`Ошибка при удалении бренда ${id}:`, error);
       if (error && typeof error === 'object' && 'response' in error) {
@@ -172,7 +172,7 @@ class BrandUnitService {
   /**
    * Создание новой единицы измерения
    */
-  async createUnit(unitData: { title: string }): Promise<Unit> {
+  async createUnit(unitData: { name: string }): Promise<Unit> {
     try {
       const response = await api.post<Unit | { unit: Unit }>('/product/units/', unitData);
       const data = response.data;
@@ -192,7 +192,7 @@ class BrandUnitService {
   /**
    * Обновление существующей единицы измерения
    */
-  async updateUnit(id: number, unitData: { title: string }): Promise<Unit> {
+  async updateUnit(id: number, unitData: { name: string }): Promise<Unit> {
     try {
       const response = await api.patch<Unit | { unit: Unit }>(`/product/units/${id}/`, unitData);
       const data = response.data;

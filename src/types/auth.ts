@@ -47,14 +47,27 @@ export interface Supplier {
 }
 
 /**
+ * Данные для регистрации
+ */
+export interface RegisterData {
+  email: string;
+  password?: string;
+  iin: string;
+  name: string;
+  phone: string;
+  city?: number | '';
+  address?: string;
+}
+
+/**
  * Ответ при успешной аутентификации
  */
 export interface AuthResponse {
   id: string;
   email: string;
   name: string;
-  access: string;
-  refresh: string;
+  access?: string;
+  refresh?: string;
 }
 
 /**

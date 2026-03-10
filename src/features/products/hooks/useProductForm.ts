@@ -1,387 +1,342 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import productService from '../api/productService';
+import type { SubCategory, Category } from '../api/productService';
+import { AuthContext } from '../../../contexts/AuthContextBase';
 
-// Определяем тип для опций react-select
+// Тип для опций react-select
 export interface SelectOption {
   value: number;
   label: string;
 }
 
-// Определяем тип для аргументов хука
 interface UseProductFormArgs {
   productId?: number;
   isEditMode?: boolean;
 }
 
 /**
- * Кастомный хук для управления логикой формы создания/редактирования товара.
- * Инкапсулирует состояние формы, валидацию, загрузку данных и отправку на сервер.
+ * Хук управления формой создания товара.
+ * Поля соответствуют модели OPTProduct:
+ * name, description, sub_category (ID), image (File)
  */
 export const useProductForm = ({ productId, isEditMode = false }: UseProductFormArgs = {}) => {
   const navigate = useNavigate();
+  const auth = useContext(AuthContext);
+
   const [isLoading, setIsLoading] = useState(false);
+  const [isDataLoading, setIsDataLoading] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Состояние формы — точно соответствует полям OPTProduct
   const [formData, setFormData] = useState({
-    title: '',
+    name: '',
     description: '',
-    brand_id: null as number | null,
-    unit_id: null as number | null,
-    category_id: null as number | null,
-    price: 0,
-    article: 0,
-    length: undefined as number | undefined,
-    width: undefined as number | undefined,
-    height: undefined as number | undefined,
-    weight: undefined as number | undefined,
-    images: [] as File[]
+    sub_category: null as number | null,
+    brand: null as number | null,
+    unit: null as number | null,
   });
 
-  // Состояния для данных селектов
-  const [brands, setBrands] = useState<SelectOption[]>([]);
+  // Данные для дропдаунов
   const [categories, setCategories] = useState<SelectOption[]>([]);
+  const [subCategories, setSubCategories] = useState<SelectOption[]>([]);
+  const [brands, setBrands] = useState<SelectOption[]>([]);
   const [units, setUnits] = useState<SelectOption[]>([]);
-  const [isDataLoading, setIsDataLoading] = useState(true);
+  const [allSubCategories, setAllSubCategories] = useState<SubCategory[]>([]);
+  const [allCategories, setAllCategories] = useState<Category[]>([]);
 
-  // Состояния для выбранных опций react-select
+  // Выбранные значения для react-select
+  const [selectedCategory, setSelectedCategory] = useState<SelectOption | null>(null);
+  const [selectedSubCategory, setSelectedSubCategory] = useState<SelectOption | null>(null);
   const [selectedBrand, setSelectedBrand] = useState<SelectOption | null>(null);
   const [selectedUnit, setSelectedUnit] = useState<SelectOption | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<SelectOption | null>(null);
 
+  // Изображение (одно — как в модели OPTProduct)
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [previewImages, setPreviewImages] = useState<string[]>([]);
-  const [existingImages, setExistingImages] = useState<string[]>([]);
-  const createdObjectUrlsRef = useRef<string[]>([]);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
+  const [isImageEditorOpen, setIsImageEditorOpen] = useState(false);
+  const [tempImageForEdit, setTempImageForEdit] = useState<string | null>(null);
+  const [tempImageFileName, setTempImageFileName] = useState<string>('product-image.jpg');
 
-  const revokeIfObjectUrl = (url: string) => {
-    if (url.startsWith('blob:')) {
-      URL.revokeObjectURL(url);
-      createdObjectUrlsRef.current = createdObjectUrlsRef.current.filter((item) => item !== url);
-    }
-  };
-
-  const appendImages = (files: File[]) => {
-    if (!files.length) return;
-
-    const newPreviews = files.map(file => URL.createObjectURL(file));
-    createdObjectUrlsRef.current.push(...newPreviews);
-
-    setFormData(prev => ({
-      ...prev,
-      images: [...prev.images, ...files]
-    }));
-
-    setPreviewImages(prev => [...prev, ...newPreviews]);
-
-    if (errors.images) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors.images;
-        return newErrors;
-      });
-    }
-  };
-
-  // Загрузка данных для селектов и данных товара для редактирования
+  // Загрузка справочников
   useEffect(() => {
-    const fetchSelectData = async () => {
+    const fetchData = async () => {
+      setIsDataLoading(true);
       try {
-        setErrors(prev => {
-          const newErrors = { ...prev };
-          delete newErrors.submit;
-          return newErrors;
-        });
-        setIsDataLoading(true);
-
-        // Параллельно загружаем справочники
-        const [brandsData, categoriesData, unitsData] = await Promise.all([
-          productService.getBrands(),
+        const [categoriesData, subCategoriesData, brandsData, unitsData] = await Promise.all([
           productService.getCategories(),
-          productService.getUnits()
+          productService.getSubCategories(),
+          productService.getBrands(),
+          productService.getUnits(),
         ]);
 
-        const brandsOptions = brandsData.map(brand => ({ value: brand.id, label: brand.title }));
-        const categoriesOptions = categoriesData.map(category => ({ value: category.id, label: category.title }));
-        const unitsOptions = unitsData.map(unit => ({ value: unit.id, label: unit.title }));
+        setAllCategories(categoriesData);
+        setAllSubCategories(subCategoriesData);
 
-        setBrands(brandsOptions);
-        setCategories(categoriesOptions);
-        setUnits(unitsOptions);
+        const catOptions = categoriesData.map(c => ({ value: c.id, label: c.name }));
+        setCategories(catOptions);
 
-        // Если режим редактирования, загружаем данные товара
+        // Все подкатегории в плоском списке
+        const subOptions = subCategoriesData.map(sc => ({ value: sc.id, label: sc.name }));
+        setSubCategories(subOptions);
+
+        // Бренды и единицы измерения
+        const brandOptions = brandsData.map(b => ({ value: b.id, label: b.name }));
+        setBrands(brandOptions);
+
+        const unitOptions = unitsData.map(u => ({ value: u.id, label: u.name }));
+        setUnits(unitOptions);
+
+        // Режим редактирования — загружаем данные товара
         if (isEditMode && productId) {
-          const productData = await productService.getProduct(productId);
+          const product = await productService.getProduct(productId);
+          
+          // Получаем ID бренда и единицы измерения
+          const brandId = product.brand 
+            ? (typeof product.brand === 'object' ? product.brand.id : product.brand)
+            : null;
+          const unitId = product.unit 
+            ? (typeof product.unit === 'object' ? product.unit.id : product.unit)
+            : null;
+          
           setFormData({
-            title: productData.title,
-            description: productData.description || '',
-            brand_id: productData.brand_id || null,
-            unit_id: productData.unit_id || null,
-            category_id: productData.category_id || null,
-            price: productData.price,
-            article: productData.article || 0,
-            length: productData.length,
-            width: productData.width,
-            height: productData.height,
-            weight: productData.weight,
-            images: []
+            name: product.name,
+            description: product.description || '',
+            sub_category: typeof product.sub_category === 'object' && product.sub_category 
+              ? product.sub_category.id 
+              : product.sub_category,
+            brand: brandId,
+            unit: unitId,
           });
 
-          // Устанавливаем выбранные значения для селектов
-          setSelectedBrand(brandsOptions.find(b => b.value == productData.brand_id) || null);
-          setSelectedCategory(categoriesOptions.find(c => c.value == productData.category_id) || null);
-          setSelectedUnit(unitsOptions.find(u => u.value == productData.unit_id) || null);
+          // Устанавливаем выбранную подкатегорию
+          const subCategoryId = typeof product.sub_category === 'object' && product.sub_category
+            ? product.sub_category.id
+            : product.sub_category;
+            
+          if (subCategoryId) {
+            const subOpt = subOptions.find(s => s.value === subCategoryId) || null;
+            setSelectedSubCategory(subOpt);
 
-          if (productData.images) {
-            setExistingImages(productData.images.map((img: string) => img));
-            setPreviewImages(productData.images.map((img: string) => img));
+            // Устанавливаем родительскую категорию
+            const sub = subCategoriesData.find(s => s.id === subCategoryId);
+            if (sub) {
+              const catOpt = catOptions.find(c => c.value === sub.category) || null;
+              setSelectedCategory(catOpt);
+            }
+          }
+
+          // Устанавливаем бренд
+          if (brandId) {
+            const brandOpt = brandOptions.find(b => b.value === brandId) || null;
+            setSelectedBrand(brandOpt);
+          }
+
+          // Устанавливаем единицу измерения
+          if (unitId) {
+            const unitOpt = unitOptions.find(u => u.value === unitId) || null;
+            setSelectedUnit(unitOpt);
+          }
+
+          if (product.image) {
+            setExistingImageUrl(product.image);
+            setImagePreview(product.image);
           }
         }
-
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Ошибка загрузки данных для формы';
-        setErrors(prev => ({ ...prev, submit: errorMessage }));
+        const msg = error instanceof Error ? error.message : 'Ошибка загрузки данных';
+        setErrors(prev => ({ ...prev, submit: msg }));
       } finally {
         setIsDataLoading(false);
       }
     };
 
-    fetchSelectData();
+    fetchData();
   }, [productId, isEditMode]);
 
-  const handleChange = (field: string, value: string | number | null | File[] | undefined) => {
+  const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-
     if (errors[field]) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
-      });
+      setErrors(prev => { const e = { ...prev }; delete e[field]; return e; });
     }
   };
 
-  const handleSelectChange = (field: string, selectedOption: SelectOption | null) => {
-    handleChange(field, selectedOption ? selectedOption.value : null);
+  // При выборе категории — фильтруем подкатегории
+  const handleCategoryChange = (option: SelectOption | null) => {
+    setSelectedCategory(option);
+    setSelectedSubCategory(null);
+    setFormData(prev => ({ ...prev, sub_category: null }));
 
-    if (field === 'brand_id') {
-      setSelectedBrand(selectedOption);
-    } else if (field === 'unit_id') {
-      setSelectedUnit(selectedOption);
-    } else if (field === 'category_id') {
-      setSelectedCategory(selectedOption);
-    }
-  };
-
-  const handleNumberChange = (field: string, value: string) => {
-    if (value === '') {
-      handleChange(field, undefined);
+    if (option) {
+      const filtered = allSubCategories
+        .filter(sc => sc.category === option.value)
+        .map(sc => ({ value: sc.id, label: sc.name }));
+      setSubCategories(filtered);
     } else {
-      const numValue = parseFloat(value);
-      if (!isNaN(numValue)) {
-        handleChange(field, numValue);
-      }
+      // Если категория не выбрана — показываем все
+      setSubCategories(allSubCategories.map(sc => ({ value: sc.id, label: sc.name })));
     }
   };
 
-  const handlePriceChange = (value: string) => {
-    const sanitized = value.replace(/[^\d.]/g, '');
-
-    if (sanitized === '') {
-      handleChange('price', 0);
-    } else {
-      const numValue = parseFloat(sanitized);
-      if (!isNaN(numValue) && numValue >= 0) {
-        handleChange('price', numValue);
-      }
+  const handleSubCategoryChange = (option: SelectOption | null) => {
+    setSelectedSubCategory(option);
+    setFormData(prev => ({ ...prev, sub_category: option ? option.value : null }));
+    if (errors.sub_category) {
+      setErrors(prev => { const e = { ...prev }; delete e.sub_category; return e; });
     }
+  };
+
+  const handleBrandChange = (option: SelectOption | null) => {
+    setSelectedBrand(option);
+    setFormData(prev => ({ ...prev, brand: option ? option.value : null }));
+  };
+
+  const handleUnitChange = (option: SelectOption | null) => {
+    setSelectedUnit(option);
+    setFormData(prev => ({ ...prev, unit: option ? option.value : null }));
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      const newFiles = Array.from(files);
-      appendImages(newFiles);
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setTempImageForEdit(reader.result as string);
+        setTempImageFileName(file.name);
+        setIsImageEditorOpen(true);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  const handlePasteFiles = (files: File[]) => {
-    appendImages(files);
-  };
-
-  const removeImage = async (index: number) => {
-    try {
-      if (isEditMode && productId && index < existingImages.length) {
-        const imageUrl = existingImages[index];
-        await productService.deleteProductImage(productId, imageUrl);
-
-        setExistingImages((prev) => prev.filter((_, i) => i !== index));
-        setPreviewImages((prev) => prev.filter((_, i) => i !== index));
-        toast.success('Фото удалено');
-        return;
-      }
-
-      const newImageIndex = index - existingImages.length;
-      setFormData(prev => {
-        const newImages = [...prev.images];
-        if (newImageIndex >= 0 && newImageIndex < newImages.length) {
-          newImages.splice(newImageIndex, 1);
-        }
-        return { ...prev, images: newImages };
-      });
-
-      const previewToRemove = previewImages[index];
-      if (previewToRemove) {
-        revokeIfObjectUrl(previewToRemove);
-      }
-
-      setPreviewImages(prev => prev.filter((_, i) => i !== index));
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Не удалось удалить изображение';
-      toast.error(errorMessage);
+  const handleImageEditSave = (editedFile: File) => {
+    if (imagePreview && imagePreview.startsWith('blob:')) {
+      URL.revokeObjectURL(imagePreview);
+    }
+    setImageFile(editedFile);
+    setImagePreview(URL.createObjectURL(editedFile));
+    setIsImageEditorOpen(false);
+    setTempImageForEdit(null);
+    if (errors.image) {
+      setErrors(prev => { const e = { ...prev }; delete e.image; return e; });
     }
   };
 
-  const editImage = (index: number, editedFile: File) => {
-    const newImageIndex = index - existingImages.length;
-    if (newImageIndex < 0) {
-      toast.error('Старые фото можно только удалить и загрузить заново');
-      return;
-    }
-
-    setFormData(prev => {
-      const newImages = [...prev.images];
-      newImages[newImageIndex] = editedFile;
-      return { ...prev, images: newImages };
-    });
-
-    revokeIfObjectUrl(previewImages[index]);
-    const newPreviewUrl = URL.createObjectURL(editedFile);
-    createdObjectUrlsRef.current.push(newPreviewUrl);
-
-    setPreviewImages(prev => {
-      const newPreviews = [...prev];
-      newPreviews[index] = newPreviewUrl;
-      return newPreviews;
-    });
+  const handleImageEditCancel = () => {
+    setIsImageEditorOpen(false);
+    setTempImageForEdit(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  const removeImage = () => {
+    if (imagePreview && imagePreview.startsWith('blob:')) {
+      URL.revokeObjectURL(imagePreview);
+    }
+    setImageFile(null);
+    setImagePreview(null);
+    setExistingImageUrl(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  // Очистка blob URL при размонтировании
   useEffect(() => {
     return () => {
-      createdObjectUrlsRef.current.forEach(url => URL.revokeObjectURL(url));
+      if (imagePreview && imagePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(imagePreview);
+      }
     };
   }, []);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
-
-    if (!formData.title.trim()) newErrors.title = 'Введите название';
-    if (!formData.description.trim()) newErrors.description = 'Введите описание';
-    if (!formData.brand_id) newErrors.brand_id = 'Выберите бренд';
-    if (!formData.category_id) newErrors.category_id = 'Выберите категорию';
-    if (!formData.unit_id) newErrors.unit_id = 'Выберите единицу измерения';
-    if (!formData.price || formData.price <= 0) newErrors.price = 'Укажите цену';
-    if (!isEditMode && (!formData.images || formData.images.length === 0)) {
-      newErrors.images = 'Загрузите хотя бы одно изображение товара';
-    }
-
+    if (!formData.name.trim()) newErrors.name = 'Введите название товара';
+    if (!formData.sub_category) newErrors.sub_category = 'Выберите подкатегорию';
+    // Изображение не обязательно - можно добавить в любой момент
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!validateForm()) return;
+
+    const vendorId = auth?.supplier?.id;
+    if (!vendorId) {
+      toast.error('Ошибка: не удалось получить ID поставщика. Войдите заново.');
+      return;
+    }
 
     setIsLoading(true);
     const toastId = toast.loading(isEditMode ? 'Обновление товара...' : 'Создание товара...');
 
     try {
-      if (formData.brand_id === null || formData.unit_id === null || formData.category_id === null) {
-        throw new Error('Бренд, категория и ед. измерения должны быть выбраны');
-      }
+      const productData = {
+        vendor: Number(vendorId),
+        sub_category: formData.sub_category,
+        brand: formData.brand,
+        unit: formData.unit,
+        name: formData.name,
+        description: formData.description || undefined,
+        image: imageFile || undefined,
+      };
 
       if (isEditMode && productId) {
-        const updateData: Record<string, unknown> = {
-          title: formData.title,
-          description: formData.description,
-          price: formData.price,
-          brand_id: formData.brand_id,
-          unit_id: formData.unit_id,
-          category_id: formData.category_id,
-        };
-
-        if (formData.article) updateData.article = formData.article;
-        if (formData.length !== undefined && formData.length !== null) updateData.length = formData.length;
-        if (formData.width !== undefined && formData.width !== null) updateData.width = formData.width;
-        if (formData.height !== undefined && formData.height !== null) updateData.height = formData.height;
-        if (formData.weight !== undefined && formData.weight !== null) updateData.weight = formData.weight;
-
-        await productService.updateProduct(productId, updateData);
-
-        if (formData.images.length > 0) {
-          await productService.addProductImages(productId, formData.images);
-        }
-
+        // Режим редактирования - обновляем существующий товар
+        await productService.updateProduct(productId, productData);
         toast.success('Товар успешно обновлен!', { id: toastId });
-        setTimeout(() => navigate('/dashboard/products'), 1500);
-
       } else {
-        const formDataToSend = new FormData();
-
-        formDataToSend.append('title', formData.title);
-        formDataToSend.append('description', formData.description);
-        formDataToSend.append('price', formData.price.toString());
-        formDataToSend.append('brand_id', formData.brand_id.toString());
-        formDataToSend.append('unit_id', formData.unit_id.toString());
-        formDataToSend.append('category_id', formData.category_id.toString());
-
-        if (formData.article) formDataToSend.append('article', formData.article.toString());
-        if (formData.length !== undefined && formData.length !== null) formDataToSend.append('length', formData.length.toString());
-        if (formData.width !== undefined && formData.width !== null) formDataToSend.append('width', formData.width.toString());
-        if (formData.height !== undefined && formData.height !== null) formDataToSend.append('height', formData.height.toString());
-        if (formData.weight !== undefined && formData.weight !== null) formDataToSend.append('weight', formData.weight.toString());
-
-        formData.images.forEach(image => {
-          formDataToSend.append('files', image);
-        });
-
-        await productService.createProductWithImages(formDataToSend);
+        // Режим создания - создаем новый товар
+        await productService.createProduct(productData);
         toast.success('Товар успешно создан!', { id: toastId });
-        setTimeout(() => navigate('/dashboard/products'), 1500);
       }
 
+      setTimeout(() => navigate('/dashboard/products'), 1500);
+
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Произошла неизвестная ошибка';
-      toast.error(errorMessage, { id: toastId });
-      setErrors(prev => ({ ...prev, submit: errorMessage }));
+      const msg = error instanceof Error ? error.message : 'Произошла неизвестная ошибка';
+      toast.error(msg, { id: toastId });
+      setErrors(prev => ({ ...prev, submit: msg }));
     } finally {
       setIsLoading(false);
     }
   };
 
   return {
-    navigate,
     formData,
     isLoading,
     isDataLoading,
     errors,
-    brands,
+    // Дропдауны
     categories,
+    subCategories,
+    brands,
     units,
-    selectedBrand,
+    allCategories,
+    // Выбранные значения
     selectedCategory,
+    selectedSubCategory,
+    selectedBrand,
     selectedUnit,
-    previewImages,
+    // Изображение
+    imageFile,
+    imagePreview,
     fileInputRef,
-    handleSelectChange,
+    isImageEditorOpen,
+    tempImageForEdit,
+    tempImageFileName,
+    // Обработчики
     handleChange,
-    handleNumberChange,
-    handlePriceChange,
+    handleCategoryChange,
+    handleSubCategoryChange,
+    handleBrandChange,
+    handleUnitChange,
     handleFileChange,
-    handlePasteFiles,
+    handleImageEditSave,
+    handleImageEditCancel,
     removeImage,
-    editImage,
     handleSubmit,
   };
 };

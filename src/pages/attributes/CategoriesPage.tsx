@@ -107,7 +107,7 @@ const CategoriesPage: React.FC<CategoriesPageProps> = ({ isStandalone = false })
       setError(null);
 
       try {
-        const response = await categoryService.getCategories({});
+        const response = await categoryService.getCategories({ limit: 1000 }); // Получаем все категории
 
         setCategories(response.categories);
         setTotalCategories(response.total);
@@ -182,7 +182,7 @@ const CategoriesPage: React.FC<CategoriesPageProps> = ({ isStandalone = false })
     try {
       console.log('parent_id', selectedCategory?.value);
       const newCategory = await categoryService.createCategory({
-        title: newCategoryTitle.trim(),
+        name: newCategoryTitle.trim(),
         parent_id: selectedCategory?.value ?? null
       });
 
@@ -272,11 +272,8 @@ const CategoriesPage: React.FC<CategoriesPageProps> = ({ isStandalone = false })
             <div className="col-span-1 text-xs font-semibold text-slate-500 uppercase tracking-wider">
               ID
             </div>
-            <div className="col-span-5 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            <div className="col-span-8 text-xs font-semibold text-slate-500 uppercase tracking-wider">
               Название
-            </div>
-            <div className="col-span-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              Дата создания
             </div>
             <div className="col-span-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">
               Действия
@@ -306,7 +303,7 @@ const CategoriesPage: React.FC<CategoriesPageProps> = ({ isStandalone = false })
                 setError(null);
                 setIsLoading(true);
                 setTimeout(() => {
-                  categoryService.getCategories({})
+                  categoryService.getCategories({ limit: 1000 })
                     .then(response => {
                       setCategories(response.categories);
                       setTotalCategories(response.total);
@@ -342,30 +339,59 @@ const CategoriesPage: React.FC<CategoriesPageProps> = ({ isStandalone = false })
             )}
 
             {categories.map((category) => (
-              <div key={category.id} className="px-4 sm:px-6 py-4 hover:bg-slate-50 transition-colors">
-                <div className="grid grid-cols-12 gap-4 items-center">
-                  <div className="col-span-1">
-                    <div className="text-sm text-slate-900">{category.id}</div>
-                  </div>
-                  <div className="col-span-5">
-                    <div className="text-sm font-medium text-slate-900">{category.title}</div>
-                  </div>
-                  <div className="col-span-3">
-                    <div className="text-sm text-slate-900">{formatDate(category.created_at)}</div>
-                  </div>
-                  <div className="col-span-3 text-right flex justify-end items-center space-x-2">
-                    <button
-                      className="text-red-600 hover:text-red-900"
-                      onClick={() => handleDeleteClick(category.id)}
-                      title="Удалить"
-                    >
-                      <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
+              <React.Fragment key={category.id}>
+                {/* Родительская категория */}
+                <div className="px-4 sm:px-6 py-4 hover:bg-slate-50 transition-colors bg-slate-50/30">
+                  <div className="grid grid-cols-12 gap-4 items-center">
+                    <div className="col-span-1">
+                      <div className="text-sm font-bold text-slate-900">{category.id}</div>
+                    </div>
+                    <div className="col-span-8">
+                      <div className="text-sm font-bold text-slate-900">{category.name}</div>
+                    </div>
+                    <div className="col-span-3 text-right flex justify-end items-center space-x-2">
+                      <button
+                        className="text-red-600 hover:text-red-900"
+                        onClick={() => handleDeleteClick(category.id)}
+                        title="Удалить"
+                      >
+                        <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
+
+                {/* Подкатегории */}
+                {category.sub_categories && category.sub_categories.length > 0 && (
+                  category.sub_categories.map((subCategory) => (
+                    <div key={subCategory.id} className="px-4 sm:px-6 py-3 hover:bg-slate-50 transition-colors border-l-2 border-slate-200 bg-slate-50/50">
+                      <div className="grid grid-cols-12 gap-4 items-center">
+                        <div className="col-span-1">
+                          <div className="text-sm text-slate-500 pl-4">{subCategory.id}</div>
+                        </div>
+                        <div className="col-span-8">
+                          <div className="text-sm text-slate-600 pl-6">
+                            {subCategory.name}
+                          </div>
+                        </div>
+                        <div className="col-span-3 text-right flex justify-end items-center space-x-2">
+                          <button
+                            className="text-red-600 hover:text-red-900 opacity-70"
+                            onClick={() => handleDeleteClick(subCategory.id)}
+                            title="Удалить подкатегорию"
+                          >
+                            <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </React.Fragment>
             ))}
           </div>
         )}
@@ -427,7 +453,7 @@ const CategoriesPage: React.FC<CategoriesPageProps> = ({ isStandalone = false })
                   <label className="block text-sm font-semibold text-slate-700 mb-1.5">Родительская категория</label>
                   <Select
                     id="category_id"
-                    options={(categories || []).map(u => ({ value: u.id, label: u.title }))}
+                    options={(categories || []).map(u => ({ value: u.id, label: u.name }))}
                     value={selectedCategory}
                     onChange={(option) => handleSelectChange('category_id', option)}
                     placeholder="Выберите родительскую категорию (опционально)"

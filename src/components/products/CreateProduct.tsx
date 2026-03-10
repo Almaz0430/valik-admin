@@ -1,19 +1,22 @@
 /**
- * Компонент создания/редактирования товара для десктопной версии.
- * Использует кастомный хук useProductForm для управления всей логикой.
+ * Компонент создания/редактирования товара.
+ * Поля соответствуют реальной модели OPTProduct бэкенда:
+ * name, description, sub_category (через выбор категории → подкатегории), image
  */
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useProductForm } from '../../features/products';
 import {
   ArrowLeftIcon,
-  XCircleIcon
+  XCircleIcon,
+  PhotoIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 import Input from '../ui/Input';
 import TextArea from '../ui/TextArea';
+import ImageEditor from '../ui/ImageEditor';
 import Select from 'react-select';
 import type { StylesConfig } from 'react-select';
-import FileUploader from '../ui/FileUploader';
 import type { SelectOption } from '../../features/products/hooks/useProductForm';
 
 interface CreateProductProps {
@@ -22,7 +25,6 @@ interface CreateProductProps {
 }
 
 const selectStyles: StylesConfig<SelectOption, false> = {
-  // Стили для react-select можно вынести в отдельный файл, если они используются где-то еще
   control: (base, state) => ({
     ...base,
     minHeight: '42px',
@@ -52,29 +54,35 @@ const CreateProduct: React.FC<CreateProductProps> = ({ isEditMode = false, produ
     isLoading,
     isDataLoading,
     errors,
-    brands,
     categories,
+    subCategories,
+    brands,
     units,
-    selectedBrand,
     selectedCategory,
+    selectedSubCategory,
+    selectedBrand,
     selectedUnit,
-    previewImages,
+    imagePreview,
     fileInputRef,
-    handleSelectChange,
+    isImageEditorOpen,
+    tempImageForEdit,
+    tempImageFileName,
     handleChange,
-    handleNumberChange,
-    handlePriceChange,
+    handleCategoryChange,
+    handleSubCategoryChange,
+    handleBrandChange,
+    handleUnitChange,
     handleFileChange,
-    handlePasteFiles,
+    handleImageEditSave,
+    handleImageEditCancel,
     removeImage,
-    editImage,
     handleSubmit,
   } = useProductForm({ isEditMode, productId });
 
   if (isDataLoading) {
     return (
       <div className="flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500" />
         <span className="ml-3 text-gray-600">Загрузка данных...</span>
       </div>
     );
@@ -82,12 +90,14 @@ const CreateProduct: React.FC<CreateProductProps> = ({ isEditMode = false, produ
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8 pb-24 md:pb-0">
-      {/* Десктопная шапка */}
-      <div className="hidden md:flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+      {/* Шапка — Десктоп */}
+      <div className="hidden md:flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{isEditMode ? 'Редактирование товара' : 'Создание нового товара'}</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {isEditMode ? 'Редактирование товара' : 'Создание нового товара'}
+          </h1>
           <p className="mt-1 text-sm text-gray-500">
-            {isEditMode ? 'Измените информацию о товаре' : 'Заполните информацию о товаре'}
+            Поля, отмеченные *, обязательны для заполнения
           </p>
         </div>
         <Link
@@ -99,11 +109,11 @@ const CreateProduct: React.FC<CreateProductProps> = ({ isEditMode = false, produ
         </Link>
       </div>
 
-      {/* Мобильная шапка (glassmorphism) */}
+      {/* Шапка — Мобилка */}
       <div className="md:hidden sticky top-0 z-30 -mx-4 -mt-8 px-4 py-3.5 bg-white/80 backdrop-blur-xl shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] border-b border-slate-200/50 flex items-center mb-6">
         <Link
           to="/dashboard/products"
-          className="mr-3 p-1.5 rounded-full text-slate-500 hover:bg-slate-100 active:bg-slate-200 transition-colors"
+          className="mr-3 p-1.5 rounded-full text-slate-500 hover:bg-slate-100 transition-colors"
         >
           <ArrowLeftIcon className="h-5 w-5" />
         </Link>
@@ -112,164 +122,184 @@ const CreateProduct: React.FC<CreateProductProps> = ({ isEditMode = false, produ
         </h1>
       </div>
 
-      {/* Уведомления */}
+      {/* Ошибка отправки */}
       {errors.submit && (
         <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
           <div className="flex items-center">
-            <XCircleIcon className="h-5 w-5 text-red-500 mr-3" />
+            <XCircleIcon className="h-5 w-5 text-red-500 mr-3 flex-shrink-0" />
             <p className="text-sm text-red-700">{errors.submit}</p>
           </div>
         </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Левая колонка - Основная информация */}
+        {/* Левая колонка */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Основная информация */}
           <div className="bg-white p-6 rounded-2xl shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] ring-1 ring-slate-200/50">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Основная информация</h3>
             <div className="space-y-4">
               <Input
-                id="title"
+                id="name"
                 label="Название товара *"
                 placeholder="Введите название товара"
-                value={formData.title}
-                onChange={(e) => handleChange('title', e.target.value)}
-                error={errors.title}
+                value={formData.name}
+                onChange={(e) => handleChange('name', e.target.value)}
+                error={errors.name}
                 required
               />
               <TextArea
                 id="description"
-                label="Описание *"
+                label="Описание"
                 placeholder="Опишите характеристики и особенности товара"
                 value={formData.description}
                 onChange={(e) => handleChange('description', e.target.value)}
                 error={errors.description}
                 rows={5}
                 resize="none"
-                required
               />
             </div>
           </div>
 
+          {/* Изображение */}
           <div className="bg-white p-6 rounded-2xl shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] ring-1 ring-slate-200/50">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Изображения</h3>
-            <FileUploader
-              fileInputRef={fileInputRef as React.RefObject<HTMLInputElement>}
-              previewImages={previewImages}
-              onFileChange={handleFileChange}
-              onRemoveImage={removeImage}
-              onEditImage={editImage}
-              onPasteFiles={handlePasteFiles}
-              error={errors.images}
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              Изображение товара
+            </h3>
+
+            {imagePreview ? (
+              <div className="relative inline-block">
+                <img
+                  src={imagePreview}
+                  alt="Превью товара"
+                  className="w-48 h-48 object-cover rounded-xl border border-slate-200"
+                />
+                <button
+                  type="button"
+                  onClick={removeImage}
+                  className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-md"
+                  title="Удалить изображение"
+                >
+                  <XMarkIcon className="h-4 w-4" />
+                </button>
+              </div>
+            ) : (
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-colors ${errors.image ? 'border-red-400 bg-red-50' : 'border-slate-300 hover:border-orange-400 hover:bg-orange-50/30'
+                  }`}
+              >
+                <PhotoIcon className="h-12 w-12 mx-auto text-slate-400 mb-3" />
+                <p className="text-sm font-medium text-slate-600">Нажмите для выбора изображения</p>
+                <p className="text-xs text-slate-400 mt-1">PNG, JPG, WebP до 10 МБ</p>
+              </div>
+            )}
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleFileChange}
             />
-          </div>
 
-          <div className="bg-white p-6 rounded-2xl shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] ring-1 ring-slate-200/50">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Габариты (необязательно)</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Input
-                id="length"
-                label="Длина (см)"
-                type="number"
-                placeholder="0"
-                value={formData.length || ''}
-                onChange={(e) => handleNumberChange('length', e.target.value)}
-              />
-              <Input
-                id="width"
-                label="Ширина (см)"
-                type="number"
-                placeholder="0"
-                value={formData.width || ''}
-                onChange={(e) => handleNumberChange('width', e.target.value)}
-              />
-              <Input
-                id="height"
-                label="Высота (см)"
-                type="number"
-                placeholder="0"
-                value={formData.height || ''}
-                onChange={(e) => handleNumberChange('height', e.target.value)}
-              />
-              <Input
-                id="weight"
-                label="Вес (кг)"
-                type="number"
-                placeholder="0.0"
-                value={formData.weight || ''}
-                onChange={(e) => handleNumberChange('weight', e.target.value)}
-              />
-            </div>
+            {errors.image && (
+              <p className="text-xs text-red-500 mt-2">{errors.image}</p>
+            )}
+
+            {!imagePreview && (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="mt-3 text-sm text-orange-600 hover:text-orange-700 font-medium"
+              >
+                Выбрать файл
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Правая колонка - Организация */}
+        {/* Правая колонка */}
         <div className="lg:col-span-1 space-y-6">
+          {/* Организация */}
           <div className="bg-white p-6 rounded-2xl shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] ring-1 ring-slate-200/50">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Организация</h3>
             <div className="space-y-4">
+              {/* Категория (для фильтрации подкатегорий) */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Категория *</label>
-                <Select
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Категория
+                </label>
+                <Select<SelectOption, false>
                   value={selectedCategory}
-                  onChange={(option) => handleSelectChange('category_id', option)}
+                  onChange={handleCategoryChange}
                   options={categories}
                   styles={selectStyles}
-                  placeholder="Выберите категорию"
-                  isLoading={isDataLoading}
+                  placeholder="Сначала выберите категорию..."
+                  isClearable
+                  isDisabled={isDataLoading}
                 />
-                {errors.category_id && <p className="text-xs text-red-500 mt-1">{errors.category_id}</p>}
+                <p className="text-xs text-slate-400 mt-1">Необязательно — для фильтрации подкатегорий</p>
               </div>
+
+              {/* Подкатегория */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Бренд *</label>
-                <Select
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Подкатегория *
+                </label>
+                <Select<SelectOption, false>
+                  value={selectedSubCategory}
+                  onChange={handleSubCategoryChange}
+                  options={subCategories}
+                  styles={selectStyles}
+                  placeholder="Выберите подкатегорию"
+                  isDisabled={isDataLoading}
+                  noOptionsMessage={() => 'Нет подкатегорий'}
+                />
+                {errors.sub_category && (
+                  <p className="text-xs text-red-500 mt-1">{errors.sub_category}</p>
+                )}
+              </div>
+
+              {/* Бренд */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Бренд
+                </label>
+                <Select<SelectOption, false>
                   value={selectedBrand}
-                  onChange={(option) => handleSelectChange('brand_id', option)}
+                  onChange={handleBrandChange}
                   options={brands}
                   styles={selectStyles}
-                  placeholder="Выберите бренд"
-                  isLoading={isDataLoading}
+                  placeholder="Выберите бренд (опционально)"
+                  isClearable
+                  isDisabled={isDataLoading}
+                  noOptionsMessage={() => 'Нет брендов'}
                 />
-                {errors.brand_id && <p className="text-xs text-red-500 mt-1">{errors.brand_id}</p>}
               </div>
+
+              {/* Единица измерения */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Ед. измерения *</label>
-                <Select
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Единица измерения
+                </label>
+                <Select<SelectOption, false>
                   value={selectedUnit}
-                  onChange={(option) => handleSelectChange('unit_id', option)}
+                  onChange={handleUnitChange}
                   options={units}
                   styles={selectStyles}
-                  placeholder="Выберите единицу"
-                  isLoading={isDataLoading}
+                  placeholder="Выберите единицу (опционально)"
+                  isClearable
+                  isDisabled={isDataLoading}
+                  noOptionsMessage={() => 'Нет единиц измерения'}
                 />
-                {errors.unit_id && <p className="text-xs text-red-500 mt-1">{errors.unit_id}</p>}
               </div>
-              <Input
-                id="article"
-                label="Артикул"
-                placeholder="Введите артикул товара"
-                value={formData.article || ''}
-                onChange={(e) => handleNumberChange('article', e.target.value)}
-              />
             </div>
-          </div>
-          <div className="bg-white p-6 rounded-2xl shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] ring-1 ring-slate-200/50">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Цена</h3>
-            <Input
-              id="price"
-              label="Цена (₸) *"
-              type="number"
-              placeholder="0"
-              value={formData.price || ''}
-              onChange={(e) => handlePriceChange(e.target.value)}
-              error={errors.price}
-              required
-            />
           </div>
         </div>
       </div>
 
-      {/* Кнопки действий (Десктоп) */}
+      {/* Кнопки — Десктоп */}
       <div className="hidden md:flex justify-end gap-3 pt-5 border-t border-slate-200/60 mt-8">
         <Link
           to="/dashboard/products"
@@ -280,30 +310,44 @@ const CreateProduct: React.FC<CreateProductProps> = ({ isEditMode = false, produ
         <button
           type="submit"
           disabled={isLoading}
-          className="py-2 px-5 bg-orange-600 text-white rounded-xl shadow-[0_2px_8px_-2px_rgba(249,115,22,0.6)] text-sm font-medium hover:bg-orange-700 active:scale-[0.98] transition-all disabled:opacity-50 disabled:active:scale-100 flex items-center"
+          className="py-2 px-5 bg-orange-600 text-white rounded-xl shadow-[0_2px_8px_-2px_rgba(249,115,22,0.6)] text-sm font-medium hover:bg-orange-700 active:scale-[0.98] transition-all disabled:opacity-50 flex items-center"
         >
-          {isLoading && <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></span>}
+          {isLoading && (
+            <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2" />
+          )}
           {isEditMode ? 'Сохранить изменения' : 'Создать товар'}
         </button>
       </div>
 
-      {/* Фиксированное нижнее меню с кнопками (Мобилка) */}
-      <div className="md:hidden fixed bottom-16 sm:bottom-20 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-slate-200/50 p-4 flex z-[80] shadow-[0_-4px_24px_-8px_rgba(0,0,0,0.08)] pb-safe">
+      {/* Кнопки — Мобилка */}
+      <div className="md:hidden fixed bottom-16 sm:bottom-20 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-slate-200/50 p-4 flex z-[80] shadow-[0_-4px_24px_-8px_rgba(0,0,0,0.08)]">
         <Link
           to="/dashboard/products"
-          className="flex-1 mr-3 py-3 px-4 border border-slate-200/60 bg-slate-50 text-slate-700 rounded-xl text-center text-sm font-medium hover:bg-slate-100 active:bg-slate-200 transition-colors"
+          className="flex-1 mr-3 py-3 px-4 border border-slate-200/60 bg-slate-50 text-slate-700 rounded-xl text-center text-sm font-medium hover:bg-slate-100 transition-colors"
         >
           Отмена
         </Link>
         <button
           type="submit"
           disabled={isLoading}
-          className="flex-[2] py-3 px-4 bg-orange-600 text-white rounded-xl shadow-[0_2px_12px_-4px_rgba(249,115,22,0.6)] text-sm font-medium flex items-center justify-center hover:bg-orange-700 active:scale-[0.98] transition-all disabled:opacity-50 disabled:active:scale-100"
+          className="flex-[2] py-3 px-4 bg-orange-600 text-white rounded-xl shadow-[0_2px_12px_-4px_rgba(249,115,22,0.6)] text-sm font-medium flex items-center justify-center hover:bg-orange-700 active:scale-[0.98] transition-all disabled:opacity-50"
         >
-          {isLoading && <span className="inline-block h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>}
+          {isLoading && (
+            <span className="inline-block h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+          )}
           {isEditMode ? 'Сохранить' : 'Создать товар'}
         </button>
       </div>
+
+      {/* Image Editor Modal */}
+      {isImageEditorOpen && tempImageForEdit && (
+        <ImageEditor
+          imageUrl={tempImageForEdit}
+          onSave={handleImageEditSave}
+          onCancel={handleImageEditCancel}
+          fileName={tempImageFileName}
+        />
+      )}
     </form>
   );
 };
