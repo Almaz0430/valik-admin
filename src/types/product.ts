@@ -54,6 +54,12 @@ export interface Product {
   name: string;
   description?: string | null;
   image?: string | null;
+  article?: number | null;
+  length?: string | number | null;
+  width?: string | number | null;
+  height?: string | number | null;
+  weight?: string | number | null;
+  price: string | number;
   active: boolean;
   created_at?: string | null;
   region_settings?: ProductRegionSettings[];
@@ -70,6 +76,12 @@ export interface CreateProductDTO {
   name: string;
   description?: string;
   image?: File;
+  article?: number | null;
+  length?: number | null;
+  width?: number | null;
+  height?: number | null;
+  weight?: number | null;
+  price?: number;
 }
 
 /**

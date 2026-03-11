@@ -161,6 +161,70 @@ const CreateProduct: React.FC<CreateProductProps> = ({ isEditMode = false, produ
             </div>
           </div>
 
+          {/* Цена и логистика */}
+          <div className="bg-white p-6 rounded-2xl shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] ring-1 ring-slate-200/50">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Цена и характеристики</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                id="article"
+                label="Артикул"
+                type="number"
+                placeholder="1001"
+                value={formData.article}
+                onChange={(e) => handleChange('article', e.target.value)}
+                error={errors.article}
+              />
+              <Input
+                id="price"
+                label="Цена *"
+                type="number"
+                placeholder="0.00"
+                value={formData.price}
+                onChange={(e) => handleChange('price', e.target.value)}
+                error={errors.price}
+                required
+              />
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+              <Input
+                id="length"
+                label="Длина (см)"
+                type="number"
+                step="0.01"
+                placeholder="0.00"
+                value={formData.length}
+                onChange={(e) => handleChange('length', e.target.value)}
+              />
+              <Input
+                id="width"
+                label="Ширина (см)"
+                type="number"
+                step="0.01"
+                placeholder="0.00"
+                value={formData.width}
+                onChange={(e) => handleChange('width', e.target.value)}
+              />
+              <Input
+                id="height"
+                label="Высота (см)"
+                type="number"
+                step="0.01"
+                placeholder="0.00"
+                value={formData.height}
+                onChange={(e) => handleChange('height', e.target.value)}
+              />
+              <Input
+                id="weight"
+                label="Вес (кг)"
+                type="number"
+                step="0.01"
+                placeholder="0.00"
+                value={formData.weight}
+                onChange={(e) => handleChange('weight', e.target.value)}
+              />
+            </div>
+          </div>
+
           {/* Изображение */}
           <div className="bg-white p-6 rounded-2xl shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] ring-1 ring-slate-200/50">
             <h3 className="text-lg font-medium text-gray-900 mb-4">

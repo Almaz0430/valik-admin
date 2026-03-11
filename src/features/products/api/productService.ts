@@ -80,6 +80,24 @@ class ProductService {
       if (data.image) {
         formData.append('image', data.image);
       }
+      if (data.article !== undefined && data.article !== null) {
+        formData.append('article', String(data.article));
+      }
+      if (data.length !== undefined && data.length !== null) {
+        formData.append('length', String(data.length));
+      }
+      if (data.width !== undefined && data.width !== null) {
+        formData.append('width', String(data.width));
+      }
+      if (data.height !== undefined && data.height !== null) {
+        formData.append('height', String(data.height));
+      }
+      if (data.weight !== undefined && data.weight !== null) {
+        formData.append('weight', String(data.weight));
+      }
+      if (data.price !== undefined && data.price !== null) {
+        formData.append('price', String(data.price));
+      }
 
       const response = await api.post<Product>('/product/opt-products/', formData);
       return response.data;
@@ -253,6 +271,24 @@ class ProductService {
       }
       if (data.image) {
         formData.append('image', data.image);
+      }
+      if (data.article !== undefined && data.article !== null) {
+        formData.append('article', String(data.article));
+      }
+      if (data.length !== undefined && data.length !== null) {
+        formData.append('length', String(data.length));
+      }
+      if (data.width !== undefined && data.width !== null) {
+        formData.append('width', String(data.width));
+      }
+      if (data.height !== undefined && data.height !== null) {
+        formData.append('height', String(data.height));
+      }
+      if (data.weight !== undefined && data.weight !== null) {
+        formData.append('weight', String(data.weight));
+      }
+      if (data.price !== undefined && data.price !== null) {
+        formData.append('price', String(data.price));
       }
 
       const response = await api.put<Product>(`/product/opt-products/${id}/`, formData);

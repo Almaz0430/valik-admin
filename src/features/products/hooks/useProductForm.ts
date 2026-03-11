@@ -36,6 +36,12 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
     sub_category: null as number | null,
     brand: null as number | null,
     unit: null as number | null,
+    article: '' as string | number,
+    length: '' as string | number,
+    width: '' as string | number,
+    height: '' as string | number,
+    weight: '' as string | number,
+    price: '' as string | number,
   });
 
   // Данные для дропдаунов
@@ -93,30 +99,36 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
         // Режим редактирования — загружаем данные товара
         if (isEditMode && productId) {
           const product = await productService.getProduct(productId);
-          
+
           // Получаем ID бренда и единицы измерения
-          const brandId = product.brand 
+          const brandId = product.brand
             ? (typeof product.brand === 'object' ? product.brand.id : product.brand)
             : null;
-          const unitId = product.unit 
+          const unitId = product.unit
             ? (typeof product.unit === 'object' ? product.unit.id : product.unit)
             : null;
-          
+
           setFormData({
             name: product.name,
             description: product.description || '',
-            sub_category: typeof product.sub_category === 'object' && product.sub_category 
-              ? product.sub_category.id 
+            sub_category: typeof product.sub_category === 'object' && product.sub_category
+              ? product.sub_category.id
               : product.sub_category,
             brand: brandId,
             unit: unitId,
+            article: product.article || '',
+            length: product.length || '',
+            width: product.width || '',
+            height: product.height || '',
+            weight: product.weight || '',
+            price: product.price || '',
           });
 
           // Устанавливаем выбранную подкатегорию
           const subCategoryId = typeof product.sub_category === 'object' && product.sub_category
             ? product.sub_category.id
             : product.sub_category;
-            
+
           if (subCategoryId) {
             const subOpt = subOptions.find(s => s.value === subCategoryId) || null;
             setSelectedSubCategory(subOpt);
@@ -281,6 +293,12 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
         name: formData.name,
         description: formData.description || undefined,
         image: imageFile || undefined,
+        article: formData.article ? Number(formData.article) : null,
+        length: formData.length ? Number(formData.length) : null,
+        width: formData.width ? Number(formData.width) : null,
+        height: formData.height ? Number(formData.height) : null,
+        weight: formData.weight ? Number(formData.weight) : null,
+        price: formData.price ? Number(formData.price) : undefined,
       };
 
       if (isEditMode && productId) {
