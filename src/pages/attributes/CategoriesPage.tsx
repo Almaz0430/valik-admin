@@ -220,7 +220,7 @@ const CategoriesPage: React.FC<CategoriesPageProps> = ({ isStandalone = false })
           cat.id === parentId
             ? { ...cat, sub_categories: [...(cat.sub_categories || []), result as SubCategory] }
             : cat
-        ));
+        ) as Category[]);
       } else {
         // Если это основная категория, добавляем её в начало списка
         setCategories(prev => [result as Category, ...prev]);

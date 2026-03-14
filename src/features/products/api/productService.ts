@@ -99,7 +99,7 @@ class ProductService {
         formData.append('price', String(data.price));
       }
 
-      const response = await api.post<Product>('/product/opt-products/', formData);
+      const response = await api.post<Product>('/product/opt-products/create/', formData);
       return response.data;
     } catch (error) {
       console.error('Ошибка при создании товара:', error);
