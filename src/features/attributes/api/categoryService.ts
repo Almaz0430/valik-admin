@@ -85,7 +85,7 @@ class CategoryService {
   async createCategory(categoryData: {
     name: string;
     parent_id: number | null;
-  }): Promise<Category | any> {
+  }): Promise<Category | SubCategory> {
     try {
       // Если есть parent_id, создаем подкатегорию
       if (categoryData.parent_id) {

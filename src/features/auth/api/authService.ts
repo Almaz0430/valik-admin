@@ -33,15 +33,15 @@ class AuthService {
       if (error && typeof error === 'object' && 'response' in error) {
         const err = error as {
           response?: {
-            data?: Record<string, any>
+            data?: Record<string, string | string[] | number | boolean>
           }
         };
 
         const data = err.response?.data;
 
         if (data && typeof data === 'object' && !Array.isArray(data)) {
-          if (data.message) return Promise.reject(new Error(this.translateError(data.message)));
-          if (data.detail) return Promise.reject(new Error(this.translateError(data.detail)));
+          if (data.message) return Promise.reject(new Error(this.translateError(String(data.message))));
+          if (data.detail) return Promise.reject(new Error(this.translateError(String(data.detail))));
 
           for (const key in data) {
             const fieldError = data[key];
@@ -62,7 +62,7 @@ class AuthService {
    */
   async register(data: RegisterData): Promise<AuthResponse> {
     try {
-      const response = await api.post<any>('/vendor/register/', data);
+      const response = await api.post<AuthResponse>('/vendor/register/', data);
       const authResponse = response.data;
 
       // Если бэкенд вернул токены сразу — сохраняем их
@@ -80,7 +80,7 @@ class AuthService {
       if (error && typeof error === 'object' && 'response' in error) {
         const err = error as {
           response?: {
-            data?: Record<string, any>
+            data?: Record<string, string | string[] | number | boolean>
           }
         };
 
@@ -88,8 +88,8 @@ class AuthService {
 
         // Если это объект с полями (типично для Django Rest Framework)
         if (data && typeof data === 'object' && !Array.isArray(data)) {
-          if (data.message) return Promise.reject(new Error(this.translateError(data.message)));
-          if (data.detail) return Promise.reject(new Error(this.translateError(data.detail)));
+          if (data.message) return Promise.reject(new Error(this.translateError(String(data.message))));
+          if (data.detail) return Promise.reject(new Error(this.translateError(String(data.detail))));
 
           // Извлекаем первую ошибку из любого поля
           for (const key in data) {

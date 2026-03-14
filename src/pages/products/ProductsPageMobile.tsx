@@ -22,14 +22,14 @@ const ProductCard: React.FC<{
       <div className="p-4 sm:p-5">
         <div className="flex items-start gap-4 mb-4">
           <div className="h-14 w-14 bg-slate-100/80 rounded-xl flex-shrink-0 flex items-center justify-center ring-1 ring-slate-200 overflow-hidden">
-            {product.images && product.images.length > 0 ? (
-              <img src={product.images[0]} alt={product.title} className="w-full h-full object-cover" />
+            {product.image ? (
+              <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
             ) : (
               <Package className="h-7 w-7 text-slate-400" strokeWidth={1.5} />
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-slate-900 leading-tight mb-1 truncate">{product.title}</h3>
+            <h3 className="font-bold text-slate-900 leading-tight mb-1 truncate">{product.name}</h3>
             <p className="text-xs font-medium text-slate-500">Арт: {product.article || 'Не указан'}</p>
           </div>
         </div>
@@ -41,20 +41,16 @@ const ProductCard: React.FC<{
           </div>
           <div className="bg-slate-50 p-3 rounded-xl border border-slate-100/80">
             <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Категория</p>
-            <p className="font-semibold text-slate-900 truncate">{product.category_name || 'Не указана'}</p>
+            <p className="font-semibold text-slate-900 truncate">
+              {typeof product.sub_category === 'object' ? product.sub_category?.name : 'Не указана'}
+            </p>
           </div>
         </div>
 
         <div className="flex justify-between items-center mt-1">
-          <span className={`px-2.5 py-1 inline-flex text-xs font-semibold rounded-lg ring-1 ring-inset ${product.status === 'active' ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/20' :
-            product.status === 'pending' ? 'bg-amber-50 text-amber-700 ring-amber-600/20' :
-              product.status === 'draft' ? 'bg-slate-50 text-slate-700 ring-slate-600/20' :
-                'bg-slate-50 text-slate-700 ring-slate-600/20'
+          <span className={`px-2.5 py-1 inline-flex text-xs font-semibold rounded-lg ring-1 ring-inset ${product.active ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/20' : 'bg-slate-50 text-slate-700 ring-slate-600/20'
             }`}>
-            {product.status === 'active' ? 'Активный' :
-              product.status === 'pending' ? 'На проверке' :
-                product.status === 'draft' ? 'Черновик' :
-                  'Неактивный'}
+            {product.active ? 'Активный' : 'Неактивный'}
           </span>
 
           <div className="flex items-center space-x-1">

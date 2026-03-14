@@ -41,7 +41,9 @@ const LoginPage = () => {
       };
 
       // Сохраняем данные авторизации в контексте
-      setAuthData(supplierData, response.access);
+      if (response.access) {
+        setAuthData(supplierData, response.access);
+      }
 
       // Перенаправляем на панель управления
       navigate('/dashboard');

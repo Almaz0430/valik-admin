@@ -54,7 +54,7 @@ const ProductsPage: React.FC = () => {
 
   const handleDeleteConfirm = useCallback(async () => {
     if (!productToDelete) return;
-    
+
     try {
       await productService.deleteProduct(productToDelete);
       setDeleteModalOpen(false);
@@ -139,17 +139,6 @@ const ProductsPage: React.FC = () => {
     return pages;
   }, [totalPages, queryParams.page]);
 
-  // Если идет перенаправление, показываем загрузку
-  if (isReady && isMobile) {
-    return (
-      <Layout>
-        <div className="flex justify-center items-center h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
-        </div>
-      </Layout>
-    );
-  }
-
   // Форматирование даты
   const formatDate = useCallback((dateString: string | null | undefined) => {
     if (!dateString) return 'Не указано';
@@ -163,6 +152,17 @@ const ProductsPage: React.FC = () => {
       minute: '2-digit'
     });
   }, []);
+
+  // Если идет перенаправление, показываем загрузку
+  if (isReady && isMobile) {
+    return (
+      <Layout>
+        <div className="flex justify-center items-center h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -470,8 +470,8 @@ const ProductsPage: React.FC = () => {
                     <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center">
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 text-center">Подкатегория</p>
                       <p className="text-sm font-bold text-slate-900 text-center">
-                        {typeof selectedProduct.sub_category === 'object' && selectedProduct.sub_category 
-                          ? selectedProduct.sub_category.name 
+                        {typeof selectedProduct.sub_category === 'object' && selectedProduct.sub_category
+                          ? selectedProduct.sub_category.name
                           : selectedProduct.sub_category ?? '—'}
                       </p>
                     </div>

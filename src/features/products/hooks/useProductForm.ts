@@ -62,7 +62,6 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
   const [isImageEditorOpen, setIsImageEditorOpen] = useState(false);
   const [tempImageForEdit, setTempImageForEdit] = useState<string | null>(null);
   const [tempImageFileName, setTempImageFileName] = useState<string>('product-image.jpg');
@@ -154,7 +153,6 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
           }
 
           if (product.image) {
-            setExistingImageUrl(product.image);
             setImagePreview(product.image);
           }
         }
@@ -253,7 +251,6 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
     }
     setImageFile(null);
     setImagePreview(null);
-    setExistingImageUrl(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -264,7 +261,7 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
         URL.revokeObjectURL(imagePreview);
       }
     };
-  }, []);
+  }, [imagePreview]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};

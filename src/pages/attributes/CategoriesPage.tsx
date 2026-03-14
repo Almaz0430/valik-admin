@@ -3,7 +3,7 @@
  */
 import React, { useState, useEffect } from 'react';
 import Layout from '../../components/layout/Layout';
-import { categoryService, type Category } from '../../features/attributes';
+import { categoryService, type Category, type SubCategory } from '../../features/attributes';
 import ConfirmationModal from '../../components/ui/ConfirmationModal';
 import Select, { type SingleValue, type StylesConfig } from 'react-select';
 
@@ -113,7 +113,7 @@ const CategoriesPage: React.FC<CategoriesPageProps> = ({ isStandalone = false })
         ]);
 
         // Группируем подкатегории по родительской категории
-        const subCategoriesByParent = (subCategories || []).reduce((acc: Record<number, any[]>, sub) => {
+        const subCategoriesByParent = (subCategories || []).reduce((acc: Record<number, SubCategory[]>, sub) => {
           if (!acc[sub.category]) acc[sub.category] = [];
           acc[sub.category].push(sub);
           return acc;
@@ -218,12 +218,12 @@ const CategoriesPage: React.FC<CategoriesPageProps> = ({ isStandalone = false })
         // Если это была подкатегория, добавляем её в список подкатегорий родителя
         setCategories(prev => prev.map(cat =>
           cat.id === parentId
-            ? { ...cat, sub_categories: [...(cat.sub_categories || []), result] }
+            ? { ...cat, sub_categories: [...(cat.sub_categories || []), result as SubCategory] }
             : cat
         ));
       } else {
         // Если это основная категория, добавляем её в начало списка
-        setCategories(prev => [result, ...prev]);
+        setCategories(prev => [result as Category, ...prev]);
         setTotalCategories(prev => prev + 1);
       }
 
@@ -317,7 +317,7 @@ const CategoriesPage: React.FC<CategoriesPageProps> = ({ isStandalone = false })
                       categoryService.getSubCategories()
                     ]);
 
-                    const subCategoriesByParent = (subCategories || []).reduce((acc: Record<number, any[]>, sub) => {
+                    const subCategoriesByParent = (subCategories || []).reduce((acc: Record<number, SubCategory[]>, sub) => {
                       if (!acc[sub.category]) acc[sub.category] = [];
                       acc[sub.category].push(sub);
                       return acc;
