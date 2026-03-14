@@ -102,17 +102,33 @@ const CategoriesPage: React.FC<CategoriesPageProps> = ({ isStandalone = false })
 
   // Загрузка категории при монтировании компонента
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchData = async () => {
       setIsLoading(true);
       setError(null);
 
       try {
-        const response = await categoryService.getCategories({ limit: 1000 }); // Получаем все категории
+        const [categoriesResponse, subCategories] = await Promise.all([
+          categoryService.getCategories({ limit: 1000 }),
+          categoryService.getSubCategories()
+        ]);
 
-        setCategories(response.categories);
-        setTotalCategories(response.total);
+        // Группируем подкатегории по родительской категории
+        const subCategoriesByParent = (subCategories || []).reduce((acc: Record<number, any[]>, sub) => {
+          if (!acc[sub.category]) acc[sub.category] = [];
+          acc[sub.category].push(sub);
+          return acc;
+        }, {});
+
+        // Обогащаем основные категории подкатегориями
+        const enrichedCategories = categoriesResponse.categories.map(cat => ({
+          ...cat,
+          sub_categories: subCategoriesByParent[cat.id] || []
+        }));
+
+        setCategories(enrichedCategories);
+        setTotalCategories(categoriesResponse.total);
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Произошла ошибка при загрузке категорий';
+        const errorMessage = err instanceof Error ? err.message : 'Произошла ошибка при загрузке данных';
         setError(errorMessage);
         console.error(err);
       } finally {
@@ -120,7 +136,7 @@ const CategoriesPage: React.FC<CategoriesPageProps> = ({ isStandalone = false })
       }
     };
 
-    fetchCategories();
+    fetchData();
   }, []);
 
   const [isDeletingSubCategory, setIsDeletingSubCategory] = useState<boolean>(false);
@@ -148,7 +164,7 @@ const CategoriesPage: React.FC<CategoriesPageProps> = ({ isStandalone = false })
           setCategories(categories.filter(category => category.id !== categoryToDelete));
           setTotalCategories(prev => prev - 1);
         }
-        
+
         setDeleteModalOpen(false);
         setCategoryToDelete(null);
       } catch (err) {
@@ -200,8 +216,8 @@ const CategoriesPage: React.FC<CategoriesPageProps> = ({ isStandalone = false })
 
       if (parentId) {
         // Если это была подкатегория, добавляем её в список подкатегорий родителя
-        setCategories(prev => prev.map(cat => 
-          cat.id === parentId 
+        setCategories(prev => prev.map(cat =>
+          cat.id === parentId
             ? { ...cat, sub_categories: [...(cat.sub_categories || []), result] }
             : cat
         ));
@@ -293,19 +309,35 @@ const CategoriesPage: React.FC<CategoriesPageProps> = ({ isStandalone = false })
               onClick={() => {
                 setError(null);
                 setIsLoading(true);
-                setTimeout(() => {
-                  categoryService.getCategories({ limit: 1000 })
-                    .then(response => {
-                      setCategories(response.categories);
-                      setTotalCategories(response.total);
-                      setIsLoading(false);
-                    })
-                    .catch(err => {
-                      const errorMessage = err instanceof Error ? err.message : 'Произошла ошибка при загрузке категорий';
-                      setError(errorMessage);
-                      setIsLoading(false);
-                    });
-                }, 500);
+                // Повторная попытка загрузки
+                const fetchData = async () => {
+                  try {
+                    const [categoriesResponse, subCategories] = await Promise.all([
+                      categoryService.getCategories({ limit: 1000 }),
+                      categoryService.getSubCategories()
+                    ]);
+
+                    const subCategoriesByParent = (subCategories || []).reduce((acc: Record<number, any[]>, sub) => {
+                      if (!acc[sub.category]) acc[sub.category] = [];
+                      acc[sub.category].push(sub);
+                      return acc;
+                    }, {});
+
+                    const enrichedCategories = categoriesResponse.categories.map(cat => ({
+                      ...cat,
+                      sub_categories: subCategoriesByParent[cat.id] || []
+                    }));
+
+                    setCategories(enrichedCategories);
+                    setTotalCategories(categoriesResponse.total);
+                    setIsLoading(false);
+                  } catch (err) {
+                    const errorMessage = err instanceof Error ? err.message : 'Произошла ошибка при загрузке данных';
+                    setError(errorMessage);
+                    setIsLoading(false);
+                  }
+                };
+                fetchData();
               }}
               className="mt-3 text-orange-600 hover:text-orange-800"
             >
@@ -417,8 +449,8 @@ const CategoriesPage: React.FC<CategoriesPageProps> = ({ isStandalone = false })
                   {selectedCategory ? 'Создание подкатегории' : 'Создание категории'}
                 </h3>
                 <p className="mt-1 text-sm text-slate-500 font-medium">
-                  {selectedCategory 
-                    ? `Добавление в "${selectedCategory.label}"` 
+                  {selectedCategory
+                    ? `Добавление в "${selectedCategory.label}"`
                     : 'Добавление новой основной категории'}
                 </p>
               </div>

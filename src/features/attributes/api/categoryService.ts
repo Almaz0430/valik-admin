@@ -4,6 +4,7 @@
 import { api } from '../../../utils/axiosConfig';
 import type {
   Category,
+  SubCategory,
   CategoryListResponse,
   AttributeQueryParams,
 } from '../../../types/attribute';
@@ -41,6 +42,23 @@ class CategoryService {
         throw new Error(err.response?.data?.message || 'Ошибка при получении списка категорий');
       }
       throw new Error('Ошибка при получении списка категорий');
+    }
+  }
+
+  /**
+   * Получение списка всех подкатегорий
+   */
+  async getSubCategories(): Promise<SubCategory[]> {
+    try {
+      const response = await api.get<SubCategory[]>('/product/subcategory/');
+      return Array.isArray(response.data) ? response.data : [];
+    } catch (error) {
+      console.error('Ошибка при запросе подкатегорий:', error);
+      if (error && typeof error === 'object' && 'response' in error) {
+        const err = error as { response?: { data?: { message?: string } } };
+        throw new Error(err.response?.data?.message || 'Ошибка при получении подкатегорий');
+      }
+      throw new Error('Ошибка при получении подкатегорий');
     }
   }
 
