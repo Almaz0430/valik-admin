@@ -292,7 +292,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ isEditMode = false, produ
               {/* Категория (для фильтрации подкатегорий) */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Категория
+                  Категория *
                 </label>
                 <Select<SelectOption, false>
                   value={selectedCategory}
@@ -303,13 +303,16 @@ const CreateProduct: React.FC<CreateProductProps> = ({ isEditMode = false, produ
                   isClearable
                   isDisabled={isDataLoading}
                 />
-                <p className="text-xs text-slate-400 mt-1">Необязательно — для фильтрации подкатегорий</p>
+                <p className="text-xs text-slate-400 mt-1">Обязательно для заполнения</p>
+                {errors.category && (
+                  <p className="text-xs text-red-500 mt-1">{errors.category}</p>
+                )}
               </div>
 
               {/* Подкатегория */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Подкатегория *
+                  Подкатегория
                 </label>
                 <Select<SelectOption, false>
                   value={selectedSubCategory}

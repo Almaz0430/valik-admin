@@ -182,6 +182,10 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
     setSelectedSubCategory(null);
     setFormData(prev => ({ ...prev, sub_category: null }));
 
+    if (errors.category) {
+      setErrors(prev => { const e = { ...prev }; delete e.category; return e; });
+    }
+
     if (option) {
       const filtered = allSubCategories
         .filter(sc => sc.category === option.value)
@@ -265,7 +269,8 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
     if (!formData.name.trim()) newErrors.name = 'Введите название товара';
-    if (!formData.sub_category) newErrors.sub_category = 'Выберите подкатегорию';
+    if (!selectedCategory) newErrors.category = 'Выберите категорию';
+    // if (!formData.sub_category) newErrors.sub_category = 'Выберите подкатегорию';
     // Изображение не обязательно - можно добавить в любой момент
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
