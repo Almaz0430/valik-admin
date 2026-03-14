@@ -453,59 +453,56 @@ const ProductsPage: React.FC = () => {
 
             {/* Content Body */}
             <div className="p-6 overflow-y-auto custom-scrollbar">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Left Column: Info */}
+                <div className="space-y-6">
+                  {/* Name and Description */}
+                  <div className="bg-slate-50/50 rounded-2xl p-5 ring-1 ring-slate-100 border border-slate-100/50">
+                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">О продукте</h4>
+                    <h3 className="text-xl font-bold text-slate-900 mb-3">{selectedProduct.name}</h3>
+                    <p className="text-sm font-medium text-slate-600 leading-relaxed italic">
+                      {selectedProduct.description || 'Описание не заполнено производителем'}
+                    </p>
+                  </div>
 
-              {/* Product Main Info Card */}
-              <div className="bg-slate-50/80 rounded-2xl p-5 mb-6 ring-1 ring-slate-100 border border-slate-100/50 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 rounded-bl-full -z-10"></div>
-                <h4 className="text-lg font-bold text-slate-900 mb-2 pr-12">{selectedProduct.name}</h4>
-                <p className="text-sm font-medium text-slate-600 leading-relaxed">{selectedProduct.description || 'Описание отсутствует'}</p>
+                  {/* Attributes Grid */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 text-center">Подкатегория</p>
+                      <p className="text-sm font-bold text-slate-900 text-center">
+                        {typeof selectedProduct.sub_category === 'object' && selectedProduct.sub_category 
+                          ? selectedProduct.sub_category.name 
+                          : selectedProduct.sub_category ?? '—'}
+                      </p>
+                    </div>
+                    <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 text-center">Дата добавления</p>
+                      <p className="text-sm font-bold text-slate-900 text-center">{formatDate(selectedProduct.created_at)}</p>
+                    </div>
+                  </div>
+                </div>
 
-                <div className={`mt-4 inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-bold ${selectedProduct.active ? 'bg-green-100/50 text-green-700 ring-1 ring-inset ring-green-600/20' : 'bg-slate-100 text-slate-500'
-                  }`}>
-                  {selectedProduct.active ? 'Активен' : 'Скрыт'}
+                {/* Right Column: Image */}
+                <div className="flex flex-col items-center">
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 w-full">Визуализация</h4>
+                  {selectedProduct.image ? (
+                    <div className="w-full aspect-square max-w-[280px] bg-slate-50 rounded-3xl overflow-hidden ring-1 ring-slate-200/50 border-4 border-white shadow-xl group">
+                      <img
+                        src={selectedProduct.image}
+                        alt={selectedProduct.name}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-full aspect-square max-w-[280px] rounded-3xl bg-slate-50 flex flex-col items-center justify-center border-2 border-dashed border-slate-200 text-slate-400">
+                      <svg className="w-12 h-12 mb-2 opacity-50" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <p className="text-xs font-bold">Изображение отсутствует</p>
+                    </div>
+                  )}
                 </div>
               </div>
-
-              {/* Attributes Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
-                <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center">
-                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">ID товара</p>
-                  <p className="text-sm font-bold text-slate-900">{selectedProduct.id}</p>
-                </div>
-                <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center">
-                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Вендор</p>
-                  <p className="text-sm font-bold text-slate-900">{selectedProduct.vendor}</p>
-                </div>
-                <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center">
-                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Подкатегория</p>
-                  <p className="text-sm font-bold text-slate-900">
-                    {typeof selectedProduct.sub_category === 'object' && selectedProduct.sub_category 
-                      ? selectedProduct.sub_category.name 
-                      : selectedProduct.sub_category ?? '—'}
-                  </p>
-                </div>
-                <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center col-span-2 sm:col-span-3">
-                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Дата создания</p>
-                  <p className="text-sm font-bold text-slate-900">{formatDate(selectedProduct.created_at)}</p>
-                </div>
-              </div>
-
-              {/* Image */}
-              <div className="mt-6 pt-6 border-t border-slate-100/80">
-                <h4 className="text-sm font-bold text-slate-900 mb-3">Изображение</h4>
-                {selectedProduct.image ? (
-                  <div className="w-40 h-40 rounded-2xl overflow-hidden ring-1 ring-slate-100 border border-slate-100 shadow-sm">
-                    <img
-                      src={selectedProduct.image}
-                      alt={selectedProduct.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ) : (
-                  <div className="p-4 rounded-2xl bg-slate-50 text-center border border-slate-100 border-dashed">
-                    <p className="text-sm font-medium text-slate-500">Изображение отсутствует</p>
-                  </div>
-                )}</div>
             </div>
 
             {/* Footer */}

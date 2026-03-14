@@ -62,22 +62,34 @@ class CategoryService {
   }
 
   /**
-   * Создание новой категории
+   * Создание новой категории или подкатегории
    */
   async createCategory(categoryData: {
     name: string;
     parent_id: number | null;
-  }): Promise<Category> {
+  }): Promise<Category | any> {
     try {
-      const response = await api.post<Category>('/product/category/', categoryData);
+      // Если есть parent_id, создаем подкатегорию
+      if (categoryData.parent_id) {
+        const response = await api.post('/product/subcategory/', {
+          name: categoryData.name,
+          category: categoryData.parent_id,
+        });
+        return response.data;
+      }
+
+      // Иначе создаем обычную категорию
+      const response = await api.post<Category>('/product/category/', {
+        name: categoryData.name,
+      });
       return response.data;
     } catch (error) {
-      console.error('Ошибка при создании категории:', error);
+      console.error('Ошибка при создании:', error);
       if (error && typeof error === 'object' && 'response' in error) {
         const err = error as { response?: { data?: { message?: string } } };
-        throw new Error(err.response?.data?.message || 'Ошибка при создании категории');
+        throw new Error(err.response?.data?.message || 'Ошибка при создании');
       }
-      throw new Error('Ошибка при создании категории');
+      throw new Error('Ошибка при создании');
     }
   }
 
@@ -101,20 +113,21 @@ class CategoryService {
   }
 
   /**
-   * Удаление категории
+   * Удаление категории или подкатегории
    */
-  async deleteCategory(id: number): Promise<void> {
+  async deleteCategory(id: number, isSubCategory: boolean = false): Promise<void> {
     try {
-      await api.delete(`/product/category/${id}/`);
+      const endpoint = isSubCategory ? `/product/subcategory/${id}/` : `/product/category/${id}/`;
+      await api.delete(endpoint);
     } catch (error) {
-      console.error(`Ошибка при удалении категории ${id}:`, error);
+      console.error(`Ошибка при удалении ${id}:`, error);
       if (error && typeof error === 'object' && 'response' in error) {
         const err = error as { response?: { data?: { message?: string } } };
         throw new Error(
-          err.response?.data?.message || `Ошибка при удалении категории с ID ${id}`,
+          err.response?.data?.message || `Ошибка при удалении с ID ${id}`,
         );
       }
-      throw new Error(`Ошибка при удалении категории с ID ${id}`);
+      throw new Error(`Ошибка при удалении с ID ${id}`);
     }
   }
 }

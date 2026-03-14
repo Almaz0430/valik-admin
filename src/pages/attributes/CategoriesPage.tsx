@@ -123,24 +123,36 @@ const CategoriesPage: React.FC<CategoriesPageProps> = ({ isStandalone = false })
     fetchCategories();
   }, []);
 
+  const [isDeletingSubCategory, setIsDeletingSubCategory] = useState<boolean>(false);
+
   // Обработчик удаления категории
-  const handleDeleteClick = (id: number) => {
+  const handleDeleteClick = (id: number, isSub: boolean = false) => {
     setCategoryToDelete(id);
+    setIsDeletingSubCategory(isSub);
     setDeleteModalOpen(true);
   };
 
   const handleDeleteConfirm = async () => {
     if (categoryToDelete) {
       try {
-        await categoryService.deleteCategory(categoryToDelete);
+        await categoryService.deleteCategory(categoryToDelete, isDeletingSubCategory);
 
-        // Обновляем список категорий после удаления
-        setCategories(categories.filter(category => category.id !== categoryToDelete));
-        setTotalCategories(prev => prev - 1);
+        if (isDeletingSubCategory) {
+          // Обновляем вложенные списки
+          setCategories(prev => prev.map(cat => ({
+            ...cat,
+            sub_categories: cat.sub_categories?.filter(sub => sub.id !== categoryToDelete)
+          })));
+        } else {
+          // Удаляем основную категорию
+          setCategories(categories.filter(category => category.id !== categoryToDelete));
+          setTotalCategories(prev => prev - 1);
+        }
+        
         setDeleteModalOpen(false);
         setCategoryToDelete(null);
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Произошла ошибка при удалении категории';
+        const errorMessage = err instanceof Error ? err.message : 'Произошла ошибка при удалении';
         alert(errorMessage);
         console.error(err);
         setDeleteModalOpen(false);
@@ -173,26 +185,35 @@ const CategoriesPage: React.FC<CategoriesPageProps> = ({ isStandalone = false })
 
   const handleCreateCategory = async () => {
     if (!newCategoryTitle.trim()) {
-      alert('Название категории не может быть пустым');
+      alert('Название не может быть пустым');
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      console.log('parent_id', selectedCategory?.value);
-      const newCategory = await categoryService.createCategory({
+      const parentId = selectedCategory?.value ?? null;
+      const result = await categoryService.createCategory({
         name: newCategoryTitle.trim(),
-        parent_id: selectedCategory?.value ?? null
+        parent_id: parentId
       });
 
-      // Добавляем новую категорию в список и обновляем общее количество
-      setCategories(prev => [newCategory, ...prev]);
-      setTotalCategories(prev => prev + 1);
+      if (parentId) {
+        // Если это была подкатегория, добавляем её в список подкатегорий родителя
+        setCategories(prev => prev.map(cat => 
+          cat.id === parentId 
+            ? { ...cat, sub_categories: [...(cat.sub_categories || []), result] }
+            : cat
+        ));
+      } else {
+        // Если это основная категория, добавляем её в начало списка
+        setCategories(prev => [result, ...prev]);
+        setTotalCategories(prev => prev + 1);
+      }
 
       closeCreateModal();
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Произошла ошибка при создании категории';
+      const errorMessage = err instanceof Error ? err.message : 'Произошла ошибка при создании';
       alert(errorMessage);
       console.error(err);
     } finally {
@@ -200,36 +221,6 @@ const CategoriesPage: React.FC<CategoriesPageProps> = ({ isStandalone = false })
     }
   };
 
-  // Форматирование даты
-  const formatDate = (dateString: string | undefined) => {
-    if (!dateString) return 'Не указано';
-
-    let date: Date;
-
-    if (/^\d+$/.test(dateString)) {
-      const timestamp = Number(dateString);
-
-      if (dateString.length === 10) {
-        date = new Date(timestamp * 1000);
-      } else {
-        date = new Date(timestamp);
-      }
-    } else {
-      date = new Date(dateString);
-    }
-
-    if (isNaN(date.getTime())) {
-      return 'Некорректная дата';
-    }
-
-    return date.toLocaleDateString('ru-RU', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
 
   const content = (
     <div className="space-y-6 pb-16 lg:pb-0">
@@ -379,7 +370,7 @@ const CategoriesPage: React.FC<CategoriesPageProps> = ({ isStandalone = false })
                         <div className="col-span-3 text-right flex justify-end items-center space-x-2">
                           <button
                             className="text-red-600 hover:text-red-900 opacity-70"
-                            onClick={() => handleDeleteClick(subCategory.id)}
+                            onClick={() => handleDeleteClick(subCategory.id, true)}
                             title="Удалить подкатегорию"
                           >
                             <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -422,8 +413,14 @@ const CategoriesPage: React.FC<CategoriesPageProps> = ({ isStandalone = false })
 
             <div className="flex justify-between items-start p-6 border-b border-slate-100/80 bg-white/50 rounded-t-3xl">
               <div>
-                <h3 className="text-xl font-bold text-slate-900 tracking-tight">Создание новой категории</h3>
-                <p className="mt-1 text-sm text-slate-500 font-medium">Заполните данные ниже</p>
+                <h3 className="text-xl font-bold text-slate-900 tracking-tight">
+                  {selectedCategory ? 'Создание подкатегории' : 'Создание категории'}
+                </h3>
+                <p className="mt-1 text-sm text-slate-500 font-medium">
+                  {selectedCategory 
+                    ? `Добавление в "${selectedCategory.label}"` 
+                    : 'Добавление новой основной категории'}
+                </p>
               </div>
               <button
                 type="button"
@@ -440,12 +437,14 @@ const CategoriesPage: React.FC<CategoriesPageProps> = ({ isStandalone = false })
             <div className="p-6">
               <div className="space-y-5">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">Название категории *</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                    {selectedCategory ? 'Название подкатегории *' : 'Название категории *'}
+                  </label>
                   <input
                     type="text"
                     value={newCategoryTitle}
                     onChange={(e) => setNewCategoryTitle(e.target.value)}
-                    placeholder="Например: Смартфоны"
+                    placeholder={selectedCategory ? "Например: iPhone 15 Pro" : "Например: Смартфоны"}
                     className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-900 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all font-medium"
                   />
                 </div>
