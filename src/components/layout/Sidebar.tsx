@@ -10,7 +10,8 @@ import {
   BookOpen,
   User
 } from 'lucide-react';
-// import { useAuth } from '../../contexts/AuthContext';
+import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -48,45 +49,55 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
   return (
     <div
-      className={`fixed inset-y-0 left-0 z-30 w-64 bg-white/80 backdrop-blur-xl border-r border-slate-200/60 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)] transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+      className={cn(
+        "fixed inset-y-0 left-0 z-30 w-64 bg-background border-r transition-transform duration-300 ease-in-out",
+        isOpen ? 'translate-x-0' : '-translate-x-full'
+      )}
     >
       <div className="flex flex-col h-full">
         {/* Логотип */}
         <div className="p-6 flex justify-center items-center">
-          <img src="/logo.svg" alt="Логотип" className="h-16 opacity-90 hover:opacity-100 transition-opacity" />
+          <img src="/logo.svg" alt="Valik.kz" className="h-14 w-auto" />
         </div>
 
-        {/* Навигация */}
-        <div className="px-4 py-6">
-          <nav className="space-y-1">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.path);
+        <Separator className="mx-4" />
 
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 ${active
-                    ? 'bg-orange-50/80 text-orange-700 shadow-sm ring-1 ring-inset ring-orange-100/50'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 active:scale-[0.98]'
-                    }`}
-                  onClick={() => {
-                    if (onClose) {
-                      onClose();
-                    }
-                  }}
-                >
-                  <Icon
-                    className={`mr-3 h-5 w-5 transition-colors ${active ? 'text-orange-600' : 'text-slate-400 group-hover:text-slate-600'
-                      }`}
-                  />
-                  <span>{item.name}</span>
-                </Link>
-              );
-            })}
-          </nav>
+        {/* Навигация */}
+        <nav className="flex-1 px-3 py-4 space-y-1">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const active = isActive(item.path);
+
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors",
+                  active
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                )}
+                onClick={() => {
+                  if (onClose) {
+                    onClose();
+                  }
+                }}
+              >
+                <Icon className="h-5 w-5 flex-shrink-0" />
+                <span>{item.name}</span>
+              </Link>
+            );
+          })}
+        </nav>
+
+        <Separator className="mx-4" />
+
+        {/* Футер */}
+        <div className="p-4">
+          <p className="text-xs text-muted-foreground text-center">
+            © {new Date().getFullYear()} Valik.kz
+          </p>
         </div>
       </div>
     </div>

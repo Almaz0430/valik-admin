@@ -1,32 +1,29 @@
 /**
  * Страница регистрации поставщика
+ * Использует shadcn/ui компоненты
  */
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authService } from '../../features/auth';
 import { useAuth } from '../../contexts/AuthContextBase';
-
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
 const RegisterPage = () => {
   const navigate = useNavigate();
   const { setAuthData } = useAuth();
 
-  /**
-   * Состояния для полей формы
-   */
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [iin, setIin] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState('');
   const [error, setError] = useState('');
 
-
-  /**
-   * Обработчик отправки формы
-   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -39,7 +36,6 @@ const RegisterPage = () => {
       setIsLoading(true);
       setError('');
 
-      // 1. Регистрация
       await authService.register({
         email,
         password,
@@ -48,13 +44,11 @@ const RegisterPage = () => {
         phone
       });
 
-      // 2. Автоматический вход сразу после регистрации
       const loginResponse = await authService.login({
         email,
         password
       });
 
-      // 3. Сохраняем данные авторизации в контексте
       const supplierData = {
         id: loginResponse.id,
         email: loginResponse.email,
@@ -65,11 +59,9 @@ const RegisterPage = () => {
         setAuthData(supplierData, loginResponse.access);
       }
 
-      // 4. Перенаправляем на панель управления
       navigate('/dashboard');
 
     } catch (err) {
-      // Обработка ошибок регистрации
       let errorMessage = 'Произошла ошибка при регистрации. Пожалуйста, попробуйте еще раз.';
 
       if (err instanceof Error) {
@@ -84,173 +76,139 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center font-sans relative overflow-hidden">
-      {/* Декоративные элементы фона */}
-      <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-br from-orange-100/40 via-orange-50/20 to-transparent -z-10"></div>
-      <div className="absolute -top-24 -right-24 w-96 h-96 bg-orange-200/20 rounded-full blur-3xl -z-10"></div>
-      <div className="absolute top-1/2 -left-24 w-72 h-72 bg-blue-100/30 rounded-full blur-3xl -z-10"></div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-orange-50/30 to-slate-50 flex flex-col p-4 relative overflow-hidden">
+      {/* Декоративные элементы */}
+      <div className="absolute -top-24 -right-24 w-96 h-96 bg-orange-200/20 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 -left-24 w-72 h-72 bg-blue-100/30 rounded-full blur-3xl" />
 
-      <div className="flex-1 flex flex-col items-center justify-center w-full p-4 sm:p-8 relative z-10 py-10">
-        <div className="w-full max-w-2xl">
-          {/* Логотип и заголовок */}
-          <div className="text-center mb-10">
-            <img src="/logo.svg" alt="Логотип Valik.kz" className="h-[4.5rem] w-auto mx-auto mb-6" />
-            <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-2">Регистрация</h1>
-            <p className="text-base text-slate-500 font-medium">Создайте аккаунт для доступа к панели управления</p>
-          </div>
+      {/* Логотип */}
+      <div className="absolute top-6 left-6 z-10">
+        <img src="/logo.svg" alt="Valik.kz" className="h-16 w-auto" />
+      </div>
 
-          {/* Карточка формы */}
-          <div className="bg-white/80 backdrop-blur-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] ring-1 ring-slate-200/60 rounded-3xl p-8 sm:p-10">
+      <div className="w-full max-w-2xl relative z-10 mx-auto my-auto py-8">
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Создание аккаунта</CardTitle>
+            <CardDescription>Заполните все поля для регистрации</CardDescription>
+          </CardHeader>
+          <CardContent>
             {error && (
-              <div className="mb-6 bg-red-50/80 backdrop-blur-sm border border-red-100 text-red-600 p-4 rounded-2xl text-sm flex items-center shadow-sm">
-                <svg className="h-5 w-5 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="mb-4 bg-destructive/10 border border-destructive/20 text-destructive p-3 rounded-lg text-sm flex items-center gap-2">
+                <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span className="font-medium">{error}</span>
+                <span>{error}</span>
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                {/* Поле Email */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <label htmlFor="email" className="block text-sm font-semibold text-slate-700">
-                    Email
-                  </label>
-                  <input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="block w-full rounded-xl border border-slate-200 px-4 py-3 bg-white shadow-sm focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 focus:outline-none transition-all text-slate-900 font-medium placeholder:text-slate-400 placeholder:font-normal"
-                    placeholder="Ваш Email"
-                    required
-                  />
-                </div>
-
-                {/* Телефон */}
-                <div className="space-y-2">
-                  <label htmlFor="phone" className="block text-sm font-semibold text-slate-700">
-                    Телефон
-                  </label>
-                  <input
-                    id="phone"
-                    type="text"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="block w-full rounded-xl border border-slate-200 px-4 py-3 bg-white shadow-sm focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 focus:outline-none transition-all text-slate-900 font-medium placeholder:text-slate-400 placeholder:font-normal"
-                    placeholder="77000000000"
-                    required
-                  />
-                </div>
-
-                {/* ИИН / БИН */}
-                <div className="space-y-2">
-                  <label htmlFor="iin" className="block text-sm font-semibold text-slate-700">
-                    ИИН / БИН
-                  </label>
-                  <input
-                    id="iin"
-                    type="text"
-                    value={iin}
-                    onChange={(e) => setIin(e.target.value)}
-                    className="block w-full rounded-xl border border-slate-200 px-4 py-3 bg-white shadow-sm focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 focus:outline-none transition-all text-slate-900 font-medium placeholder:text-slate-400 placeholder:font-normal"
-                    placeholder="12 цифр"
-                    required
-                    maxLength={12}
-                    minLength={12}
-                  />
-                </div>
-
-                {/* Название компании / ИП */}
-                <div className="space-y-2">
-                  <label htmlFor="name" className="block text-sm font-semibold text-slate-700">
-                    Название / ИП
-                  </label>
-                  <input
+                  <Label htmlFor="name">Название компании *</Label>
+                  <Input
                     id="name"
-                    type="text"
+                    placeholder="ТОО Компания"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="block w-full rounded-xl border border-slate-200 px-4 py-3 bg-white shadow-sm focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 focus:outline-none transition-all text-slate-900 font-medium placeholder:text-slate-400 placeholder:font-normal"
-                    placeholder="Например: ТОО Ромашка"
                     required
                   />
                 </div>
 
-
-                {/* Поле Пароль */}
                 <div className="space-y-2">
-                  <label htmlFor="password" className="block text-sm font-semibold text-slate-700">
-                    Пароль
-                  </label>
-                  <input
+                  <Label htmlFor="iin">ИИН/БИН *</Label>
+                  <Input
+                    id="iin"
+                    placeholder="123456789012"
+                    value={iin}
+                    onChange={(e) => setIin(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email *</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="email@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Телефон *</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="+7 (___) ___-__-__"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="password">Пароль *</Label>
+                  <Input
                     id="password"
                     type="password"
+                    placeholder="Минимум 8 символов"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="block w-full rounded-xl border border-slate-200 px-4 py-3 bg-white shadow-sm focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 focus:outline-none transition-all text-slate-900 font-medium placeholder:text-slate-400 placeholder:font-normal"
-                    placeholder="Придумайте пароль"
                     required
                     minLength={8}
                   />
                 </div>
 
-                {/* Поле подтверждения пароля */}
                 <div className="space-y-2">
-                  <label htmlFor="confirmPassword" className="block text-sm font-semibold text-slate-700">
-                    Подтверждение пароля
-                  </label>
-                  <input
+                  <Label htmlFor="confirmPassword">Подтвердите пароль *</Label>
+                  <Input
                     id="confirmPassword"
                     type="password"
+                    placeholder="Повторите пароль"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="block w-full rounded-xl border border-slate-200 px-4 py-3 bg-white shadow-sm focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 focus:outline-none transition-all text-slate-900 font-medium placeholder:text-slate-400 placeholder:font-normal"
-                    placeholder="Повторите пароль"
                     required
                     minLength={8}
                   />
                 </div>
               </div>
 
-              {/* Кнопка регистрации */}
-              <button
-                type="submit"
-                disabled={isLoading}
-                className={`w-full flex justify-center items-center py-3.5 px-4 rounded-xl text-sm font-semibold text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-4 focus:ring-orange-500/20 shadow-[0_4px_14px_0_rgba(249,115,22,0.39)] transition-all active:scale-[0.98] mt-4 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''
-                  }`}
-              >
+              <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? (
                   <>
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
                     Регистрация...
                   </>
                 ) : (
-                  'Создать аккаунт'
+                  'Зарегистрироваться'
                 )}
-              </button>
+              </Button>
             </form>
+          </CardContent>
+          <CardFooter className="flex justify-center">
+            <p className="text-sm text-muted-foreground">
+              Уже есть аккаунт?{' '}
+              <Link to="/login" className="text-primary hover:underline font-medium">
+                Войти
+              </Link>
+            </p>
+          </CardFooter>
+        </Card>
 
-            {/* Футер с ссылкой на вход */}
-            <div className="mt-8 pt-6 border-t border-slate-100 text-center">
-              <p className="text-sm text-slate-500 font-medium">
-                Уже есть аккаунт?{' '}
-                <Link to="/login" className="text-orange-600 hover:text-orange-700 font-semibold transition-colors">
-                  Войти
-                </Link>
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Футер с копирайтом */}
-      <div className="w-full py-6 mt-auto">
-        <p className="text-center text-sm font-medium text-slate-400">
+        {/* Футер */}
+        <p className="text-center text-sm text-muted-foreground mt-8">
           © {new Date().getFullYear()} Valik.kz. Все права защищены.
         </p>
       </div>
@@ -258,4 +216,4 @@ const RegisterPage = () => {
   );
 };
 
-export default RegisterPage; 
+export default RegisterPage;

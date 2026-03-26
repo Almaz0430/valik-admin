@@ -12,7 +12,8 @@ import {
   PhotoIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
-import Input from '../ui/Input';
+import { FormField } from '../ui/FormField';
+import { Label } from '@/components/ui/label';
 import TextArea from '../ui/TextArea';
 import ImageEditor from '../ui/ImageEditor';
 import Select from 'react-select';
@@ -139,7 +140,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ isEditMode = false, produ
           <div className="bg-white p-6 rounded-2xl shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] ring-1 ring-slate-200/50">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Основная информация</h3>
             <div className="space-y-4">
-              <Input
+              <FormField
                 id="name"
                 label="Название товара *"
                 placeholder="Введите название товара"
@@ -165,7 +166,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ isEditMode = false, produ
           <div className="bg-white p-6 rounded-2xl shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] ring-1 ring-slate-200/50">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Цена и характеристики</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
+              <FormField
                 id="article"
                 label="Артикул"
                 type="number"
@@ -174,7 +175,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ isEditMode = false, produ
                 onChange={(e) => handleChange('article', e.target.value)}
                 error={errors.article}
               />
-              <Input
+              <FormField
                 id="price"
                 label="Цена *"
                 type="number"
@@ -186,7 +187,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ isEditMode = false, produ
               />
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-              <Input
+              <FormField
                 id="length"
                 label="Длина (см)"
                 type="number"
@@ -195,7 +196,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ isEditMode = false, produ
                 value={formData.length}
                 onChange={(e) => handleChange('length', e.target.value)}
               />
-              <Input
+              <FormField
                 id="width"
                 label="Ширина (см)"
                 type="number"
@@ -204,7 +205,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ isEditMode = false, produ
                 value={formData.width}
                 onChange={(e) => handleChange('width', e.target.value)}
               />
-              <Input
+              <FormField
                 id="height"
                 label="Высота (см)"
                 type="number"
@@ -213,7 +214,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ isEditMode = false, produ
                 value={formData.height}
                 onChange={(e) => handleChange('height', e.target.value)}
               />
-              <Input
+              <FormField
                 id="weight"
                 label="Вес (кг)"
                 type="number"

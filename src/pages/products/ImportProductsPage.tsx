@@ -11,8 +11,8 @@ import {
 import productService from '../../features/products/api/productService';
 import type { ImportProductsResponse } from '../../types/product';
 import Layout from '../../components/layout/Layout';
-import Button from '../../components/ui/Button';
-import Card from '../../components/ui/Card';
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { toast } from 'react-hot-toast';
 
 const ImportProductsPage: React.FC = () => {
@@ -144,16 +144,16 @@ const ImportProductsPage: React.FC = () => {
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                     {/* Левая колонка - Загрузка файла */}
                     <div className="xl:col-span-2 space-y-6">
-                        <Card
-                            title={importResult ? 'Результаты импорта' : 'Загрузите CSV файл'}
-                            subtitle={
-                                importResult
-                                    ? 'Проверьте итог загрузки и исправьте ошибки, если они есть.'
-                                    : 'Перетащите файл или выберите его вручную. Поддерживаются CSV до 5MB.'
-                            }
-                            className="shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] ring-1 ring-slate-200/50"
-                            headerClassName="bg-slate-50/50"
-                        >
+                        <Card className="shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] ring-1 ring-slate-200/50">
+                            <CardHeader className="bg-slate-50/50">
+                                <CardTitle>{importResult ? 'Результаты импорта' : 'Загрузите CSV файл'}</CardTitle>
+                                <CardDescription>
+                                    {importResult
+                                        ? 'Проверьте итог загрузки и исправьте ошибки, если они есть.'
+                                        : 'Перетащите файл или выберите его вручную. Поддерживаются CSV до 5MB.'}
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
                             {!importResult ? (
                                 <div className="space-y-6">
                                     <div
@@ -309,12 +309,17 @@ const ImportProductsPage: React.FC = () => {
                                     </div>
                                 </div>
                             )}
+                            </CardContent>
                         </Card>
                     </div>
 
                     {/* Правая колонка - Инструкция */}
                     <div className="space-y-6">
-                        <Card title="Требования к файлу" className="shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] ring-1 ring-slate-200/50" headerClassName="bg-slate-50/50">
+                        <Card className="shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] ring-1 ring-slate-200/50">
+                            <CardHeader className="bg-slate-50/50">
+                                <CardTitle>Требования к файлу</CardTitle>
+                            </CardHeader>
+                            <CardContent>
                             <div className="text-sm text-gray-700 space-y-3">
                                 <p>Файл должен быть в формате <strong>CSV</strong> (разделитель - запятая или точка с запятой).</p>
 
@@ -344,6 +349,7 @@ const ImportProductsPage: React.FC = () => {
                                     </pre>
                                 </div>
                             </div>
+                            </CardContent>
                         </Card>
                     </div>
                 </div>
