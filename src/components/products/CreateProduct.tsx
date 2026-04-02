@@ -256,6 +256,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ isEditMode = false, produ
                 <PhotoIcon className="h-12 w-12 mx-auto text-slate-400 mb-3" />
                 <p className="text-sm font-medium text-slate-600">Нажмите для выбора изображения</p>
                 <p className="text-xs text-slate-400 mt-1">PNG, JPG, WebP до 10 МБ</p>
+                <p className="text-xs text-orange-500 mt-2 font-medium">или нажмите Ctrl+V для вставки из буфера</p>
               </div>
             )}
 

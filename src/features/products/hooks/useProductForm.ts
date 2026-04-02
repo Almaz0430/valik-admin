@@ -66,6 +66,35 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
   const [tempImageForEdit, setTempImageForEdit] = useState<string | null>(null);
   const [tempImageFileName, setTempImageFileName] = useState<string>('product-image.jpg');
 
+  // Обработчик вставки изображения из буфера обмена
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.type.indexOf('image') !== -1) {
+          const blob = item.getAsFile();
+          if (blob) {
+            const reader = new FileReader();
+            reader.onload = () => {
+              setTempImageForEdit(reader.result as string);
+              setTempImageFileName(`pasted-image-${Date.now()}.png`);
+              setIsImageEditorOpen(true);
+            };
+            reader.readAsDataURL(blob);
+            toast.success('Изображение вставлено из буфера обмена');
+          }
+          break;
+        }
+      }
+    };
+
+    window.addEventListener('paste', handlePaste);
+    return () => window.removeEventListener('paste', handlePaste);
+  }, []);
+
   // Загрузка справочников
   useEffect(() => {
     const fetchData = async () => {
