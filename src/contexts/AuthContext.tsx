@@ -9,42 +9,52 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   
-  // При инициализации проверяем наличие токена и данных пользователя в localStorage
+  // При инициализации пытаемся восстановить сессию через refresh токен (куки)
   useEffect(() => {
-    try {
-      const token = localStorage.getItem('accessToken');
-      const storedSupplier = localStorage.getItem('supplier');
+    const initAuth = async () => {
+      try {
+        const vendorId = localStorage.getItem('vendorId');
+        if (vendorId) {
+          // Пытаемся обновить токен доступа
+          const token = await authService.refreshToken();
+          const currentSupplier = await authService.getCurrentUser();
 
-      if (token && storedSupplier) {
-        setAccessToken(token);
-        setSupplier(JSON.parse(storedSupplier));
+          if (token && currentSupplier) {
+            setAccessToken(token);
+            setSupplier(currentSupplier);
+          }
+        }
+      } catch (error) {
+        console.error('Ошибка при восстановлении сессии:', error);
+        // При ошибке очищаем всё
+        setAccessToken(null);
+        setSupplier(null);
+        localStorage.removeItem('vendorId');
+      } finally {
+        setIsInitialized(true);
       }
-    } catch (error) {
-      console.error('Ошибка при инициализации авторизации:', error);
-      // При ошибке очищаем состояние
-      setAccessToken(null);
-      setSupplier(null);
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('supplier');
-    } finally {
-      // Помечаем инициализацию как завершенную
-      setIsInitialized(true);
-    }
+    };
+
+    initAuth();
   }, []);
 
   const setAuthData = (supplier: Supplier, token: string) => {
     setSupplier(supplier);
     setAccessToken(token);
-    localStorage.setItem('accessToken', token);
+    // supplier инфо можно кэшировать в localStorage для быстрой отрисовки,
+    // но токен теперь строго в памяти.
     localStorage.setItem('supplier', JSON.stringify(supplier));
   };
 
   const logout = async () => {
-    await authService.logout();
-    setSupplier(null);
-    setAccessToken(null);
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('supplier');
+    try {
+      await authService.logout();
+    } finally {
+      setSupplier(null);
+      setAccessToken(null);
+      localStorage.removeItem('vendorId');
+      localStorage.removeItem('supplier');
+    }
   };
 
   const value = {
@@ -55,9 +65,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     logout,
   };
 
-  // Если инициализация не завершена, можно показать загрузку
+  // Если инициализация не завершена, показываем загрузку
   if (!isInitialized) {
-    return null; // или компонент загрузки
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+      </div>
+    );
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

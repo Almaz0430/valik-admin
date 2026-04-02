@@ -19,10 +19,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   useEffect(() => {
     const verifyAuth = async () => {
       try {
-        const hasToken =
-          typeof window !== 'undefined' && !!localStorage.getItem('accessToken');
-
-        if (isAuthenticated && hasToken) {
+        if (isAuthenticated) {
           setIsAllowed(true);
         } else {
           setIsAllowed(false);

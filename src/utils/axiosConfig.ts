@@ -1,6 +1,6 @@
 import axios from 'axios';
 import env from '../config/env';
-import authService from '../features/auth/api/authService';
+import { getAccessToken, setAccessToken } from './tokenStorage';
 
 const baseUrl = env.API_URL;
 
@@ -9,10 +9,26 @@ export const api = axios.create({
   withCredentials: true,
 });
 
+// Late binding: authService регистрирует свою функцию refresh здесь,
+// чтобы избежать циклической зависимости при импорте.
+let _refreshTokenFn: (() => Promise<string>) | null = null;
+
+export const registerRefreshTokenFn = (fn: () => Promise<string>) => {
+  _refreshTokenFn = fn;
+};
+
+// Очищаем состояние без API вызова и редиректим на логин
+const forceLogout = () => {
+  setAccessToken(null);
+  localStorage.removeItem('vendorId');
+  localStorage.removeItem('supplier');
+  window.location.href = '/login';
+};
+
 // Request interceptor для добавления токена авторизации
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('accessToken');
+    const token = getAccessToken();
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
@@ -31,20 +47,28 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Если ошибка 401 (Unauthorized) и мы еще не пытались обновить токен
+    const isRefreshEndpoint = originalRequest.url?.includes('/vendor/token/refresh/');
+    const isLogoutEndpoint = originalRequest.url?.includes('/vendor/logout/');
+
+    // Для refresh и logout эндпоинтов — не пытаемся рефрешить, сразу чистим и редиректим
+    if (error.response?.status === 401 && (isRefreshEndpoint || isLogoutEndpoint)) {
+      forceLogout();
+      return Promise.reject(error);
+    }
+
+    // Для остальных запросов с 401 — пробуем обновить токен один раз
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
-        const newAccessToken = await authService.refreshToken();
+        if (!_refreshTokenFn) throw new Error('refreshTokenFn not registered');
+        const newAccessToken = await _refreshTokenFn();
 
-        // Повторяем оригинальный запрос с новым токеном
         originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
         return api(originalRequest);
-      } catch (refreshError) {
-        // Если обновить токен не удалось, редиректим на логин
-        await authService.logout();
-        return Promise.reject(refreshError);
+      } catch {
+        forceLogout();
+        return Promise.reject(error);
       }
     }
 

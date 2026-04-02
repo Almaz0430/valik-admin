@@ -156,11 +156,7 @@ class ProductService {
     formData.append('file', file);
 
     try {
-      const response = await api.post<ImportProductsResponse>('/suppliers/products/import', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const response = await api.post<ImportProductsResponse>('/product/import-csv/', formData);
       return this.normalizeImportResponse(response.data);
     } catch (error) {
       console.error('Ошибка при импорте товаров:', error);
@@ -171,6 +167,29 @@ class ProductService {
         }
       }
       throw new Error('Ошибка при отправке файла импорта');
+    }
+  }
+
+  /**
+   * Скачивание шаблона для импорта товаров
+   * GET /product/import-csv/template/
+   */
+  async downloadImportTemplate(): Promise<void> {
+    try {
+      const response = await api.get('/product/import-csv/template/', {
+        responseType: 'blob',
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'products_import_template.csv');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Ошибка при скачивании шаблона:', error);
+      throw new Error('Не удалось скачать шаблон для импорта');
     }
   }
 
