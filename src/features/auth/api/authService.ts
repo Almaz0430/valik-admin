@@ -2,7 +2,8 @@
  * Сервис для работы с API аутентификации поставщиков
  */
 import type { AuthResponse, LoginCredentials, RegisterData, Supplier, TokenRefreshResponse } from '../../../types/auth';
-import { api } from '../../../utils/axiosConfig';
+import { api, registerRefreshTokenFn } from '../../../utils/axiosConfig';
+import { getAccessToken, setAccessToken } from '../../../utils/tokenStorage';
 
 /**
  * Класс для работы с API аутентификации
@@ -25,7 +26,7 @@ class AuthService {
         throw new Error('Сервер не вернул токен доступа');
       }
 
-      this.setTokens(authResponse.access, authResponse.refresh);
+      this.setTokens(authResponse.access);
       localStorage.setItem('vendorId', authResponse.id);
 
       return authResponse;
@@ -65,9 +66,9 @@ class AuthService {
       const response = await api.post<AuthResponse>('/vendor/register/', data);
       const authResponse = response.data;
 
-      // Если бэкенд вернул токены сразу — сохраняем их
+      // Если бэкенд вернул токен сразу — сохраняем его
       if (authResponse.access) {
-        this.setTokens(authResponse.access, authResponse.refresh);
+        this.setTokens(authResponse.access);
       }
 
       // Сохраняем ID вендора, если он есть в ответе
@@ -118,15 +119,15 @@ class AuthService {
 
     this.refreshPromise = (async () => {
       try {
-        const refresh = localStorage.getItem('refreshToken');
-        if (!refresh) throw new Error('No refresh token available');
-
-        const response = await api.post<TokenRefreshResponse>('/vendor/token/refresh/', { refresh });
+        // We no longer pass refresh token in body, backend reads it from cookies
+        const response = await api.post<TokenRefreshResponse>('/vendor/token/refresh/', {});
         const { access } = response.data;
-        this.setTokens(access, refresh); // Keep the old refresh or use new if returned
+        this.setTokens(access);
         return access;
       } catch (error) {
-        await this.logout();
+        // If refresh fails, we're likely unauthorized
+        setAccessToken(null);
+        localStorage.removeItem('vendorId');
         throw error;
       } finally {
         this.refreshPromise = null;
@@ -139,11 +140,8 @@ class AuthService {
   /**
    * Установка токена
    */
-  private setTokens(access: string, refresh?: string): void {
-    localStorage.setItem('accessToken', access);
-    if (refresh) {
-      localStorage.setItem('refreshToken', refresh);
-    }
+  private setTokens(access: string): void {
+    setAccessToken(access);
   }
 
   /**
@@ -151,16 +149,14 @@ class AuthService {
    */
   async logout(): Promise<void> {
     try {
-      const refresh = localStorage.getItem('refreshToken');
-      if (refresh) {
-        await api.post('/vendor/logout/', { refresh });
-      }
+      // Backend will clear the cookies
+      await api.post('/vendor/logout/', {});
     } catch (error) {
       console.error('Ошибка при выходе из системы:', error);
     } finally {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
+      setAccessToken(null);
       localStorage.removeItem('vendorId');
+      localStorage.removeItem('supplier'); // Clear cached supplier as well
     }
   }
 
@@ -210,13 +206,16 @@ class AuthService {
   }
 
   /**
-   * Получение токена из localStorage
+   * Получение токена из памяти
    */
   getToken(): string | null {
-    return localStorage.getItem('accessToken');
+    return getAccessToken();
   }
 }
 
 const authService = new AuthService();
+
+// Регистрируем функцию refresh в axiosConfig (late binding, без циклического импорта)
+registerRefreshTokenFn(authService.refreshToken.bind(authService));
 
 export default authService;

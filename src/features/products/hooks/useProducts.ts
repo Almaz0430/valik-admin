@@ -10,7 +10,7 @@ interface UseProductsOptions {
 
 export const useProducts = ({ initialParams }: UseProductsOptions = {}) => {
   const auth = useContext(AuthContext);
-  const [queryParams] = useState<ProductQueryParams>(
+  const [queryParams, setQueryParams] = useState<ProductQueryParams>(
     initialParams || { page: 1, limit: 10 }
   );
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -36,17 +36,28 @@ export const useProducts = ({ initialParams }: UseProductsOptions = {}) => {
     enabled: !!vendorId,
   });
 
-  const products: Product[] = data?.products ?? [];
+  const allProducts: Product[] = data?.products ?? [];
   const total: number = data?.total ?? 0;
   const errorMessage: string | null = error ? (error as Error).message : null;
 
-  const handlePageChange = (_page: number) => {
-    // Пагинация на клиенте если понадобится
+  const handlePageChange = (page: number) => {
+    setQueryParams(prev => ({
+      ...prev,
+      page,
+    }));
   };
 
   const resetToFirstPage = () => {
-    // no-op, поиск происходит на клиенте
+    setQueryParams(prev => ({
+      ...prev,
+      page: 1,
+    }));
   };
+
+  const page = queryParams.page ?? 1;
+  const limit = queryParams.limit ?? 10;
+  const startIndex = (page - 1) * limit;
+  const products = allProducts.slice(startIndex, startIndex + limit);
 
   return {
     products,

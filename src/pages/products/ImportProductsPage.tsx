@@ -22,6 +22,7 @@ const ImportProductsPage: React.FC = () => {
     const [file, setFile] = useState<File | null>(null);
     const [isDragging, setIsDragging] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [isDownloading, setIsDownloading] = useState(false);
     const [importResult, setImportResult] = useState<ImportProductsResponse | null>(null);
 
     useEffect(() => {
@@ -101,6 +102,18 @@ const ImportProductsPage: React.FC = () => {
         }
     };
 
+    const handleDownloadTemplate = async () => {
+        setIsDownloading(true);
+        try {
+            await productService.downloadImportTemplate();
+            toast.success('Шаблон успешно скачан');
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Не удалось скачать шаблон');
+        } finally {
+            setIsDownloading(false);
+        }
+    };
+
     const resetForm = () => {
         setFile(null);
         setImportResult(null);
@@ -128,6 +141,15 @@ const ImportProductsPage: React.FC = () => {
                             onClick={() => navigate('/dashboard/products')}
                         >
                             К списку
+                        </Button>
+                        <Button
+                            variant="custom"
+                            className="bg-white text-orange-600 border border-orange-200 shadow-sm hover:bg-orange-50 hover:border-orange-300 transition-all active:scale-[0.98] rounded-xl font-medium"
+                            leftIcon={<DocumentTextIcon className="h-5 w-5" />}
+                            onClick={handleDownloadTemplate}
+                            isLoading={isDownloading}
+                        >
+                            Скачать шаблон
                         </Button>
                         {importResult && (
                             <Button
