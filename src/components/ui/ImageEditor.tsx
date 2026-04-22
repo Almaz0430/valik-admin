@@ -176,101 +176,103 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
 
   return (
     <div 
-      className="fixed inset-0 flex items-center justify-center z-50"
+      className="fixed inset-0 flex items-center justify-center z-50 p-3 sm:p-4"
       style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
     >
-      <div className="bg-white rounded-lg p-6 max-w-4xl max-h-[90vh] overflow-auto">
+      <div className="bg-white rounded-xl sm:rounded-lg w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-auto shadow-2xl">
         {/* Заголовок */}
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">
-            <ScissorsIcon className="h-5 w-5 inline mr-2" />
-            Редактирование изображения
+        <div className="flex justify-between items-center p-4 sm:p-6 border-b border-slate-100">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
+            <ScissorsIcon className="h-5 w-5 mr-2 flex-shrink-0" />
+            <span className="hidden sm:inline">Редактирование изображения</span>
+            <span className="sm:hidden">Кроп</span>
           </h3>
           <button
             onClick={onCancel}
-            className="text-gray-400 hover:text-gray-600"
+            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
           >
-            <XMarkIcon className="h-6 w-6" />
+            <XMarkIcon className="h-5 w-5 sm:h-6 sm:w-6" />
           </button>
         </div>
 
-        {/* Панель инструментов */}
-        <div className="flex flex-wrap gap-4 mb-4 p-3 bg-gray-50 rounded-lg">
-          <button
-            onClick={handleRotate}
-            className="flex items-center px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-          >
-            <ArrowPathIcon className="h-4 w-4 mr-1" />
-            Повернуть
-          </button>
-          
-          <div className="flex items-center space-x-2">
-            <label className="text-sm text-gray-600">Масштаб:</label>
-            <input
-              type="range"
-              min="0.5"
-              max="2"
-              step="0.1"
-              value={scale}
-              onChange={(e) => setScale(Number(e.target.value))}
-              className="w-20"
-            />
-            <span className="text-sm text-gray-600">{Math.round(scale * 100)}%</span>
+        <div className="p-4 sm:p-6 space-y-4">
+          {/* Панель инструментов */}
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-gray-50 rounded-lg">
+            <button
+              type="button"
+              onClick={handleRotate}
+              className="flex items-center px-3 py-2 text-xs sm:text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors flex-shrink-0"
+            >
+              <ArrowPathIcon className="h-4 w-4 mr-1" />
+              <span className="hidden sm:inline">Повернуть</span>
+              <span className="sm:hidden">↻</span>
+            </button>
+            
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
+              <label className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">Масштаб:</label>
+              <input
+                type="range"
+                min="0.5"
+                max="2"
+                step="0.1"
+                value={scale}
+                onChange={(e) => setScale(Number(e.target.value))}
+                className="w-16 sm:w-24 flex-shrink-0"
+              />
+              <span className="text-xs sm:text-sm text-gray-600 w-10 text-right">{Math.round(scale * 100)}%</span>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleReset}
+              className="flex items-center px-3 py-2 text-xs sm:text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors flex-shrink-0"
+            >
+              <span className="hidden sm:inline">Сбросить</span>
+              <span className="sm:hidden">⟲</span>
+            </button>
           </div>
 
-          <button
-            onClick={handleReset}
-            className="flex items-center px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-          >
-            Сбросить
-          </button>
-        </div>
+          {/* Область редактирования */}
+          <div className="flex justify-center overflow-hidden rounded-lg bg-gray-50 p-2">
+            <ReactCrop
+              crop={crop}
+              onChange={(_, percentCrop) => setCrop(percentCrop)}
+              onComplete={(c) => setCompletedCrop(c)}
+              aspect={undefined}
+              minWidth={30}
+              minHeight={30}
+            >
+              <img
+                ref={imgRef}
+                src={imageUrl}
+                alt="Редактируемое изображение"
+                onLoad={onImageLoad}
+                className="max-w-full h-auto"
+                style={{
+                  transform: `rotate(${rotation}deg) scale(${scale})`,
+                  maxHeight: 'min(400px, 50vh)'
+                }}
+              />
+            </ReactCrop>
+          </div>
 
-        {/* Область редактирования */}
-        <div className="mb-4 flex justify-center">
-          <ReactCrop
-            crop={crop}
-            onChange={(_, percentCrop) => setCrop(percentCrop)}
-            onComplete={(c) => setCompletedCrop(c)}
-            aspect={undefined}
-            minWidth={50}
-            minHeight={50}
-          >
-            <img
-              ref={imgRef}
-              src={imageUrl}
-              alt="Редактируемое изображение"
-              onLoad={onImageLoad}
-              style={{
-                transform: `rotate(${rotation}deg) scale(${scale})`,
-                maxWidth: '600px',
-                maxHeight: '400px'
-              }}
-            />
-          </ReactCrop>
-        </div>
+          {/* Скрытый canvas для обработки */}
+          <canvas
+            ref={canvasRef}
+            style={{ display: 'none' }}
+          />
 
-        {/* Скрытый canvas для обработки */}
-        <canvas
-          ref={canvasRef}
-          style={{ display: 'none' }}
-        />
-
-        {/* Кнопки действий */}
-        <div className="flex justify-end space-x-3 pt-4 border-t border-slate-100">
-          <button
-            onClick={onCancel}
-            className="px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 bg-white border border-slate-200 shadow-sm hover:bg-slate-50 hover:text-slate-900 transition-all active:scale-[0.98]"
-          >
-            Отмена
-          </button>
-          <button
-            onClick={handleSave}
-            className="flex items-center px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-orange-600 shadow-[0_2px_8px_-2px_rgba(249,115,22,0.4)] hover:bg-orange-700 transition-all active:scale-[0.98]"
-          >
-            <CheckIcon className="h-4 w-4 mr-1.5" />
-            Сохранить
-          </button>
+          {/* Кнопки действий */}
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={handleSave}
+              className="flex-1 flex items-center justify-center px-4 py-2.5 sm:py-3 rounded-xl text-sm font-semibold text-white bg-orange-600 shadow-[0_2px_8px_-2px_rgba(249,115,22,0.4)] hover:bg-orange-700 transition-all active:scale-[0.98]"
+            >
+              <CheckIcon className="h-4 w-4 mr-1.5" />
+              Сохранить
+            </button>
+          </div>
         </div>
       </div>
     </div>

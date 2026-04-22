@@ -25,7 +25,15 @@ class ProductService {
   async getVendorProducts(vendorId: number): Promise<Product[]> {
     try {
       const response = await api.get<Product[]>(`/product/vendor/${vendorId}/products/`);
-      return response.data;
+      const data = response.data;
+      // Бэкенд может возвращать { products: [...] } или напрямую массив [...]
+      if (Array.isArray(data)) {
+        return data;
+      }
+      if (data && typeof data === 'object' && 'products' in data && Array.isArray((data as any).products)) {
+        return (data as any).products;
+      }
+      return [];
     } catch (error) {
       console.error('Ошибка при запросе списка товаров:', error);
       if (error && typeof error === 'object' && 'response' in error) {

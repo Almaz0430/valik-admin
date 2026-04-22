@@ -75,8 +75,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors",
                   active
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                    ? 'bg-orange-600 text-white shadow-sm'
+                    : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
                 )}
                 onClick={() => {
                   if (onClose) {

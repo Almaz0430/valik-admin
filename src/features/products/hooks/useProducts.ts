@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { Product, ProductQueryParams } from '../../../types/product';
 import productService from '../api/productService';
 import { AuthContext } from '../../../contexts/AuthContextBase';
+import env from '../../../config/env';
 
 interface UseProductsOptions {
   initialParams?: ProductQueryParams;
@@ -27,10 +28,15 @@ export const useProducts = ({ initialParams }: UseProductsOptions = {}) => {
     queryFn: async () => {
       if (!vendorId) throw new Error('Не авторизован');
       const products = await productService.getVendorProducts(vendorId);
+      // Добавляем полный URL к изображениям, если бэкенд возвращает относительный путь
+      const productsWithFullImage = products.map(product => ({
+        ...product,
+        image: product.image ? (product.image.startsWith('http') ? product.image : `${env.API_URL}${product.image}`) : null,
+      }));
       // Фильтрация по поисковому запросу на клиенте
       const filtered = searchTerm
-        ? products.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()))
-        : products;
+        ? productsWithFullImage.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()))
+        : productsWithFullImage;
       return { products: filtered, total: filtered.length };
     },
     enabled: !!vendorId,

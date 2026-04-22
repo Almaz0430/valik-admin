@@ -18,8 +18,6 @@ interface UseProductFormArgs {
 
 /**
  * Хук управления формой создания товара.
- * Поля соответствуют модели OPTProduct:
- * name, description, sub_category (ID), image (File)
  */
 export const useProductForm = ({ productId, isEditMode = false }: UseProductFormArgs = {}) => {
   const navigate = useNavigate();
@@ -29,7 +27,6 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Состояние формы — точно соответствует полям OPTProduct
   const [formData, setFormData] = useState({
     name: '',
     description: '',

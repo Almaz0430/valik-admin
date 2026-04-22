@@ -389,7 +389,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ isEditMode = false, produ
       </div>
 
       {/* Кнопки — Мобилка */}
-      <div className="md:hidden fixed bottom-16 sm:bottom-20 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-slate-200/50 p-4 flex z-[80] shadow-[0_-4px_24px_-8px_rgba(0,0,0,0.08)]">
+      <div className={`md:hidden fixed bottom-16 sm:bottom-20 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-slate-200/50 p-4 flex z-30 shadow-[0_-4px_24px_-8px_rgba(0,0,0,0.08)] transition-opacity duration-200 ${isImageEditorOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
         <Link
           to="/dashboard/products"
           className="flex-1 mr-3 py-3 px-4 border border-slate-200/60 bg-slate-50 text-slate-700 rounded-xl text-center text-sm font-medium hover:bg-slate-100 transition-colors"
