@@ -12,7 +12,7 @@ import productService from '../../features/products/api/productService';
 import type { ImportProductsResponse } from '../../types/product';
 import Layout from '../../components/layout/Layout';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { toast } from 'react-hot-toast';
 
 const ImportProductsPage: React.FC = () => {

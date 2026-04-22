@@ -1,4 +1,4 @@
-import { Input } from './input';
+import { Input } from './Input';
 import { Label } from './label';
 
 interface FormFieldProps extends React.ComponentProps<typeof Input> {

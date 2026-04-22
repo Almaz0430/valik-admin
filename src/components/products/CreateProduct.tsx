@@ -13,7 +13,6 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { FormField } from '../ui/FormField';
-import { Label } from '@/components/ui/label';
 import TextArea from '../ui/TextArea';
 import ImageEditor from '../ui/ImageEditor';
 import Select from 'react-select';
