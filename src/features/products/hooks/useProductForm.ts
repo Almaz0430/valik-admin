@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import productService from '../api/productService';
 import type { SubCategory, Category } from '../api/productService';
 import { AuthContext } from '../../../contexts/AuthContextBase';
+import env from '../../../config/env';
 
 // Тип для опций react-select
 export interface SelectOption {
@@ -22,6 +23,18 @@ interface UseProductFormArgs {
 export const useProductForm = ({ productId, isEditMode = false }: UseProductFormArgs = {}) => {
   const navigate = useNavigate();
   const auth = useContext(AuthContext);
+
+  const normalizeImageUrl = (image: string | null | undefined): string | null => {
+    if (!image) {
+      return null;
+    }
+
+    try {
+      return new URL(image, env.API_URL).toString();
+    } catch {
+      return image;
+    }
+  };
 
   const [isLoading, setIsLoading] = useState(false);
   const [isDataLoading, setIsDataLoading] = useState(true);
@@ -179,7 +192,7 @@ export const useProductForm = ({ productId, isEditMode = false }: UseProductForm
           }
 
           if (product.image) {
-            setImagePreview(product.image);
+            setImagePreview(normalizeImageUrl(product.image));
           }
         }
       } catch (error) {

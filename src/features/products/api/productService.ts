@@ -18,22 +18,77 @@ export type { Category, SubCategory };
  * Класс для работы с API товаров поставщика
  */
 class ProductService {
+  private extractProductList(raw: unknown): Product[] {
+    if (Array.isArray(raw)) {
+      return raw as Product[];
+    }
+
+    if (raw && typeof raw === 'object') {
+      const obj = raw as Record<string, unknown>;
+
+      if (Array.isArray(obj.products)) {
+        return obj.products as Product[];
+      }
+
+      if (Array.isArray(obj.results)) {
+        return obj.results as Product[];
+      }
+    }
+
+    return [];
+  }
+
+  private async enrichMissingImages(products: Product[]): Promise<Product[]> {
+    const hasMissingImageWithIds = products.some((product) => {
+      const images = (product as Product & { images?: unknown }).images;
+      return !product.image && Array.isArray(images) && images.length > 0;
+    });
+
+    if (!hasMissingImageWithIds) {
+      return products;
+    }
+
+    try {
+      const response = await api.get<unknown>('/product/opt-products/');
+      const catalogProducts = this.extractProductList(response.data);
+      const imageByProductId = new Map<number, string>();
+
+      catalogProducts.forEach((product) => {
+        if (typeof product.id === 'number' && product.image) {
+          imageByProductId.set(product.id, product.image);
+        }
+      });
+
+      return products.map((product) => {
+        if (product.image) {
+          return product;
+        }
+
+        const fallbackImage = imageByProductId.get(product.id);
+        if (!fallbackImage) {
+          return product;
+        }
+
+        return {
+          ...product,
+          image: fallbackImage,
+        };
+      });
+    } catch (error) {
+      console.warn('Не удалось подгрузить изображения товаров из fallback endpoint:', error);
+      return products;
+    }
+  }
+
   /**
    * Получение списка товаров конкретного вендора
    * GET /product/vendor/<vendor_id>/products/
    */
   async getVendorProducts(vendorId: number): Promise<Product[]> {
     try {
-      const response = await api.get<Product[]>(`/product/vendor/${vendorId}/products/`);
-      const data = response.data;
-      // Бэкенд может возвращать { products: [...] } или напрямую массив [...]
-      if (Array.isArray(data)) {
-        return data;
-      }
-      if (data && typeof data === 'object' && 'products' in data && Array.isArray((data as any).products)) {
-        return (data as any).products;
-      }
-      return [];
+      const response = await api.get<unknown>(`/product/vendor/${vendorId}/products/`);
+      const products = this.extractProductList(response.data);
+      return this.enrichMissingImages(products);
     } catch (error) {
       console.error('Ошибка при запросе списка товаров:', error);
       if (error && typeof error === 'object' && 'response' in error) {
@@ -50,8 +105,10 @@ class ProductService {
    */
   async getProduct(id: number): Promise<Product> {
     try {
-      const response = await api.get<Product>(`/product/optinfo/${id}/`);
-      return response.data;
+      const response = await api.get<unknown>(`/product/optinfo/${id}/`);
+      const product = response.data as Product;
+      const [enrichedProduct] = await this.enrichMissingImages([product]);
+      return enrichedProduct || product;
     } catch (error) {
       console.error(`Ошибка при получении товара ${id}:`, error);
       if (error && typeof error === 'object' && 'response' in error) {

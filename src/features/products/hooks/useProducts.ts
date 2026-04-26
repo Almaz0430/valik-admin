@@ -28,10 +28,21 @@ export const useProducts = ({ initialParams }: UseProductsOptions = {}) => {
     queryFn: async () => {
       if (!vendorId) throw new Error('Не авторизован');
       const products = await productService.getVendorProducts(vendorId);
+      const normalizeImageUrl = (image: string | null | undefined): string | null => {
+        if (!image) {
+          return null;
+        }
+
+        try {
+          return new URL(image, env.API_URL).toString();
+        } catch {
+          return image;
+        }
+      };
       // Добавляем полный URL к изображениям, если бэкенд возвращает относительный путь
       const productsWithFullImage = products.map(product => ({
         ...product,
-        image: product.image ? (product.image.startsWith('http') ? product.image : `${env.API_URL}${product.image}`) : null,
+        image: normalizeImageUrl(product.image),
       }));
       // Фильтрация по поисковому запросу на клиенте
       const filtered = searchTerm
