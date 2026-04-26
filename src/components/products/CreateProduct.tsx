@@ -124,7 +124,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ isEditMode = false, produ
 
       {/* Ошибка отправки */}
       {errors.submit && (
-        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
+        <div className="bg-red-50 border border-red-200 p-4 rounded-md">
           <div className="flex items-center">
             <XCircleIcon className="h-5 w-5 text-red-500 mr-3 flex-shrink-0" />
             <p className="text-sm text-red-700">{errors.submit}</p>

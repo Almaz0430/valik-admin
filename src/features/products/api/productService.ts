@@ -340,7 +340,6 @@ class ProductService {
     try {
       const formData = new FormData();
       formData.append('name', data.name);
-      formData.append('vendor', String(data.vendor));
       if (data.sub_category !== null && data.sub_category !== undefined) {
         formData.append('sub_category', String(data.sub_category));
       }
