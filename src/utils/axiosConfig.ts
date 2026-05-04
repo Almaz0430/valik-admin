@@ -1,6 +1,6 @@
 import axios from 'axios';
 import env from '../config/env';
-import { getAccessToken, setAccessToken } from './tokenStorage';
+import { clearTokens, getAccessToken } from './tokenStorage';
 
 const baseUrl = env.API_URL;
 
@@ -19,7 +19,7 @@ export const registerRefreshTokenFn = (fn: () => Promise<string>) => {
 
 // Очищаем состояние без API вызова и редиректим на логин
 const forceLogout = () => {
-  setAccessToken(null);
+  clearTokens();
   localStorage.removeItem('vendorId');
   localStorage.removeItem('supplier');
   window.location.href = '/login';

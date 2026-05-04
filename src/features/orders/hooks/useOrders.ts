@@ -19,9 +19,16 @@ export const useOrders = () => {
     const term = searchTerm.toLowerCase();
 
     return orders.filter((order) => {
-      const numberMatch = order.number.toLowerCase().includes(term);
-      const customerMatch = order.customer.toLowerCase().includes(term);
-      return numberMatch || customerMatch;
+      const values = [
+        order.number,
+        order.customer,
+        order.phone,
+        order.address,
+        order.statusLabel,
+        order.paymentStatusLabel,
+      ];
+
+      return values.some((value) => value?.toLowerCase().includes(term));
     });
   }, [orders, searchTerm]);
 

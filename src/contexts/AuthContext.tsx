@@ -15,9 +15,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         const vendorId = localStorage.getItem('vendorId');
         if (vendorId) {
-          // Пытаемся обновить токен доступа
-          const token = await authService.refreshToken();
-          const currentSupplier = await authService.getCurrentUser();
+          let token = authService.getToken();
+          let currentSupplier = token ? await authService.getCurrentUser() : null;
+
+          if (!token || !currentSupplier) {
+            token = await authService.refreshToken();
+            currentSupplier = await authService.getCurrentUser();
+          }
 
           if (token && currentSupplier) {
             setAccessToken(token);

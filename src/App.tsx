@@ -10,6 +10,7 @@ import DashboardPage from './pages/dashboard/DashboardPage';
 import EditProductPage from './pages/products/EditProductPage';
 import ImportProductsPage from './pages/products/ImportProductsPage';
 import OrdersPage from './pages/orders/OrdersPage';
+import OrderDetailsPage from './pages/orders/OrderDetailsPage';
 import ProfilePage from './pages/profile/ProfilePage';
 import GuidePage from './pages/guide/GuidePage';
 import { AttributesPage } from './pages/attributes';
@@ -77,6 +78,11 @@ function App() {
               <Route path="/dashboard/orders" element={
                 <ProtectedRoute>
                   <OrdersPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard/orders/:id" element={
+                <ProtectedRoute>
+                  <OrderDetailsPage />
                 </ProtectedRoute>
               } />
               <Route path="/dashboard/profile" element={

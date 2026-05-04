@@ -1,9 +1,17 @@
 /**
  * Сервис для работы с API аутентификации поставщиков
  */
-import type { AuthResponse, LoginCredentials, RegisterData, Supplier, TokenRefreshResponse } from '../../../types/auth';
+import type {
+  AuthResponse,
+  City,
+  LoginCredentials,
+  RegisterData,
+  Supplier,
+  SupplierProfileUpdatePayload,
+  TokenRefreshResponse
+} from '../../../types/auth';
 import { api, registerRefreshTokenFn } from '../../../utils/axiosConfig';
-import { getAccessToken, setAccessToken } from '../../../utils/tokenStorage';
+import { clearTokens, getAccessToken, getRefreshToken, setAccessToken, setRefreshToken } from '../../../utils/tokenStorage';
 
 /**
  * Класс для работы с API аутентификации
@@ -26,7 +34,7 @@ class AuthService {
         throw new Error('Сервер не вернул токен доступа');
       }
 
-      this.setTokens(authResponse.access);
+      this.setTokens(authResponse.access, authResponse.refresh);
       localStorage.setItem('vendorId', authResponse.id);
 
       return authResponse;
@@ -68,7 +76,7 @@ class AuthService {
 
       // Если бэкенд вернул токен сразу — сохраняем его
       if (authResponse.access) {
-        this.setTokens(authResponse.access);
+        this.setTokens(authResponse.access, authResponse.refresh);
       }
 
       // Сохраняем ID вендора, если он есть в ответе
@@ -119,14 +127,17 @@ class AuthService {
 
     this.refreshPromise = (async () => {
       try {
-        // We no longer pass refresh token in body, backend reads it from cookies
-        const response = await api.post<TokenRefreshResponse>('/vendor/token/refresh/', {});
+        const refresh = getRefreshToken();
+        const response = await api.post<TokenRefreshResponse>(
+          '/vendor/token/refresh/',
+          refresh ? { refresh } : {}
+        );
         const { access } = response.data;
-        this.setTokens(access);
+        this.setTokens(access, response.data.refresh);
         return access;
       } catch (error) {
         // If refresh fails, we're likely unauthorized
-        setAccessToken(null);
+        clearTokens();
         localStorage.removeItem('vendorId');
         throw error;
       } finally {
@@ -140,8 +151,11 @@ class AuthService {
   /**
    * Установка токена
    */
-  private setTokens(access: string): void {
+  private setTokens(access: string, refresh?: string): void {
     setAccessToken(access);
+    if (refresh) {
+      setRefreshToken(refresh);
+    }
   }
 
   /**
@@ -154,7 +168,7 @@ class AuthService {
     } catch (error) {
       console.error('Ошибка при выходе из системы:', error);
     } finally {
-      setAccessToken(null);
+      clearTokens();
       localStorage.removeItem('vendorId');
       localStorage.removeItem('supplier'); // Clear cached supplier as well
     }
@@ -173,6 +187,46 @@ class AuthService {
     } catch (error) {
       console.error('Ошибка при получении данных пользователя:', error);
       return null;
+    }
+  }
+
+  /**
+   * Получение списка городов
+   */
+  async getCities(): Promise<City[]> {
+    try {
+      const response = await api.get<City[]>('/product/cities/');
+      return Array.isArray(response.data) ? response.data : [];
+    } catch (error) {
+      console.error('Ошибка при получении списка городов:', error);
+      throw new Error('Не удалось загрузить список городов');
+    }
+  }
+
+  /**
+   * Обновление профиля поставщика
+   */
+  async updateProfile(id: string | number, data: SupplierProfileUpdatePayload): Promise<Supplier> {
+    try {
+      const response = await api.put<Supplier>(`/vendor/profile/update/${id}/`, data);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при обновлении профиля:', error);
+
+      if (error && typeof error === 'object' && 'response' in error) {
+        const err = error as { response?: { data?: unknown } };
+        const data = err.response?.data;
+
+        if (data && typeof data === 'object') {
+          const messages = Object.entries(data as Record<string, string | string[]>)
+            .map(([field, value]) => `${field}: ${Array.isArray(value) ? value.join(', ') : value}`)
+            .join('; ');
+
+          throw new Error(messages || 'Не удалось сохранить профиль');
+        }
+      }
+
+      throw new Error('Не удалось сохранить профиль');
     }
   }
 

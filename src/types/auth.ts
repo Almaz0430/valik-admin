@@ -39,11 +39,34 @@ export interface Supplier {
   name: string;
   iin?: string;
   phone?: string;
-  city?: string;
+  iik?: string;
+  bik?: string;
+  bank_name?: string;
+  kbe?: string;
+  knp?: string;
+  city?: number | string | City | null;
   address?: string;
   logo?: string;
   // Дополнительные поля поставщика
-  [key: string]: string | number | boolean | null | undefined;
+  [key: string]: string | number | boolean | City | null | undefined;
+}
+
+export interface City {
+  id: number;
+  name: string;
+}
+
+export interface SupplierProfileUpdatePayload {
+  iin: string;
+  name: string;
+  phone: string;
+  iik: string;
+  bik: string;
+  bank_name: string;
+  kbe: string;
+  knp: string;
+  city: number;
+  address: string;
 }
 
 /**
@@ -75,4 +98,5 @@ export interface AuthResponse {
  */
 export interface TokenRefreshResponse {
   access: string;
+  refresh?: string;
 } 
