@@ -240,24 +240,6 @@ const OrderDetailsPage: React.FC = () => {
               {new Date(order.date).toLocaleString('ru-RU')} · {order.phone || 'Телефон не указан'}
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
-            <button
-              type="button"
-              onClick={() => setForm(createEditForm(order))}
-              className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 sm:px-5"
-              disabled={isSaving}
-            >
-              Сбросить
-            </button>
-            <button
-              type="button"
-              onClick={handleSave}
-              className="rounded-xl bg-orange-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-orange-700 disabled:opacity-60 sm:px-6"
-              disabled={isSaving}
-            >
-              {isSaving ? 'Сохраняем...' : 'Сохранить'}
-            </button>
-          </div>
         </div>
 
         {error && (
@@ -488,6 +470,27 @@ const OrderDetailsPage: React.FC = () => {
                 </div>
               </div>
             </div>
+          </div>
+        </section>
+
+        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+            <button
+              type="button"
+              onClick={() => setForm(createEditForm(order))}
+              className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+              disabled={isSaving}
+            >
+              Сбросить
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              className="rounded-xl bg-orange-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-orange-700 disabled:opacity-60"
+              disabled={isSaving}
+            >
+              {isSaving ? 'Сохраняем...' : 'Сохранить'}
+            </button>
           </div>
         </section>
       </div>

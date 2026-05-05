@@ -62,6 +62,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ isEditMode = false, produ
     selectedSubCategory,
     selectedBrand,
     selectedUnit,
+    imageFile,
     imagePreview,
     fileInputRef,
     isImageEditorOpen,
@@ -232,20 +233,36 @@ const CreateProduct: React.FC<CreateProductProps> = ({ isEditMode = false, produ
             </h3>
 
             {imagePreview ? (
-              <div className="relative inline-block">
-                <img
-                  src={imagePreview}
-                  alt="Превью товара"
-                  className="w-48 h-48 object-cover rounded-xl border border-slate-200"
-                />
-                <button
-                  type="button"
-                  onClick={removeImage}
-                  className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-md"
-                  title="Удалить изображение"
-                >
-                  <XMarkIcon className="h-4 w-4" />
-                </button>
+              <div className="space-y-3">
+                <div className="relative inline-block">
+                  <img
+                    src={imagePreview}
+                    alt="Превью товара"
+                    className="w-48 h-48 object-cover rounded-xl border border-slate-200"
+                  />
+                  <button
+                    type="button"
+                    onClick={removeImage}
+                    className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-md"
+                    title="Удалить изображение"
+                  >
+                    <XMarkIcon className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="inline-flex items-center rounded-xl border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-semibold text-orange-700 transition-colors hover:bg-orange-100"
+                  >
+                    Заменить фото
+                  </button>
+                  {imageFile && (
+                    <span className="text-xs font-medium text-green-600">
+                      Новое фото выбрано и будет отправлено при сохранении
+                    </span>
+                  )}
+                </div>
               </div>
             ) : (
               <div

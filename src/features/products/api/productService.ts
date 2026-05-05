@@ -143,7 +143,7 @@ class ProductService {
         formData.append('description', data.description);
       }
       if (data.image) {
-        formData.append('image', data.image);
+        formData.append('image', data.image, data.image.name);
       }
       if (data.article !== undefined && data.article !== null) {
         formData.append('article', String(data.article));
@@ -164,7 +164,9 @@ class ProductService {
         formData.append('price', String(data.price));
       }
 
-      const response = await api.post<Product>('/product/opt-products/create/', formData);
+      const response = await api.post<Product>('/product/opt-products/create/', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
       return response.data;
     } catch (error) {
       console.error('Ошибка при создании товара:', error);
@@ -353,7 +355,7 @@ class ProductService {
         formData.append('description', data.description);
       }
       if (data.image) {
-        formData.append('image', data.image);
+        formData.append('image', data.image, data.image.name);
       }
       if (data.article !== undefined && data.article !== null) {
         formData.append('article', String(data.article));
@@ -374,7 +376,9 @@ class ProductService {
         formData.append('price', String(data.price));
       }
 
-      const response = await api.put<Product>(`/product/opt-products/${id}/`, formData);
+      const response = await api.put<Product>(`/product/opt-products/${id}/`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
       return response.data;
     } catch (error) {
       console.error(`Ошибка при обновлении товара ${id}:`, error);
