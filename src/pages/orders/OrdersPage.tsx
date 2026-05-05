@@ -2,7 +2,7 @@
  * Страница управления заказами
  */
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Layout from '../../components/layout/Layout';
 import { orderService, useOrders } from '../../features/orders';
 import productService from '../../features/products/api/productService';
@@ -75,6 +75,8 @@ const createEditForm = (order: Order): OrderEditForm => ({
 
 const OrdersPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const statusFilter = searchParams.get('status');
   const [selectedOrder, setSelectedOrder] = React.useState<Order | null>(null);
   const [isDetailsLoading, setIsDetailsLoading] = React.useState(false);
   const [detailsError, setDetailsError] = React.useState<string | null>(null);
@@ -91,6 +93,32 @@ const OrdersPage: React.FC = () => {
     searchTerm,
     setSearchTerm,
   } = useOrders();
+
+  const filteredOrdersByStatus = React.useMemo(() => {
+    switch (statusFilter) {
+      case 'new':
+        return orders.filter((order) => order.orderStatus === 1);
+      case 'processing':
+        return orders.filter((order) => [2, 3, 4].includes(order.orderStatus));
+      case 'completed':
+        return orders.filter((order) => [5, 6].includes(order.orderStatus));
+      default:
+        return orders;
+    }
+  }, [orders, statusFilter]);
+
+  const statusFilterLabel = React.useMemo(() => {
+    switch (statusFilter) {
+      case 'new':
+        return 'Новые заказы';
+      case 'processing':
+        return 'В обработке';
+      case 'completed':
+        return 'Завершенные';
+      default:
+        return null;
+    }
+  }, [statusFilter]);
 
   // Функция для отображения статуса заказа
   const getStatusClasses = (status: string) => {
@@ -272,6 +300,21 @@ const OrdersPage: React.FC = () => {
           </div>
         </div>
 
+        {statusFilterLabel && (
+          <div className="flex flex-col gap-3 rounded-2xl border border-orange-100 bg-orange-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm font-semibold text-orange-800">
+              Фильтр: {statusFilterLabel} · найдено {filteredOrdersByStatus.length}
+            </p>
+            <button
+              type="button"
+              onClick={() => setSearchParams({})}
+              className="text-left text-sm font-semibold text-orange-700 hover:text-orange-900"
+            >
+              Показать все
+            </button>
+          </div>
+        )}
+
         {/* Фильтры заказов - новый дизайн */}
         <div className="mb-6 space-y-4">
           {/* Основная строка поиска */}
@@ -393,10 +436,10 @@ const OrdersPage: React.FC = () => {
 
         {/* Таблица заказов */}
         <div className="mt-6">
-          {orders.length > 0 ? (
+          {filteredOrdersByStatus.length > 0 ? (
             <>
               <div className="space-y-3 md:hidden">
-                {orders.map((order) => {
+                {filteredOrdersByStatus.map((order) => {
                   const statusClasses = getStatusClasses(order.status);
                   return (
                     <article
@@ -472,7 +515,7 @@ const OrdersPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {orders.map((order) => {
+                  {filteredOrdersByStatus.map((order) => {
                     const statusClasses = getStatusClasses(order.status);
                     return (
                       <tr key={order.id} className="hover:bg-gray-50">

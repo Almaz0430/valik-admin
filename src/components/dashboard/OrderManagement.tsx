@@ -2,6 +2,7 @@
  * Компонент управления заказами
  */
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { TruckIcon, ArrowRightIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
 
 interface OrderManagementProps {
@@ -38,29 +39,29 @@ const OrderManagement: React.FC<OrderManagementProps> = ({
         <p className="mt-2 text-sm text-slate-500 font-medium">Управление заказами клиентов</p>
       </div>
       <div className="p-5 space-y-3">
-        <button className="group w-full flex items-center justify-between px-5 py-3 text-base text-left text-slate-700 bg-white border border-slate-200 hover:border-orange-200 hover:bg-orange-50/50 rounded-xl transition-all duration-200 active:scale-[0.98]">
+        <Link to="/dashboard/orders?status=new" className="group w-full flex items-center justify-between px-5 py-3 text-base text-left text-slate-700 bg-white border border-slate-200 hover:border-orange-200 hover:bg-orange-50/50 rounded-xl transition-all duration-200 active:scale-[0.98]">
           <span className="flex items-center font-medium">
             <span className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-orange-100 text-orange-700 text-sm font-bold mr-3 group-hover:scale-110 transition-transform">{newOrders}</span>
-            <span>Новые заказа</span>
+            <span>Новые заказы</span>
           </span>
           <ArrowRightIcon className="h-5 w-5 text-slate-400 group-hover:text-orange-500 group-hover:translate-x-1 transition-all" />
-        </button>
+        </Link>
 
-        <button className="group w-full flex items-center justify-between px-5 py-3 text-base text-left text-slate-700 bg-white border border-slate-200 hover:border-amber-200 hover:bg-amber-50/50 rounded-xl transition-all duration-200 active:scale-[0.98]">
+        <Link to="/dashboard/orders?status=processing" className="group w-full flex items-center justify-between px-5 py-3 text-base text-left text-slate-700 bg-white border border-slate-200 hover:border-amber-200 hover:bg-amber-50/50 rounded-xl transition-all duration-200 active:scale-[0.98]">
           <span className="flex items-center font-medium">
             <span className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-amber-100 text-amber-700 text-sm font-bold mr-3 group-hover:scale-110 transition-transform">{processingOrders}</span>
             <span>В обработке</span>
           </span>
           <ArrowRightIcon className="h-5 w-5 text-slate-400 group-hover:text-amber-500 group-hover:translate-x-1 transition-all" />
-        </button>
+        </Link>
 
-        <button className="group w-full flex items-center justify-between px-5 py-3 text-base text-left text-slate-700 bg-white border border-slate-200 hover:border-emerald-200 hover:bg-emerald-50/50 rounded-xl transition-all duration-200 active:scale-[0.98]">
+        <Link to="/dashboard/orders?status=completed" className="group w-full flex items-center justify-between px-5 py-3 text-base text-left text-slate-700 bg-white border border-slate-200 hover:border-emerald-200 hover:bg-emerald-50/50 rounded-xl transition-all duration-200 active:scale-[0.98]">
           <span className="flex items-center font-medium">
             <span className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-emerald-100 text-emerald-700 text-sm font-bold mr-3 group-hover:scale-110 transition-transform">{completedOrders}</span>
             <span>Завершенные</span>
           </span>
           <ArrowRightIcon className="h-5 w-5 text-slate-400 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
-        </button>
+        </Link>
       </div>
     </div>
   );
