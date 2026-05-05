@@ -21,6 +21,7 @@ export default defineConfig({
   server: {
     host: '127.0.0.1',
     port: 3010,
+    allowedHosts: ['vendor.valik.kz'],
   }
 })
 //   build: {
